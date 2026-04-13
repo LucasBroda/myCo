@@ -77,6 +77,50 @@ src/
 - Port : **3000**
 - Proxy : `/api` → `http://localhost:5000` (backend)
 
+## Design & UX
+
+### Palette de couleurs — règles strictes
+
+**Couleurs interdites :**
+- Tout violet/mauve (`#7c3aed`, `#8b5cf6`, `#a855f7`, `#6d28d9`, etc.)
+- Tout bleu typique IA/chatbot (`#2563eb`, `#3b82f6`, `#60a5fa`, `#1d4ed8`, etc.)
+- Les dégradés violet→bleu ou bleu→cyan caractéristiques des interfaces IA génératives
+
+**Palette autorisée — exemples de directions :**
+- Neutres : `slate`, `zinc`, `stone`, `gray` (échelle Tailwind ou équivalent)
+- Tons chauds : terracotta, ocre, sable, ardoise chaude
+- Accents sobres et intentionnels : vert forêt, rouge brique, jaune ambre
+- Fond clair ou sombre selon le contexte, jamais de fond saturé
+
+### Accessibilité (WCAG 2.1 — niveau AA minimum)
+
+- Contraste texte/fond ≥ **4.5:1** pour le texte normal, ≥ **3:1** pour le grand texte
+- Tous les éléments interactifs sont navigables au **clavier** (`Tab`, `Enter`, `Escape`)
+- Chaque image non décorative a un attribut `alt` descriptif
+- Les icônes seules ont un `aria-label` ou un texte visuellement masqué (`sr-only`)
+- Utiliser les balises sémantiques HTML5 : `<nav>`, `<main>`, `<header>`, `<section>`, `<article>`, `<button>`, etc.
+- Les formulaires ont des `<label>` associés à chaque `<input>`
+- Les états visuels (focus, hover, disabled, error) sont tous distincts et visibles
+- Pas de contenu qui clignote ou s'anime de façon agressive
+
+### Design moderne et sobre
+
+- **Mobile-first** : concevoir d'abord pour petits écrans, puis enrichir pour desktop
+- Espacement cohérent basé sur une échelle (ex: multiples de 4px ou 8px)
+- Typographie hiérarchique claire : une seule police principale, maximum deux familles
+- Taille de texte de base ≥ 16px
+- Pas de contenu tronqué arbitrairement — adapter le layout plutôt que cacher
+- Les états vides, chargement et erreur sont tous designés (pas de composant sans état alternatif)
+- Les actions destructives (suppression, déconnexion) demandent une confirmation
+- Feedback visuel immédiat sur toute interaction (hover, focus, clic, chargement)
+
+### Composants React
+
+- Les composants visuels sont découplés de la logique métier
+- Les styles sont colocalisés avec le composant (CSS Modules, Tailwind, ou styled-components selon le projet)
+- Pas de valeurs de style en dur dans le JSX si elles sont réutilisées ailleurs
+- Toujours penser responsive : pas de largeur fixe en `px` pour les conteneurs
+
 ## Règles générales
 
 - Ne jamais créer de fichiers inutiles — toujours préférer éditer un fichier existant
