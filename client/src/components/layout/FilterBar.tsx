@@ -1,0 +1,84 @@
+import { focusRing } from '@/styles/mixins'
+import styled, { css } from 'styled-components'
+
+const Bar = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['2']};
+	flex-wrap: wrap;
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+`
+
+interface ChipProps {
+	$active: boolean
+}
+
+const Chip = styled.button<ChipProps>`
+	padding: ${({ theme }) => `${theme.spacing['1']} ${theme.spacing['3']}`};
+	border-radius: ${({ theme }) => theme.radii.full};
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	cursor: pointer;
+	font-family: inherit;
+	transition:
+		background-color ${({ theme }) => theme.transitions.fast},
+		color ${({ theme }) => theme.transitions.fast},
+		border-color ${({ theme }) => theme.transitions.fast};
+
+	${({ $active, theme }) =>
+		$active
+			? css`
+					background-color: ${theme.colors.amberLight};
+					color: ${theme.colors.amber};
+					border-color: ${theme.colors.amberBorder};
+				`
+			: css`
+					background-color: ${theme.colors.surfaceElevated};
+					color: ${theme.colors.textSecondary};
+
+					&:hover {
+						background-color: ${theme.colors.surface};
+						color: ${theme.colors.textPrimary};
+					}
+				`}
+
+	&:focus-visible {
+		${focusRing}
+	}
+`
+
+export interface FilterOption<T extends string> {
+	value: T
+	label: string
+}
+
+interface FilterBarProps<T extends string> {
+	options: FilterOption<T>[]
+	value: T
+	onChange: (value: T) => void
+	label: string
+}
+
+export function FilterBar<T extends string>({
+	options,
+	value,
+	onChange,
+	label,
+}: FilterBarProps<T>) {
+	return (
+		<Bar role="group" aria-label={label}>
+			{options.map(opt => (
+				<Chip
+					key={opt.value}
+					type="button"
+					$active={value === opt.value}
+					onClick={() => onChange(opt.value)}
+					aria-pressed={value === opt.value}
+				>
+					{opt.label}
+				</Chip>
+			))}
+		</Bar>
+	)
+}

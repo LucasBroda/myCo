@@ -1,73 +1,106 @@
-# React + TypeScript + Vite
+# MyCo - Pokémon TCG Collection Manager
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Application fullstack de gestion de collection de cartes Pokémon TCG.
 
-Currently, two official plugins are available:
+## 🏗️ Structure du projet
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+myCo/
+├── backend/          # API Node.js + Express + PostgreSQL
+├── client/           # Interface React + TypeScript + Vite
+└── README.md         # Ce fichier
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🚀 Démarrage rapide
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 1️⃣ Prérequis
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- **Node.js** v18+
+- **PostgreSQL** v12+
+- **npm** ou **yarn**
+
+### 2️⃣ Configuration PostgreSQL
+
+```bash
+# Se connecter à PostgreSQL
+sudo -u postgres psql
+
+# Créer la base et l'utilisateur
+CREATE DATABASE myco;
+CREATE USER lucasb WITH PASSWORD 'votre_mot_de_passe';
+GRANT ALL PRIVILEGES ON DATABASE myco TO lucasb;
+\q
 ```
+
+### 3️⃣ Backend
+
+```bash
+cd backend
+npm install
+# Configurer le fichier .env (voir backend/.env.example ou client/README.md)
+npm run migrate      # Créer les tables
+npm run dev          # Démarrer le serveur (port 5000)
+```
+
+### 4️⃣ Client
+
+```bash
+cd client
+npm install
+npm run start        # Démarrer l'interface (port 3000)
+```
+
+### 5️⃣ Créer un compte
+
+- Ouvrir `http://localhost:3000/register`
+- Renseigner email + mot de passe (8 caractères min)
+
+---
+
+## 📖 Documentation complète
+
+👉 **Consultez le [README détaillé](client/README.md)** pour :
+- Configuration PostgreSQL détaillée
+- Variables d'environnement
+- Génération des secrets JWT
+- Scripts disponibles
+- Dépannage
+
+---
+
+## 🛠️ Technologies
+
+**Backend :** Node.js, Express, TypeScript, PostgreSQL, Redis, JWT  
+**Frontend :** React 19, TypeScript, Vite, Styled Components, Zustand
+
+---
+
+## 📝 Scripts utiles
+
+**Backend :**
+```bash
+npm run dev        # Développement
+npm run migrate    # Migrations DB
+npm run build      # Build production
+```
+
+**Client :**
+```bash
+npm run start      # Développement
+npm run build      # Build production
+npm run lint       # Vérification code
+```
+
+---
+
+## ⚠️ Problèmes courants
+
+| Erreur | Solution |
+|--------|----------|
+| `password authentication failed` | Vérifier `DATABASE_URL` dans `backend/.env` |
+| `relation "users" does not exist` | Exécuter `npm run migrate` dans `backend/` |
+| `ESLint Invalid Options` | Désactivé dans Vite, utiliser `npm run lint` |
+
+---
+
+📧 **Contact :** Projet académique ISEN
