@@ -2,6 +2,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { db } from "../config/db";
 
+// Fichier permettant de créer toutes les tables postgre
 async function runMigrations(): Promise<void> {
   const migrationsDir = path.join(__dirname, "migrations");
   const files = fs
