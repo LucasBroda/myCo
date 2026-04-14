@@ -20,6 +20,8 @@ export const GlobalStyle = createGlobalStyle`
     background-color: ${({ theme }) => theme.colors.bg};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    transition: background-color ${({ theme }) => theme.transitions.base},
+                color ${({ theme }) => theme.transitions.base};
   }
 
   #root {
