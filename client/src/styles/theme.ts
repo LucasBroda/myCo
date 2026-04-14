@@ -127,11 +127,44 @@ export const darkTheme = {
 		md: '0 4px 12px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3)',
 		lg: '0 12px 32px rgba(0,0,0,0.5), 0 4px 12px rgba(0,0,0,0.4)',
 	},
-} as const
+}
 
-export type Theme = typeof lightTheme
+export type Theme = typeof lightTheme | typeof darkTheme
 
 declare module 'styled-components' {
 	// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-	export interface DefaultTheme extends Theme {}
+	export interface DefaultTheme extends Omit<typeof lightTheme, 'colors' | 'shadows'> {
+		colors: {
+			bg: string
+			surface: string
+			surfaceElevated: string
+			border: string
+			borderStrong: string
+			textPrimary: string
+			textSecondary: string
+			textMuted: string
+			textInverse: string
+			amber: string
+			amberHover: string
+			amberLight: string
+			amberBorder: string
+			brick: string
+			brickHover: string
+			brickLight: string
+			brickBorder: string
+			forest: string
+			forestHover: string
+			forestLight: string
+			forestBorder: string
+			focus: string
+			disabled: string
+			disabledText: string
+			overlay: string
+		}
+		shadows: {
+			sm: string
+			md: string
+			lg: string
+		}
+	}
 }
