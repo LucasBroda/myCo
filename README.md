@@ -27,8 +27,8 @@ sudo -u postgres psql
 
 # Créer la base et l'utilisateur
 CREATE DATABASE myco;
-CREATE USER lucasb WITH PASSWORD 'votre_mot_de_passe';
-GRANT ALL PRIVILEGES ON DATABASE myco TO lucasb;
+CREATE USER myuser WITH PASSWORD 'votre_mot_de_passe';
+GRANT ALL PRIVILEGES ON DATABASE myco TO myuser;
 \q
 ```
 
