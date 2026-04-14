@@ -1,16 +1,20 @@
 import { GlobalStyle } from '@/styles/GlobalStyle'
-import { theme } from '@/styles/theme'
+import { darkTheme, lightTheme } from '@/styles/theme'
 import { ToastContainer } from '@components/ui/Toast'
 import { useAuthStore } from '@store/authStore'
+import { useUiStore } from '@store/uiStore'
 import { Navigate, Outlet } from 'react-router'
 import { ThemeProvider } from 'styled-components'
 
 export default function RootLayout() {
 	const isHydrated = useAuthStore(s => s.isHydrated)
+	const themeMode = useUiStore(s => s.themeMode)
 
 	if (!isHydrated) {
 		return null
 	}
+
+	const theme = themeMode === 'dark' ? darkTheme : lightTheme
 
 	return (
 		<ThemeProvider theme={theme}>

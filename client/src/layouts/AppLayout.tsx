@@ -1,4 +1,5 @@
 import { focusRing } from '@/styles/mixins'
+import ThemeToggle from '@components/ui/ThemeToggle'
 import { useAuth } from '@hooks/useAuth'
 import { NavLink, Outlet } from 'react-router'
 import styled from 'styled-components'
@@ -35,15 +36,22 @@ const Sidebar = styled.nav`
 	}
 `
 
-const Brand = styled.div`
-	font-size: ${({ theme }) => theme.font.size.lg};
-	font-weight: ${({ theme }) => theme.font.weight.bold};
-	color: ${({ theme }) => theme.colors.textPrimary};
+const BrandContainer = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['3']};
 	flex-shrink: 0;
 
 	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
 		margin-bottom: ${({ theme }) => theme.spacing['8']};
+		width: 100%;
 	}
+`
+
+const Brand = styled.div`
+	font-size: ${({ theme }) => theme.font.size.lg};
+	font-weight: ${({ theme }) => theme.font.weight.bold};
+	color: ${({ theme }) => theme.colors.textPrimary};
 `
 
 const NavItems = styled.ul`
@@ -140,7 +148,10 @@ export default function AppLayout() {
 	return (
 		<Shell>
 			<Sidebar aria-label="Navigation principale">
-				<Brand>myCo</Brand>
+				<BrandContainer>
+					<Brand>myCo</Brand>
+					<ThemeToggle />
+				</BrandContainer>
 				<NavItems>
 					{navItems.map(item => (
 						<li key={item.to}>
