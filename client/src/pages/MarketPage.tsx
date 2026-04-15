@@ -10,7 +10,7 @@ import { SectionTitle } from '@components/layout/SectionTitle'
 import { PriceTag } from '@components/pokemon/PriceTag'
 import { marketService } from '@services/marketService'
 import { useDebounce } from '@hooks/useDebounce'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import styled from 'styled-components'
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
@@ -496,7 +496,7 @@ export default function MarketPage() {
 	}, [])
 
 	// Trigger search when debounced query changes
-	function handleSearch(q: string) {
+	const handleSearch = useCallback((q: string) => {
 		setQuery(q)
 		if (!q.trim()) {
 			setSearchResults([])
@@ -512,7 +512,7 @@ export default function MarketPage() {
 				setSearchError(err instanceof Error ? err.message : 'Erreur de recherche')
 			)
 			.finally(() => setIsSearching(false))
-	}
+	}, [])
 
 	const showSearch = !!query.trim()
 

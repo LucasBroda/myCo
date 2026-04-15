@@ -1,7 +1,7 @@
 import { focusRing } from '@/styles/mixins'
 import ThemeToggle from '@components/ui/ThemeToggle'
 import { useAuth } from '@hooks/useAuth'
-import { NavLink, Outlet } from 'react-router'
+import { Link, Outlet, useLocation } from 'react-router'
 import styled from 'styled-components'
 
 const Shell = styled.div`
@@ -21,6 +21,7 @@ const Sidebar = styled.nav`
 	display: flex;
 	align-items: center;
 	gap: ${({ theme }) => theme.spacing['4']};
+	z-index: 10;
 
 	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
 		flex-direction: column;
@@ -65,7 +66,7 @@ const NavItems = styled.ul`
 	}
 `
 
-const StyledNavLink = styled(NavLink)`
+const StyledLink = styled(Link)<{ $isActive: boolean }>`
 	display: flex;
 	align-items: center;
 	gap: ${({ theme }) => theme.spacing['2']};
@@ -78,17 +79,20 @@ const StyledNavLink = styled(NavLink)`
 		background-color ${({ theme }) => theme.transitions.fast},
 		color ${({ theme }) => theme.transitions.fast};
 	white-space: nowrap;
+	text-decoration: none;
 
 	&:hover {
 		background-color: ${({ theme }) => theme.colors.surface};
 		color: ${({ theme }) => theme.colors.textPrimary};
 	}
 
-	&.active {
-		background-color: ${({ theme }) => theme.colors.amberLight};
-		color: ${({ theme }) => theme.colors.amber};
-		font-weight: ${({ theme }) => theme.font.weight.semibold};
-	}
+	${({ $isActive, theme }) =>
+		$isActive &&
+		`
+		background-color: ${theme.colors.amberLight};
+		color: ${theme.colors.amber};
+		font-weight: ${theme.font.weight.semibold};
+	`}
 
 	&:focus-visible {
 		${focusRing}
@@ -125,7 +129,6 @@ const LogoutButton = styled.button`
 const Main = styled.main`
 	flex: 1;
 	padding: ${({ theme }) => theme.spacing['4']};
-	overflow-x: hidden;
 
 	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
 		padding: ${({ theme }) => theme.spacing['6']};
@@ -144,6 +147,7 @@ const navItems = [
 
 export default function AppLayout() {
 	const { user, logout } = useAuth()
+	const location = useLocation()
 
 	return (
 		<Shell>
@@ -155,7 +159,12 @@ export default function AppLayout() {
 				<NavItems>
 					{navItems.map(item => (
 						<li key={item.to}>
-							<StyledNavLink to={item.to}>{item.label}</StyledNavLink>
+							<StyledLink
+								to={item.to}
+								$isActive={location.pathname === item.to || location.pathname.startsWith(item.to + '/')}
+							>
+								{item.label}
+							</StyledLink>
 						</li>
 					))}
 				</NavItems>
