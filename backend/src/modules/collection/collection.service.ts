@@ -4,6 +4,7 @@ import {
   CardCondition,
   CollectionStats,
 } from "../../types/models";
+import * as cardsService from "../cards/cards.service";
 
 export async function getCollection(userId: string): Promise<AcquiredCard[]> {
   const result = await db.query(
@@ -14,6 +15,8 @@ export async function getCollection(userId: string): Promise<AcquiredCard[]> {
   );
   return result.rows.map((row) => ({
     id: row.id as string,
+    cardName: row.card_name as string,
+    setName: row.set_name as string,
     userId: row.user_id as string,
     cardId: row.card_id as string,
     setId: row.set_id as string,
@@ -22,6 +25,37 @@ export async function getCollection(userId: string): Promise<AcquiredCard[]> {
     condition: row.condition as CardCondition,
     createdAt: row.created_at as string,
   }));
+}
+
+export async function getCollectionWithDetails(
+  userId: string,
+): Promise<AcquiredCard[]> {
+  const acquiredCards = await getCollection(userId);
+
+  // Fetch card details in parallel (with reasonable batching to avoid overwhelming the API)
+  const cardDetailsPromises = acquiredCards.map(async (acquired) => {
+    try {
+      const card = await cardsService.getCard(acquired.cardId);
+      return {
+        ...acquired,
+        cardName: card.name,
+        setName: card.set.name,
+      };
+    } catch (error) {
+      // If card details can't be fetched, use fallback
+      console.error(
+        `Failed to fetch card details for ${acquired.cardId}:`,
+        error,
+      );
+      return {
+        ...acquired,
+        cardName: acquired.cardId,
+        setName: "Unknown Set",
+      };
+    }
+  });
+
+  return Promise.all(cardDetailsPromises);
 }
 
 export async function addCard(
@@ -41,6 +75,8 @@ export async function addCard(
   const row = result.rows[0];
   return {
     id: row.id as string,
+    cardName: row.card_name as string,
+    setName: row.set_name as string,
     userId: row.user_id as string,
     cardId: row.card_id as string,
     setId: row.set_id as string,
