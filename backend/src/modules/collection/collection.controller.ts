@@ -3,6 +3,7 @@ import { CardCondition } from "../../types/models";
 import {
   addCard,
   getCollection,
+  getCollectionWithDetails,
   getStats,
   removeCard,
 } from "./collection.service";
@@ -21,6 +22,14 @@ export async function getCollectionHandler(
   res: Response,
 ): Promise<void> {
   const cards = await getCollection(req.user!.id);
+  res.json({ data: cards });
+}
+
+export async function getCollectionWithDetailsHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const cards = await getCollectionWithDetails(req.user!.id);
   res.json({ data: cards });
 }
 

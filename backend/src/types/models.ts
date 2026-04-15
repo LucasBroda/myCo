@@ -45,6 +45,8 @@ export interface PokemonCard {
 
 export interface AcquiredCard {
   id: string;
+  cardName: string;
+  setName: string;
   userId: string;
   cardId: string;
   setId: string;

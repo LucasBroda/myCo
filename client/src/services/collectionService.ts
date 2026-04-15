@@ -11,6 +11,13 @@ export const collectionService = {
 		return res.data
 	},
 
+	async getCollectionWithDetails(): Promise<AcquiredCard[]> {
+		const res = await http.get<{ data: AcquiredCard[] }>(
+			'/collection/with-details'
+		)
+		return res.data
+	},
+
 	async addCard(payload: {
 		cardId: string
 		setId: string

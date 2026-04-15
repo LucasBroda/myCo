@@ -1,4 +1,4 @@
-import type { AcquiredCard, CollectionStats, PlannedPurchase } from '@/types/models'
+import type { CollectionStats, PlannedPurchase, AcquiredCard } from '@/types/models'
 import { Card } from '@components/ui/Card'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
@@ -278,9 +278,9 @@ function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
 				{visible.map(card => (
 					<AcqItem key={card.id}>
 						<AcqInfo>
-							<AcqCardId>{card.cardId}</AcqCardId>
+							<AcqCardId>{card.cardName}</AcqCardId>
 							<AcqMeta>
-								{new Date(card.acquiredDate).toLocaleDateString('fr-FR')} ·{' '}
+								{card.setName} · {new Date(card.acquiredDate).toLocaleDateString('fr-FR')} ·{' '}
 								{card.condition}
 							</AcqMeta>
 						</AcqInfo>
@@ -314,7 +314,7 @@ export default function ProfilePage() {
 		try {
 			const [statsData, collectionData, plannedData] = await Promise.all([
 				collectionService.getStats(),
-				collectionService.getCollection(),
+				collectionService.getCollectionWithDetails(),
 				profileService.getPlanned(),
 			])
 			setStats(statsData)
