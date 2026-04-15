@@ -206,7 +206,17 @@ export default function SetDetailPage() {
 				collectionService.getCollection(),
 			])
 			setPokemonSet(setData.set)
-			setCards(setData.cards)
+			// Sort cards numerically by number field
+			const sortedCards = [...setData.cards].sort((a, b) => {
+				// Extract numeric part from card numbers (e.g., "10", "TG01" -> 1, "SWSH001" -> 1)
+				const numA = Number.parseInt(a.number.replace(/\D/g, ''), 10) || 0
+				const numB = Number.parseInt(b.number.replace(/\D/g, ''), 10) || 0
+				
+				if (numA !== numB) return numA - numB
+				// If numbers are equal, fall back to alphabetic sort
+				return a.number.localeCompare(b.number)
+			})
+			setCards(sortedCards)
 			setCollection(collection)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Erreur de chargement')
