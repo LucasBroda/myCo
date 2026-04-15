@@ -92,6 +92,7 @@ export async function getDeals(): Promise<
       (c) => c.market.cardMarketPrice !== null && c.market.cardMarketPrice > 0,
     )
     .map((c) => {
+      // Prend des valeurs au piff je pense car il ne doit pas trouver de prix
       const avgPrice =
         c.cardmarket?.prices?.trendPrice ?? c.market.cardMarketPrice!;
       const currentPrice = c.market.cardMarketPrice!;
