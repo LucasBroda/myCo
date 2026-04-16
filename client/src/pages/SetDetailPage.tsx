@@ -192,6 +192,7 @@ export default function SetDetailPage() {
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [filter, setFilter] = useState<CardFilter>('all')
+	const [rarityFilter, setRarityFilter] = useState<string>('all')
 	const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null)
 
 	const { acquiredMap, setCollection } = useCollectionStore()
@@ -236,9 +237,24 @@ export default function SetDetailPage() {
 
 	const ownedCount = cards.filter(c => isOwnedCard(c.id)).length
 
+	// Extract unique rarities from cards
+	const availableRarities = Array.from(new Set(cards.map(c => c.rarity))).sort((a, b) =>
+		a.localeCompare(b)
+	)
+	const rarityOptions: FilterOption<string>[] = [
+		{ value: 'all', label: 'Toutes les raretés' },
+		...availableRarities.map(rarity => ({ value: rarity, label: rarity })),
+	]
+
+	// Apply filters
 	const filteredCards = cards.filter(card => {
-		if (filter === 'owned') return isOwnedCard(card.id)
-		if (filter === 'missing') return !isOwnedCard(card.id)
+		// Filter by ownership status
+		if (filter === 'owned' && !isOwnedCard(card.id)) return false
+		if (filter === 'missing' && isOwnedCard(card.id)) return false
+		
+		// Filter by rarity
+		if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false
+		
 		return true
 	})
 
@@ -280,6 +296,13 @@ export default function SetDetailPage() {
 				value={filter}
 				onChange={setFilter}
 				label="Filtrer les cartes"
+			/>
+
+			<FilterBar
+				options={rarityOptions}
+				value={rarityFilter}
+				onChange={setRarityFilter}
+				label="Filtrer par rareté"
 			/>
 
 			{filteredCards.length === 0 ? (
