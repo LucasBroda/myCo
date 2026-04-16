@@ -68,6 +68,36 @@ const filterOptions: FilterOption<CardFilter>[] = [
 	{ value: 'missing', label: 'Manquantes' },
 ]
 
+// Rarity order from most common to rarest (lower number = more common)
+const rarityOrder: Record<string, number> = {
+	'Common': 1,
+	'Uncommon': 2,
+	'Rare': 3,
+	'Rare Holo': 4,
+	'Double Rare': 5,
+	'Rare Holo EX': 6,
+	'Rare Holo GX': 7,
+	'Rare Holo V': 8,
+	'Rare Holo VMAX': 9,
+	'Rare Holo VSTAR': 10,
+	'Rare Ultra': 11,
+	'Illustration Rare': 12,
+	'Rare ACE': 13,
+	'Rare BREAK': 14,
+	'Amazing Rare': 15,
+	'Radiant Rare': 16,
+	'Rare Shining': 17,
+	'Rare Shiny': 18,
+	'Rare Shiny GX': 19,
+	'Ultra Rare': 20,
+	'Special Illustration Rare': 21,
+	'Hyper Rare': 22,
+	'Rare Secret': 23,
+	'Rare Rainbow': 24,
+	'LEGEND': 25,
+	'Promo': 26,
+}
+
 // ─── AcquireModal ─────────────────────────────────────────────────────────────
 
 interface AcquireModalProps {
@@ -192,6 +222,7 @@ export default function SetDetailPage() {
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [filter, setFilter] = useState<CardFilter>('all')
+	const [rarityFilter, setRarityFilter] = useState<string>('all')
 	const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null)
 
 	const { acquiredMap, setCollection } = useCollectionStore()
@@ -236,9 +267,28 @@ export default function SetDetailPage() {
 
 	const ownedCount = cards.filter(c => isOwnedCard(c.id)).length
 
+	// Extract unique rarities from cards and sort by rarity order
+	const availableRarities = Array.from(new Set(cards.map(c => c.rarity))).sort((a, b) => {
+		const orderA = rarityOrder[a] ?? 999 // Unknown rarities go to the end
+		const orderB = rarityOrder[b] ?? 999
+		if (orderA !== orderB) return orderA - orderB
+		// If same order or both unknown, sort alphabetically
+		return a.localeCompare(b)
+	})
+	const rarityOptions: FilterOption<string>[] = [
+		{ value: 'all', label: 'Toutes les raretés' },
+		...availableRarities.map(rarity => ({ value: rarity, label: rarity })),
+	]
+
+	// Apply filters
 	const filteredCards = cards.filter(card => {
-		if (filter === 'owned') return isOwnedCard(card.id)
-		if (filter === 'missing') return !isOwnedCard(card.id)
+		// Filter by ownership status
+		if (filter === 'owned' && !isOwnedCard(card.id)) return false
+		if (filter === 'missing' && isOwnedCard(card.id)) return false
+		
+		// Filter by rarity
+		if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false
+		
 		return true
 	})
 
@@ -280,6 +330,13 @@ export default function SetDetailPage() {
 				value={filter}
 				onChange={setFilter}
 				label="Filtrer les cartes"
+			/>
+
+			<FilterBar
+				options={rarityOptions}
+				value={rarityFilter}
+				onChange={setRarityFilter}
+				label="Filtrer par rareté"
 			/>
 
 			{filteredCards.length === 0 ? (
