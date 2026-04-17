@@ -21,6 +21,7 @@
 		"noFallthroughCasesInSwitch": true,
 
 		/* Path Mapping pour imports absolus */
+		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
 		"paths": {
 			"@/*": ["./src/*"],
