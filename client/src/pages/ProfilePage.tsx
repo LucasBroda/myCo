@@ -1,4 +1,4 @@
-import type { CollectionStats, PlannedPurchase, AcquiredCard } from '@/types/models'
+import type { CollectionStats, PlannedPurchase, AcquiredCard, PokemonCard } from '@/types/models'
 import { Card } from '@components/ui/Card'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
@@ -7,6 +7,7 @@ import { PageHeader } from '@components/layout/PageHeader'
 import { SectionTitle } from '@components/layout/SectionTitle'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
+import { cardsService } from '@services/cardsService'
 import { usePlannedStore } from '@store/plannedStore'
 import { useToast } from '@hooks/useToast'
 import { useEffect, useState } from 'react'
@@ -305,6 +306,71 @@ const CalendarToggle = styled.button`
 	}
 `
 
+const CalendarWrapper = styled.div`
+	display: flex;
+	gap: ${({ theme }) => theme.spacing['6']};
+	align-items: flex-start;
+	justify-content: flex-start;
+
+	@media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+		flex-direction: column;
+	}
+`
+
+const CardPreview = styled.div`
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['3']};
+	padding: ${({ theme }) => theme.spacing['4']};
+	background-color: ${({ theme }) => theme.colors.surface};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.md};
+	min-width: 200px;
+	max-width: 280px;
+`
+
+const CardPreviewImage = styled.img`
+	width: 100%;
+	max-width: 180px;
+	align-self: center;
+	border-radius: ${({ theme }) => theme.radii.md};
+	box-shadow: ${({ theme }) => theme.shadows.md};
+`
+
+const CardPreviewName = styled.h4`
+	margin: 0;
+	margin-top: ${({ theme }) => theme.spacing['4']};
+	font-size: ${({ theme }) => theme.font.size.base};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.textPrimary};
+`
+
+const CardPreviewDetail = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: ${({ theme }) => theme.font.size.sm};
+	color: ${({ theme }) => theme.colors.textSecondary};
+`
+
+const CardPreviewBudget = styled.span`
+	font-size: ${({ theme }) => theme.font.size.base};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.amber};
+`
+
+const CardPreviewNotes = styled.p`
+	margin: 0;
+	padding: ${({ theme }) => theme.spacing['2']};
+	background-color: ${({ theme }) => theme.colors.amberLight};
+	border-left: 3px solid ${({ theme }) => theme.colors.amber};
+	border-radius: ${({ theme }) => theme.radii.sm};
+	font-size: ${({ theme }) => theme.font.size.xs};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	font-style: italic;
+`
+
 interface PurchaseCalendarProps {
 	readonly planned: PlannedPurchase[]
 	readonly onDelete: (id: string) => Promise<void>
@@ -314,8 +380,43 @@ interface PurchaseCalendarProps {
 function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProps) {
 	const [showCalendar, setShowCalendar] = useState(false)
 	const [deleting, setDeleting] = useState<string | null>(null)
+	const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
+	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
 	const { success, error: showError } = useToast()
 	const plannedDates = planned.map(p => new Date(p.plannedDate))
+
+	// Charger les détails des cartes au montage
+	useEffect(() => {
+		async function loadCardDetails() {
+			const details: Record<string, PokemonCard> = {}
+			for (const purchase of planned) {
+				if (!details[purchase.cardId]) {
+					try {
+						const card = await cardsService.getCard(purchase.cardId)
+						details[purchase.cardId] = card
+					} catch (err) {
+						console.error(`Failed to load card ${purchase.cardId}`, err)
+					}
+				}
+			}
+			setCardDetails(details)
+		}
+		if (planned.length > 0) {
+			loadCardDetails()
+		}
+	}, [planned])
+
+	// Trouver les achats planifiés pour la date survolée
+	const hoveredPurchases = hoveredDate
+		? planned.filter(p => {
+				const purchaseDate = new Date(p.plannedDate)
+				return (
+					purchaseDate.getDate() === hoveredDate.getDate() &&
+					purchaseDate.getMonth() === hoveredDate.getMonth() &&
+					purchaseDate.getFullYear() === hoveredDate.getFullYear()
+				)
+		  })
+		: []
 
 	async function handleDelete(id: string) {
 		if (!confirm('Supprimer cet achat planifié ?')) return
@@ -351,19 +452,67 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 			{planned.length > 0 && showCalendar && (
 				<>
 					<DayPickerOverride />
-					<DayPicker
-						mode="multiple"
-						selected={plannedDates}
-						footer={
-							<p
-								style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
-								aria-live="polite"
-							>
-								{planned.length} achat{planned.length > 1 ? 's' : ''} planifié
-								{planned.length > 1 ? 's' : ''}
-							</p>
-						}
-					/>
+					<CalendarWrapper>
+						<div>
+							<DayPicker
+								mode="multiple"
+								selected={plannedDates}
+								onDayMouseEnter={setHoveredDate}
+								onDayMouseLeave={() => setHoveredDate(null)}
+								footer={
+									<p
+										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
+										aria-live="polite"
+									>
+										{planned.length} achat{planned.length > 1 ? 's' : ''} planifié
+										{planned.length > 1 ? 's' : ''}
+									</p>
+								}
+							/>
+						</div>
+						{hoveredPurchases.length > 0 && (
+							<CardPreview>
+								{hoveredPurchases.map(purchase => {
+									const card = cardDetails[purchase.cardId]
+									return card ? (
+										<div key={purchase.id}>
+											<CardPreviewImage
+												src={card.images.small}
+												alt={card.name}
+												loading="lazy"
+											/>
+											<CardPreviewName>{purchase.cardName}</CardPreviewName>
+											<CardPreviewDetail>
+												<span>Collection</span>
+												<span>{purchase.setName}</span>
+											</CardPreviewDetail>
+											<CardPreviewDetail>
+												<span>Date prévue</span>
+												<span>
+													{new Date(purchase.plannedDate).toLocaleDateString('fr-FR', {
+														day: 'numeric',
+														month: 'long',
+														year: 'numeric',
+													})}
+												</span>
+											</CardPreviewDetail>
+											{purchase.budget !== null && (
+												<CardPreviewDetail>
+													<span>Budget prévu</span>
+													<CardPreviewBudget>
+														{formatEuros(purchase.budget)}
+													</CardPreviewBudget>
+												</CardPreviewDetail>
+											)}
+											{purchase.notes && (
+												<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
+											)}
+										</div>
+									) : null
+								})}
+							</CardPreview>
+						)}
+					</CalendarWrapper>
 				</>
 			)}
 
