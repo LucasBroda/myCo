@@ -37,4 +37,17 @@ export const collectionService = {
 		const res = await http.get<{ data: CollectionStats }>('/collection/stats')
 		return res.data
 	},
+
+	async getFollowedSets(): Promise<string[]> {
+		const res = await http.get<{ data: string[] }>('/collection/followed-sets')
+		return res.data
+	},
+
+	async followSet(setId: string): Promise<void> {
+		await http.post('/collection/followed-sets', { setId })
+	},
+
+	async unfollowSet(setId: string): Promise<void> {
+		await http.delete(`/collection/followed-sets/${setId}`)
+	},
 }
