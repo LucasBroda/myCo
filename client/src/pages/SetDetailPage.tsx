@@ -14,6 +14,7 @@ import { collectionService } from '@services/collectionService'
 import { cardsService } from '@services/cardsService'
 import { profileService } from '@services/profileService'
 import { useCollectionStore } from '@store/collectionStore'
+import { usePlannedStore } from '@store/plannedStore'
 import { useToast } from '@hooks/useToast'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -208,9 +209,10 @@ interface AcquireModalProps {
 	readonly set: PokemonSet | null
 	readonly onClose: () => void
 	readonly onAcquired: () => void
+	readonly addToPlannedStore: (purchase: import('@/types/models').PlannedPurchase) => void
 }
 
-function AcquireModal({ card, set, onClose, onAcquired }: AcquireModalProps) {
+function AcquireModal({ card, set, onClose, onAcquired, addToPlannedStore }: AcquireModalProps) {
 	const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
 	const [price, setPrice] = useState('')
 	const [condition, setCondition] = useState<CardCondition>('NM')
@@ -239,13 +241,16 @@ function AcquireModal({ card, set, onClose, onAcquired }: AcquireModalProps) {
 		try {
 			if (isFutureDate) {
 				// Créer un achat planifié
-				await profileService.addPlanned({
+				const planned = await profileService.addPlanned({
+					cardId: card.id,
+					setId: set.id,
 					cardName: card.name,
 					setName: set.name,
 					plannedDate: date,
 					budget: price ? Number.parseFloat(price) : null,
 					notes: notes || null,
 				})
+				addToPlannedStore(planned)
 				success(`${card.name} ajoutée aux achats planifiés`)
 			} else {
 				// Ajouter à la collection immédiatement
@@ -372,16 +377,18 @@ export default function SetDetailPage() {
 	const [isFollowed, setIsFollowed] = useState(false)
 
 	const { acquiredMap, setCollection } = useCollectionStore()
+	const { plannedMap, setPlanned, addPlanned: addToPlannedStore } = usePlannedStore()
 
 	async function loadData() {
 		if (!setId) return
 		setIsLoading(true)
 		setError(null)
 		try {
-			const [setData, collection, followedSets] = await Promise.all([
+			const [setData, collection, followedSets, plannedPurchases] = await Promise.all([
 				cardsService.getSet(setId),
 				collectionService.getCollection(),
 				collectionService.getFollowedSets(),
+				profileService.getPlanned(),
 			])
 			setPokemonSet(setData.set)
 			setIsFollowed(followedSets.includes(setId))
@@ -397,6 +404,7 @@ export default function SetDetailPage() {
 			})
 			setCards(sortedCards)
 			setCollection(collection)
+			setPlanned(plannedPurchases)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Erreur de chargement')
 		} finally {
@@ -411,6 +419,10 @@ export default function SetDetailPage() {
 
 	function isOwnedCard(cardId: string): boolean {
 		return (acquiredMap[cardId]?.length ?? 0) > 0
+	}
+
+	function isPlannedCard(cardId: string): boolean {
+		return (plannedMap[cardId]?.length ?? 0) > 0
 	}
 
 	const ownedCount = cards.filter(c => isOwnedCard(c.id)).length
@@ -525,6 +537,7 @@ export default function SetDetailPage() {
 							key={card.id}
 							card={card}
 							owned={isOwnedCard(card.id)}
+							planned={isPlannedCard(card.id)}
 							onClick={() => handleCardClick(card)}
 						/>
 					))}
@@ -536,6 +549,7 @@ export default function SetDetailPage() {
 				set={pokemonSet}
 				onClose={() => setSelectedCard(null)}
 				onAcquired={() => setSelectedCard(null)}
+				addToPlannedStore={addToPlannedStore}
 			/>
 		</section>
 	)

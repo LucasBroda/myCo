@@ -7,6 +7,7 @@ import { PageHeader } from '@components/layout/PageHeader'
 import { SectionTitle } from '@components/layout/SectionTitle'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
+import { usePlannedStore } from '@store/plannedStore'
 import { useToast } from '@hooks/useToast'
 import { useEffect, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
@@ -590,6 +591,7 @@ export default function ProfilePage() {
 	const [planned, setPlanned] = useState<PlannedPurchase[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const { setPlanned: setPlannedStore, removePlanned } = usePlannedStore()
 
 	async function loadData() {
 		setIsLoading(true)
@@ -609,6 +611,7 @@ export default function ProfilePage() {
 				)
 			)
 			setPlanned(plannedData)
+			setPlannedStore(plannedData)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Erreur de chargement')
 		} finally {
@@ -619,6 +622,11 @@ export default function ProfilePage() {
 	useEffect(() => {
 		loadData()
 	}, [])
+
+	async function handleDeletePlanned(id: string) {
+		await profileService.deletePlanned(id)
+		removePlanned(id)
+	}
 
 	if (isLoading) return <Spinner center label="Chargement du profil…" />
 	if (error) return <ErrorState message={error} onRetry={loadData} />
@@ -634,7 +642,7 @@ export default function ProfilePage() {
 				<SpendingChart stats={stats} />
 				<PurchaseCalendar 
 					planned={planned} 
-					onDelete={profileService.deletePlanned}
+					onDelete={handleDeletePlanned}
 					onRefresh={loadData}
 				/>
 				<FullWidth>

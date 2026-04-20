@@ -13,7 +13,9 @@ export async function addPlannedHandler(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const { cardName, setName, plannedDate, budget, notes } = req.body as {
+  const { cardId, setId, cardName, setName, plannedDate, budget, notes } = req.body as {
+    cardId?: string;
+    setId?: string;
     cardName?: string;
     setName?: string;
     plannedDate?: string;
@@ -21,21 +23,23 @@ export async function addPlannedHandler(
     notes?: string | null;
   };
 
-  if (!cardName || !setName || !plannedDate) {
+  if (!cardId || !setId || !cardName || !setName || !plannedDate) {
     res
       .status(400)
-      .json({ error: "cardName, setName and plannedDate are required" });
+      .json({ error: "cardId, setId, cardName, setName and plannedDate are required" });
     return;
   }
 
-  const planned = await addPlanned(
-    req.user!.id,
+  const planned = await addPlanned({
+    userId: req.user!.id,
+    cardId,
+    setId,
     cardName,
     setName,
     plannedDate,
-    budget ?? null,
-    notes ?? null,
-  );
+    budget: budget ?? null,
+    notes: notes ?? null,
+  });
   res.status(201).json({ data: planned });
 }
 

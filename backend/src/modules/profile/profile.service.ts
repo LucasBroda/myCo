@@ -22,19 +22,22 @@ export async function getPlanned(userId: string): Promise<PlannedPurchase[]> {
   }));
 }
 
-export async function addPlanned(
-  userId: string,
-  cardName: string,
-  setName: string,
-  plannedDate: string,
-  budget: number | null,
-  notes: string | null,
-): Promise<PlannedPurchase> {
+export async function addPlanned(params: {
+  userId: string;
+  cardId: string;
+  setId: string;
+  cardName: string;
+  setName: string;
+  plannedDate: string;
+  budget: number | null;
+  notes: string | null;
+}): Promise<PlannedPurchase> {
+  const { userId, cardId, setId, cardName, setName, plannedDate, budget, notes } = params;
   const result = await db.query(
     `INSERT INTO planned_purchases (user_id, card_id, set_id, card_name, set_name, planned_date, budget, notes)
      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
      RETURNING id, user_id, card_id, set_id, card_name, set_name, planned_date, budget, notes, created_at`,
-    [userId, '', '', cardName, setName, plannedDate, budget, notes],
+    [userId, cardId, setId, cardName, setName, plannedDate, budget, notes],
   );
   const row = result.rows[0];
   return {

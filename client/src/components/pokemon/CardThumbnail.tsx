@@ -62,6 +62,25 @@ const OwnedBadge = styled.div`
 	justify-content: center;
 	font-size: 10px;
 	color: #fff;
+	z-index: 10;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+`
+
+const PlannedBadge = styled.div`
+	position: absolute;
+	top: ${({ theme }) => theme.spacing['1']};
+	left: ${({ theme }) => theme.spacing['1']};
+	width: 22px;
+	height: 22px;
+	border-radius: ${({ theme }) => theme.radii.full};
+	background-color: ${({ theme }) => theme.colors.amber};
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 12px;
+	color: #fff;
+	z-index: 10;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 `
 
 const Overlay = styled.div`
@@ -80,12 +99,20 @@ const NumberBadge = styled.span`
 `
 
 interface Props {
-	card: PokemonCard
-	owned?: boolean
-	onClick?: () => void
+	readonly card: PokemonCard
+	readonly owned?: boolean
+	readonly planned?: boolean
+	readonly onClick?: () => void
 }
 
-export function CardThumbnail({ card, owned = false, onClick }: Props) {
+export function CardThumbnail({ card, owned = false, planned = false, onClick }: Props) {
+	const getAriaLabel = () => {
+		let status = ' (manquante)'
+		if (owned) status = ' (possédée)'
+		else if (planned) status = ' (achat planifié)'
+		return `${card.name} — ${card.number} ${card.set.name}${status}`
+	}
+	
 	return (
 		<Wrapper
 			owned={owned}
@@ -98,7 +125,7 @@ export function CardThumbnail({ card, owned = false, onClick }: Props) {
 					? e => (e.key === 'Enter' || e.key === ' ') && onClick()
 					: undefined
 			}
-			aria-label={`${card.name} — ${card.number} ${card.set.name}${owned ? ' (possédée)' : ' (manquante)'}`}
+			aria-label={getAriaLabel()}
 		>
 			<Img
 				src={card.images.small}
@@ -110,6 +137,11 @@ export function CardThumbnail({ card, owned = false, onClick }: Props) {
 				<OwnedBadge aria-hidden="true" title="Possédée">
 					✓
 				</OwnedBadge>
+			)}
+			{!owned && planned && (
+				<PlannedBadge aria-hidden="true" title="Achat planifié">
+					📅
+				</PlannedBadge>
 			)}
 			<Overlay>
 				<NumberBadge aria-hidden="true">#{card.number}</NumberBadge>
