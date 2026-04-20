@@ -239,9 +239,18 @@ const DeleteButton = styled.button`
 	border-radius: ${({ theme }) => theme.radii.md};
 	color: ${({ theme }) => theme.colors.textSecondary};
 	cursor: pointer;
-	font-size: ${({ theme }) => theme.font.size.base};
 	transition: all ${({ theme }) => theme.transitions.fast};
 	flex-shrink: 0;
+
+	svg {
+		width: 16px;
+		height: 16px;
+		stroke: currentColor;
+		fill: none;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
 
 	&:hover {
 		background-color: ${({ theme }) => theme.colors.brickLight};
@@ -254,6 +263,15 @@ const DeleteButton = styled.button`
 		outline-offset: 2px;
 	}
 `
+
+function TrashIcon() {
+	return (
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z" />
+			<path d="M10 11v6M14 11v6" />
+		</svg>
+	)
+}
 
 const AddPlannedButton = styled.button`
 	width: 100%;
@@ -392,7 +410,7 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 								aria-label="Supprimer"
 								title="Supprimer cet achat planifié"
 							>
-								{deleting === item.id ? '⋯' : '🗑'}
+								{deleting === item.id ? '⋯' : <TrashIcon />}
 							</DeleteButton>
 						</PlannedItem>
 					))}
