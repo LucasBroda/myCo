@@ -20,6 +20,32 @@ import styled from 'styled-components'
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
 
+const HeaderSection = styled.div`
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: ${({ theme }) => theme.spacing['4']};
+	margin-bottom: ${({ theme }) => theme.spacing['6']};
+
+	@media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+`
+
+const FollowButton = styled(Button)<{ $isFollowed: boolean }>`
+	background-color: ${({ $isFollowed, theme }) =>
+		$isFollowed ? theme.colors.brickLight : theme.colors.amberLight};
+	color: ${({ $isFollowed, theme }) =>
+		$isFollowed ? theme.colors.brick : theme.colors.amber};
+
+	&:hover:not(:disabled) {
+		background-color: ${({ $isFollowed, theme }) =>
+			$isFollowed ? theme.colors.brick : theme.colors.amber};
+		color: ${({ theme }) => theme.colors.textPrimary};
+	}
+`
+
 const ProgressSection = styled.div`
 	margin-bottom: ${({ theme }) => theme.spacing['6']};
 	padding: ${({ theme }) => theme.spacing['4']};
@@ -224,6 +250,7 @@ export default function SetDetailPage() {
 	const [filter, setFilter] = useState<CardFilter>('all')
 	const [rarityFilter, setRarityFilter] = useState<string>('all')
 	const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null)
+	const [isFollowed, setIsFollowed] = useState(false)
 
 	const { acquiredMap, setCollection } = useCollectionStore()
 
@@ -232,11 +259,13 @@ export default function SetDetailPage() {
 		setIsLoading(true)
 		setError(null)
 		try {
-			const [setData, collection] = await Promise.all([
+			const [setData, collection, followedSets] = await Promise.all([
 				cardsService.getSet(setId),
 				collectionService.getCollection(),
+				collectionService.getFollowedSets(),
 			])
 			setPokemonSet(setData.set)
+			setIsFollowed(followedSets.includes(setId))
 			// Sort cards numerically by number field
 			const sortedCards = [...setData.cards].sort((a, b) => {
 				// Extract numeric part from card numbers (e.g., "10", "TG01" -> 1, "SWSH001" -> 1)
@@ -300,6 +329,27 @@ export default function SetDetailPage() {
 		setSelectedCard(card)
 	}
 
+	async function handleToggleFollow() {
+		if (!setId || !pokemonSet) return
+		
+		try {
+			if (isFollowed) {
+				await collectionService.unfollowSet(setId)
+				setIsFollowed(false)
+				toast(`Collection "${pokemonSet.name}" retirée de vos suivis`, 'success')
+			} else {
+				await collectionService.followSet(setId)
+				setIsFollowed(true)
+				toast(`Collection "${pokemonSet.name}" ajoutée à vos suivis`, 'success')
+			}
+		} catch (err) {
+			toast(
+				err instanceof Error ? err.message : 'Erreur lors de la modification',
+				'error'
+			)
+		}
+	}
+
 	if (isLoading) return <Spinner center label="Chargement du set…" />
 	if (error) return <ErrorState message={error} onRetry={loadData} />
 
@@ -309,11 +359,19 @@ export default function SetDetailPage() {
 				← Collections
 			</BackLink>
 
-			<PageHeader
-				title={pokemonSet?.name ?? setId ?? ''}
-				id="set-detail-title"
-				subtitle={pokemonSet?.series}
-			/>
+			<HeaderSection>
+				<PageHeader
+					title={pokemonSet?.name ?? setId ?? ''}
+					id="set-detail-title"
+					subtitle={pokemonSet?.series}
+				/>
+				<FollowButton
+					$isFollowed={isFollowed}
+					onClick={handleToggleFollow}
+				>
+					{isFollowed ? '✓ Suivie' : '+ Ajouter la collection'}
+				</FollowButton>
+			</HeaderSection>
 
 			{pokemonSet && (
 				<ProgressSection>
