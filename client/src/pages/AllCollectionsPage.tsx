@@ -23,6 +23,8 @@ const SetCardWrapper = styled.div<{ $isFollowed: boolean }>`
 	position: relative;
 	opacity: ${({ $isFollowed }) => ($isFollowed ? 0.5 : 1)};
 	transition: opacity ${({ theme }) => theme.transitions.fast};
+	cursor: ${({ $isFollowed }) => ($isFollowed ? 'not-allowed' : 'pointer')};
+	pointer-events: ${({ $isFollowed }) => ($isFollowed ? 'none' : 'auto')};
 
 	${({ $isFollowed, theme }) =>
 		$isFollowed &&
@@ -56,6 +58,7 @@ const FollowButton = styled(Button)<{ $isFollowed: boolean }>`
 		$isFollowed ? theme.colors.brickLight : theme.colors.amberLight};
 	color: ${({ $isFollowed, theme }) =>
 		$isFollowed ? theme.colors.brick : theme.colors.amber};
+	pointer-events: auto;
 
 	&:hover:not(:disabled) {
 		background-color: ${({ $isFollowed, theme }) =>
@@ -156,7 +159,7 @@ export default function AllCollectionsPage() {
 								$isFollowed={isFollowed}
 								onClick={(e) => handleToggleFollow(set.id, set.name, e)}
 							>
-								{isFollowed ? '✓ Suivie' : '+ Suivre'}
+								{isFollowed ? '✓ Ajouté' : '+ Ajouter'}
 							</FollowButton>
 						</SetCardContainer>
 					)
