@@ -8,8 +8,8 @@ export const profileService = {
 	},
 
 	async addPlanned(payload: {
-		cardId: string
-		setId: string
+		cardName: string
+		setName: string
 		plannedDate: string
 		budget: number | null
 		notes: string | null

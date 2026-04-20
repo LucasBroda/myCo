@@ -51,7 +51,9 @@ export interface AcquiredCard {
 }
 
 export interface PlannedPurchase {
-	id: string
+	id: string,
+	cardName: string, 
+	setName: string,
 	userId: string
 	cardId: string
 	setId: string
