@@ -322,7 +322,7 @@ const CardPreview = styled.div`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: ${({ theme }) => theme.spacing['3']};
+	gap: ${({ theme }) => theme.spacing['4']};
 	padding: ${({ theme }) => theme.spacing['4']};
 	min-width: 280px;
 	max-width: 400px;
@@ -360,6 +360,7 @@ const CardPreviewBudget = styled.span`
 
 const CardPreviewNotes = styled.p`
 	margin: 0;
+	margin-top: ${({ theme }) => theme.spacing['4']};
 	padding: ${({ theme }) => theme.spacing['2']};
 	background-color: ${({ theme }) => theme.colors.amberLight};
 	border-left: 3px solid ${({ theme }) => theme.colors.amber};
