@@ -13,13 +13,14 @@ export async function addPlannedHandler(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const { cardId, setId, cardName, setName, plannedDate, budget, notes } = req.body as {
+  const { cardId, setId, cardName, setName, plannedDate, budget, condition, notes } = req.body as {
     cardId?: string;
     setId?: string;
     cardName?: string;
     setName?: string;
     plannedDate?: string;
     budget?: number | null;
+    condition?: import("../../types/models").CardCondition;
     notes?: string | null;
   };
 
@@ -38,6 +39,7 @@ export async function addPlannedHandler(
     setName,
     plannedDate,
     budget: budget ?? null,
+    condition: condition ?? 'NM',
     notes: notes ?? null,
   });
   res.status(201).json({ data: planned });

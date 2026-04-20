@@ -248,6 +248,7 @@ function AcquireModal({ card, set, onClose, onAcquired, addToPlannedStore }: Acq
 					setName: set.name,
 					plannedDate: date,
 					budget: price ? Number.parseFloat(price) : null,
+					condition,
 					notes: notes || null,
 				})
 				addToPlannedStore(planned)
@@ -323,7 +324,15 @@ function AcquireModal({ card, set, onClose, onAcquired, addToPlannedStore }: Acq
 						/>
 					</Field>
 
-					{isFutureDate ? (
+					<Field label="État de la carte" htmlFor="acquire-condition">
+						<ConditionSelect
+							id="acquire-condition"
+							value={condition}
+							onChange={setCondition}
+						/>
+					</Field>
+
+					{isFutureDate && (
 						<Field 
 							label="Notes (optionnel)" 
 							htmlFor="acquire-notes"
@@ -335,14 +344,6 @@ function AcquireModal({ card, set, onClose, onAcquired, addToPlannedStore }: Acq
 								onChange={e => setNotes(e.target.value)}
 								placeholder="Ex: Attendre la réédition, surveiller les prix..."
 								maxLength={500}
-							/>
-						</Field>
-					) : (
-						<Field label="État de la carte" htmlFor="acquire-condition">
-							<ConditionSelect
-								id="acquire-condition"
-								value={condition}
-								onChange={setCondition}
 							/>
 						</Field>
 					)}
@@ -429,9 +430,10 @@ export default function SetDetailPage() {
 		const planned = plannedMap[cardId]
 		if (!planned || planned.length === 0) return undefined
 		// Retourner la date du premier achat planifié (ou celui avec la date la plus proche)
-		return planned.sort((a, b) => 
+		const sorted = [...planned].sort((a, b) => 
 			new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime()
-		)[0].plannedDate
+		)
+		return sorted[0].plannedDate
 	}
 
 	const ownedCount = cards.filter(c => isOwnedCard(c.id)).length

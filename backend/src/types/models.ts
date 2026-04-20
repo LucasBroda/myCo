@@ -65,6 +65,7 @@ export interface PlannedPurchase {
   setName: string;
   plannedDate: string;
   budget: number | null;
+  condition: CardCondition;
   notes: string | null;
   createdAt: string;
 }

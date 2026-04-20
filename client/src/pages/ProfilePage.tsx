@@ -485,8 +485,10 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 												<span>Collection</span>
 												<span>{purchase.setName}</span>
 											</CardPreviewDetail>
-											<CardPreviewDetail>
-												<span>Date prévue</span>
+											<CardPreviewDetail>											<span>État</span>
+											<span>{purchase.condition}</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>												<span>Date prévue</span>
 												<span>
 													{new Date(purchase.plannedDate).toLocaleDateString('fr-FR', {
 														day: 'numeric',

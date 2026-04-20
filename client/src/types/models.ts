@@ -59,6 +59,7 @@ export interface PlannedPurchase {
 	setId: string
 	plannedDate: string
 	budget: number | null
+	condition: CardCondition
 	notes: string | null
 	createdAt: string
 }
