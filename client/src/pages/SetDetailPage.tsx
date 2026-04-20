@@ -126,11 +126,31 @@ const rarityOrder: Record<string, number> = {
 
 // ─── AcquireModal ─────────────────────────────────────────────────────────────
 
+const ErrorMessage = styled.p`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['2']};
+	padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['4']};
+	background-color: ${({ theme }) => theme.colors.brickLight};
+	color: ${({ theme }) => theme.colors.brick};
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	border-radius: ${({ theme }) => theme.radii.md};
+	border-left: 3px solid ${({ theme }) => theme.colors.brick};
+	margin: 0;
+
+	&::before {
+		content: '⚠';
+		font-size: ${({ theme }) => theme.font.size.lg};
+		flex-shrink: 0;
+	}
+`
+
 interface AcquireModalProps {
-	card: PokemonCard | null
-	setId: string
-	onClose: () => void
-	onAcquired: () => void
+	readonly card: PokemonCard | null
+	readonly setId: string
+	readonly onClose: () => void
+	readonly onAcquired: () => void
 }
 
 function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
@@ -153,7 +173,7 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 				cardId: card.id,
 				setId,
 				acquiredDate: date,
-				pricePaid: price ? parseFloat(price) : null,
+				pricePaid: price ? Number.parseFloat(price) : null,
 				condition,
 			})
 			addToStore(acquired)
@@ -176,16 +196,9 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 			<form onSubmit={handleSubmit}>
 				<ModalBody>
 					{formError && (
-						<p
-							role="alert"
-							style={{
-								color: '#b91c1c',
-								fontSize: '14px',
-								margin: 0,
-							}}
-						>
+						<ErrorMessage role="alert">
 							{formError}
-						</p>
+						</ErrorMessage>
 					)}
 
 					<Field label="Date d'acquisition" htmlFor="acquire-date">

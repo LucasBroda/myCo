@@ -3,43 +3,72 @@ import { useEffect, useRef } from 'react'
 import styled, { keyframes } from 'styled-components'
 
 const fadeIn = keyframes`
-	from { opacity: 0; }
-	to { opacity: 1; }
+	from { 
+		opacity: 0; 
+		backdrop-filter: blur(0px);
+	}
+	to { 
+		opacity: 1; 
+		backdrop-filter: blur(4px);
+	}
 `
 
 const slideUp = keyframes`
-	from { opacity: 0; transform: translateY(16px) scale(0.98); }
-	to { opacity: 1; transform: translateY(0) scale(1); }
+	from { 
+		opacity: 0; 
+		transform: translateY(32px) scale(0.96); 
+	}
+	to { 
+		opacity: 1; 
+		transform: translateY(0) scale(1); 
+	}
 `
 
 const Backdrop = styled.div`
 	position: fixed;
 	inset: 0;
-	background-color: ${({ theme }) => theme.colors.overlay};
+	background: linear-gradient(
+		135deg,
+		rgba(28, 25, 23, 0.6) 0%,
+		rgba(28, 25, 23, 0.7) 100%
+	);
+	backdrop-filter: blur(4px);
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding: ${({ theme }) => theme.spacing['4']};
 	z-index: 100;
-	animation: ${fadeIn} ${({ theme }) => theme.transitions.fast};
+	animation: ${fadeIn} ${({ theme }) => theme.transitions.base};
 
 	@media (prefers-reduced-motion: reduce) {
 		animation: none;
+		backdrop-filter: none;
 	}
 `
 
 const Dialog = styled.div`
-	background-color: ${({ theme }) => theme.colors.surfaceElevated};
+	background: ${({ theme }) => theme.colors.surfaceElevated};
+	border: 1px solid ${({ theme }) => theme.colors.border};
 	border-radius: ${({ theme }) => theme.radii.xl};
-	box-shadow: ${({ theme }) => theme.shadows.lg};
+	box-shadow: 
+		0 20px 60px rgba(0, 0, 0, 0.15),
+		0 8px 24px rgba(0, 0, 0, 0.12),
+		0 0 0 1px rgba(217, 119, 6, 0.1);
 	width: 100%;
-	max-width: 480px;
+	max-width: 500px;
 	max-height: 90vh;
-	overflow-y: auto;
-	animation: ${slideUp} ${({ theme }) => theme.transitions.base};
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	animation: ${slideUp} 350ms cubic-bezier(0.16, 1, 0.3, 1);
 
 	@media (prefers-reduced-motion: reduce) {
 		animation: none;
+	}
+
+	@media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+		max-width: 100%;
+		border-radius: ${({ theme }) => theme.radii.lg};
 	}
 `
 
@@ -47,62 +76,146 @@ const ModalHeader = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: ${({ theme }) => theme.spacing['6']};
+	padding: ${({ theme }) => theme.spacing['6']} ${({ theme }) => theme.spacing['6']} 
+	         ${({ theme }) => theme.spacing['5']};
 	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+	background: linear-gradient(
+		to bottom,
+		${({ theme }) => theme.colors.surfaceElevated} 0%,
+		${({ theme }) => theme.colors.surface} 100%
+	);
+	position: relative;
+
+	&::after {
+		content: '';
+		position: absolute;
+		bottom: -1px;
+		left: ${({ theme }) => theme.spacing['6']};
+		right: ${({ theme }) => theme.spacing['6']};
+		height: 2px;
+		background: linear-gradient(
+			to right,
+			transparent 0%,
+			${({ theme }) => theme.colors.amber} 50%,
+			transparent 100%
+		);
+		opacity: 0.3;
+	}
 `
 
 const ModalTitle = styled.h2`
-	font-size: ${({ theme }) => theme.font.size.lg};
-	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	font-size: ${({ theme }) => theme.font.size.xl};
+	font-weight: ${({ theme }) => theme.font.weight.bold};
 	color: ${({ theme }) => theme.colors.textPrimary};
 	margin: 0;
+	letter-spacing: -0.02em;
+	line-height: 1.3;
 `
 
 const CloseButton = styled.button`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 32px;
-	height: 32px;
-	border: none;
+	width: 36px;
+	height: 36px;
+	border: 1px solid transparent;
 	background: none;
 	border-radius: ${({ theme }) => theme.radii.md};
 	color: ${({ theme }) => theme.colors.textSecondary};
 	cursor: pointer;
-	font-size: ${({ theme }) => theme.font.size.lg};
-	transition: background-color ${({ theme }) => theme.transitions.fast};
+	font-size: ${({ theme }) => theme.font.size.xl};
+	transition: all ${({ theme }) => theme.transitions.fast};
+	position: relative;
+
+	&::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: ${({ theme }) => theme.radii.md};
+		background: ${({ theme }) => theme.colors.amber};
+		opacity: 0;
+		transition: opacity ${({ theme }) => theme.transitions.fast};
+	}
 
 	&:hover {
-		background-color: ${({ theme }) => theme.colors.surface};
-		color: ${({ theme }) => theme.colors.textPrimary};
+		background-color: ${({ theme }) => theme.colors.amberLight};
+		color: ${({ theme }) => theme.colors.amber};
+		border-color: ${({ theme }) => theme.colors.amberBorder};
+		transform: scale(1.05);
+	}
+
+	&:active {
+		transform: scale(0.95);
 	}
 
 	&:focus-visible {
 		${focusRing}
+		outline-offset: 3px;
+	}
+
+	span {
+		position: relative;
+		z-index: 1;
 	}
 `
 
 export const ModalBody = styled.div`
-	padding: ${({ theme }) => theme.spacing['6']};
+	padding: ${({ theme }) => theme.spacing['8']} ${({ theme }) => theme.spacing['6']};
 	display: flex;
 	flex-direction: column;
-	gap: ${({ theme }) => theme.spacing['4']};
+	gap: ${({ theme }) => theme.spacing['5']};
+	overflow-y: auto;
+	flex: 1;
+
+	/* Scrollbar personnalisée */
+	&::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	&::-webkit-scrollbar-track {
+		background: ${({ theme }) => theme.colors.surface};
+		border-radius: ${({ theme }) => theme.radii.full};
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background: ${({ theme }) => theme.colors.border};
+		border-radius: ${({ theme }) => theme.radii.full};
+		
+		&:hover {
+			background: ${({ theme }) => theme.colors.borderStrong};
+		}
+	}
 `
 
 export const ModalFooter = styled.div`
 	display: flex;
 	justify-content: flex-end;
 	gap: ${({ theme }) => theme.spacing['3']};
-	padding: ${({ theme }) => theme.spacing['6']};
+	padding: ${({ theme }) => theme.spacing['5']} ${({ theme }) => theme.spacing['6']} 
+	         ${({ theme }) => theme.spacing['6']};
 	border-top: 1px solid ${({ theme }) => theme.colors.border};
+	background: linear-gradient(
+		to top,
+		${({ theme }) => theme.colors.surfaceElevated} 0%,
+		${({ theme }) => theme.colors.surface} 100%
+	);
+
+	@media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+		flex-direction: column-reverse;
+		gap: ${({ theme }) => theme.spacing['2']};
+
+		button {
+			width: 100%;
+		}
+	}
 `
 
 interface ModalProps {
-	isOpen: boolean
-	onClose: () => void
-	title: string
-	children: React.ReactNode
-	initialFocusRef?: React.RefObject<HTMLElement | null>
+	readonly isOpen: boolean
+	readonly onClose: () => void
+	readonly title: string
+	readonly children: React.ReactNode
+	readonly initialFocusRef?: React.RefObject<HTMLElement | null>
 }
 
 export function Modal({
@@ -120,10 +233,8 @@ export function Modal({
 			triggerRef.current = document.activeElement
 			const target = initialFocusRef?.current ?? closeButtonRef.current
 			target?.focus()
-		} else {
-			if (triggerRef.current instanceof HTMLElement) {
-				triggerRef.current.focus()
-			}
+		} else if (triggerRef.current instanceof HTMLElement) {
+			triggerRef.current.focus()
 		}
 	}, [isOpen, initialFocusRef])
 
@@ -148,7 +259,7 @@ export function Modal({
 						onClick={onClose}
 						aria-label="Fermer la fenêtre"
 					>
-						✕
+						<span>✕</span>
 					</CloseButton>
 				</ModalHeader>
 				{children}
