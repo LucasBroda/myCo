@@ -191,6 +191,61 @@ function PurchaseCalendar({ planned }: { planned: PlannedPurchase[] }) {
 
 // ─── RecentAcquisitionsList ───────────────────────────────────────────────────
 
+const SectionHeader = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+`
+
+const ToggleButton = styled.button`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['1']};
+	padding: ${({ theme }) => `${theme.spacing['1']} ${theme.spacing['2']}`};
+	background: none;
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.md};
+	font-size: ${({ theme }) => theme.font.size.sm};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	cursor: pointer;
+	font-family: inherit;
+	transition:
+		background-color ${({ theme }) => theme.transitions.fast},
+		color ${({ theme }) => theme.transitions.fast};
+
+	&:hover {
+		background-color: ${({ theme }) => theme.colors.surface};
+		color: ${({ theme }) => theme.colors.textPrimary};
+	}
+
+	&:focus-visible {
+		outline: 2px solid ${({ theme }) => theme.colors.focus};
+		outline-offset: 2px;
+	}
+`
+
+const AcqListWrapper = styled.div<{ $isCollapsed: boolean }>`
+	max-height: ${({ $isCollapsed }) => ($isCollapsed ? '0' : '500px')};
+	overflow-y: ${({ $isCollapsed }) => ($isCollapsed ? 'hidden' : 'auto')};
+	transition: max-height ${({ theme }) => theme.transitions.base};
+	scrollbar-width: thin;
+	scrollbar-color: ${({ theme }) => `${theme.colors.border} transparent`};
+
+	&::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: ${({ theme }) => theme.colors.border};
+		border-radius: ${({ theme }) => theme.radii.full};
+	}
+`
+
 const AcqList = styled.ul`
 	list-style: none;
 	margin: 0;
@@ -259,6 +314,7 @@ const PAGE_SIZE = 20
 
 function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
 	const [page, setPage] = useState(1)
+	const [isCollapsed, setIsCollapsed] = useState(false)
 	const visible = cards.slice(0, page * PAGE_SIZE)
 	const remaining = cards.length - visible.length
 
@@ -273,28 +329,40 @@ function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
 
 	return (
 		<Card>
-			<SectionTitle>Acquisitions récentes</SectionTitle>
-			<AcqList>
-				{visible.map(card => (
-					<AcqItem key={card.id}>
-						<AcqInfo>
-							<AcqCardId>{card.cardName}</AcqCardId>
-							<AcqMeta>
-								{card.setName} · {new Date(card.acquiredDate).toLocaleDateString('fr-FR')} ·{' '}
-								{card.condition}
-							</AcqMeta>
-						</AcqInfo>
-						<AcqPrice>
-							{card.pricePaid !== null ? formatEuros(card.pricePaid) : '—'}
-						</AcqPrice>
-					</AcqItem>
-				))}
-			</AcqList>
-			{remaining > 0 && (
-				<LoadMoreBtn type="button" onClick={() => setPage(p => p + 1)}>
-					Charger plus ({remaining} restante{remaining > 1 ? 's' : ''})
-				</LoadMoreBtn>
-			)}
+			<SectionHeader>
+				<SectionTitle>Acquisitions récentes</SectionTitle>
+				<ToggleButton
+					type="button"
+					onClick={() => setIsCollapsed(!isCollapsed)}
+					aria-expanded={!isCollapsed}
+					aria-controls="acquisitions-list"
+				>
+					{isCollapsed ? '▼ Afficher' : '▲ Masquer'}
+				</ToggleButton>
+			</SectionHeader>
+			<AcqListWrapper $isCollapsed={isCollapsed} id="acquisitions-list">
+				<AcqList>
+					{visible.map(card => (
+						<AcqItem key={card.id}>
+							<AcqInfo>
+								<AcqCardId>{card.cardName}</AcqCardId>
+								<AcqMeta>
+									{card.setName} · {new Date(card.acquiredDate).toLocaleDateString('fr-FR')} ·{' '}
+									{card.condition}
+								</AcqMeta>
+							</AcqInfo>
+							<AcqPrice>
+								{card.pricePaid !== null ? formatEuros(card.pricePaid) : '—'}
+							</AcqPrice>
+						</AcqItem>
+					))}
+				</AcqList>
+				{remaining > 0 && (
+					<LoadMoreBtn type="button" onClick={() => setPage(p => p + 1)}>
+						Charger plus ({remaining} restante{remaining > 1 ? 's' : ''})
+					</LoadMoreBtn>
+				)}
+			</AcqListWrapper>
 		</Card>
 	)
 }
