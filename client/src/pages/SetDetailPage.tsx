@@ -425,6 +425,15 @@ export default function SetDetailPage() {
 		return (plannedMap[cardId]?.length ?? 0) > 0
 	}
 
+	function getPlannedDate(cardId: string): string | undefined {
+		const planned = plannedMap[cardId]
+		if (!planned || planned.length === 0) return undefined
+		// Retourner la date du premier achat planifié (ou celui avec la date la plus proche)
+		return planned.sort((a, b) => 
+			new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime()
+		)[0].plannedDate
+	}
+
 	const ownedCount = cards.filter(c => isOwnedCard(c.id)).length
 
 	// Extract unique rarities from cards and sort by rarity order
@@ -455,6 +464,18 @@ export default function SetDetailPage() {
 	function handleCardClick(card: PokemonCard) {
 		if (isOwnedCard(card.id)) {
 			toast(`${card.name} est déjà dans votre collection`)
+			return
+		}
+		if (isPlannedCard(card.id)) {
+			const date = getPlannedDate(card.id)
+			if (date) {
+				const formattedDate = new Date(date).toLocaleDateString('fr-FR', {
+					day: 'numeric',
+					month: 'long',
+					year: 'numeric',
+				})
+				toast(`${card.name} est déjà planifiée pour le ${formattedDate}`)
+			}
 			return
 		}
 		setSelectedCard(card)
@@ -538,6 +559,7 @@ export default function SetDetailPage() {
 							card={card}
 							owned={isOwnedCard(card.id)}
 							planned={isPlannedCard(card.id)}
+							plannedDate={getPlannedDate(card.id)}
 							onClick={() => handleCardClick(card)}
 						/>
 					))}
