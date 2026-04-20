@@ -205,12 +205,12 @@ const Textarea = styled.textarea`
 
 interface AcquireModalProps {
 	readonly card: PokemonCard | null
-	readonly setId: string
+	readonly set: PokemonSet | null
 	readonly onClose: () => void
 	readonly onAcquired: () => void
 }
 
-function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
+function AcquireModal({ card, set, onClose, onAcquired }: AcquireModalProps) {
 	const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
 	const [price, setPrice] = useState('')
 	const [condition, setCondition] = useState<CardCondition>('NM')
@@ -230,9 +230,9 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 	const baseButtonText = isFutureDate ? 'Planifier cet achat' : 'Ajouter à la collection'
 	const submitButtonText = loading ? 'Ajout…' : baseButtonText
 
-	async function handleSubmit(e: React.FormEvent) {
+	async function handleSubmit(e: { preventDefault: () => void }) {
 		e.preventDefault()
-		if (!card) return
+		if (!card || !set) return
 		setFormError('')
 		setLoading(true)
 		
@@ -240,8 +240,8 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 			if (isFutureDate) {
 				// Créer un achat planifié
 				await profileService.addPlanned({
-					cardId: card.id,
-					setId,
+					cardName: card.name,
+					setName: set.name,
 					plannedDate: date,
 					budget: price ? Number.parseFloat(price) : null,
 					notes: notes || null,
@@ -250,8 +250,8 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 			} else {
 				// Ajouter à la collection immédiatement
 				const acquired = await collectionService.addCard({
-					cardId: card.id,
-					setId,
+					cardName: card.name,
+					setName: set.name,
 					acquiredDate: date,
 					pricePaid: price ? Number.parseFloat(price) : null,
 					condition,
@@ -358,7 +358,7 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SetDetailPage() {
-	const { setId } = useParams<{ setId: string }>()
+	const { setName } = useParams<{ setName: string }>()
 	const navigate = useNavigate()
 	const { toast } = useToast()
 
@@ -374,17 +374,17 @@ export default function SetDetailPage() {
 	const { acquiredMap, setCollection } = useCollectionStore()
 
 	async function loadData() {
-		if (!setId) return
+		if (!setName) return
 		setIsLoading(true)
 		setError(null)
 		try {
 			const [setData, collection, followedSets] = await Promise.all([
-				cardsService.getSet(setId),
+				cardsService.getSet(setName),
 				collectionService.getCollection(),
 				collectionService.getFollowedSets(),
 			])
 			setPokemonSet(setData.set)
-			setIsFollowed(followedSets.includes(setId))
+			setIsFollowed(followedSets.includes(setName))
 			// Sort cards numerically by number field
 			const sortedCards = [...setData.cards].sort((a, b) => {
 				// Extract numeric part from card numbers (e.g., "10", "TG01" -> 1, "SWSH001" -> 1)
@@ -407,7 +407,7 @@ export default function SetDetailPage() {
 	useEffect(() => {
 		loadData()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [setId])
+	}, [setName])
 
 	function isOwnedCard(cardId: string): boolean {
 		return (acquiredMap[cardId]?.length ?? 0) > 0
@@ -449,15 +449,15 @@ export default function SetDetailPage() {
 	}
 
 	async function handleToggleFollow() {
-		if (!setId || !pokemonSet) return
+		if (!setName || !pokemonSet) return
 		
 		try {
 			if (isFollowed) {
-				await collectionService.unfollowSet(setId)
+				await collectionService.unfollowSet(setName)
 				setIsFollowed(false)
 				toast(`Collection "${pokemonSet.name}" retirée de vos suivis`, 'success')
 			} else {
-				await collectionService.followSet(setId)
+				await collectionService.followSet(setName)
 				setIsFollowed(true)
 				toast(`Collection "${pokemonSet.name}" ajoutée à vos suivis`, 'success')
 			}
@@ -480,7 +480,7 @@ export default function SetDetailPage() {
 
 			<HeaderSection>
 				<PageHeader
-					title={pokemonSet?.name ?? setId ?? ''}
+					title={pokemonSet?.name ?? setName ?? ''}
 					id="set-detail-title"
 					subtitle={pokemonSet?.series}
 				/>
@@ -533,7 +533,7 @@ export default function SetDetailPage() {
 
 			<AcquireModal
 				card={selectedCard}
-				setId={setId ?? ''}
+				set={pokemonSet}
 				onClose={() => setSelectedCard(null)}
 				onAcquired={() => setSelectedCard(null)}
 			/>
