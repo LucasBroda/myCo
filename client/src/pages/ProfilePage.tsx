@@ -201,21 +201,18 @@ const SectionHeader = styled.div`
 const ToggleButton = styled.button`
 	display: flex;
 	align-items: center;
-	gap: ${({ theme }) => theme.spacing['1']};
-	padding: ${({ theme }) => `${theme.spacing['1']} ${theme.spacing['2']}`};
+	justify-content: center;
+	padding: ${({ theme }) => theme.spacing['2']};
 	background: none;
-	border: 1px solid ${({ theme }) => theme.colors.border};
+	border: none;
 	border-radius: ${({ theme }) => theme.radii.md};
-	font-size: ${({ theme }) => theme.font.size.sm};
+	font-size: ${({ theme }) => theme.font.size['2xl']};
 	color: ${({ theme }) => theme.colors.textSecondary};
 	cursor: pointer;
 	font-family: inherit;
-	transition:
-		background-color ${({ theme }) => theme.transitions.fast},
-		color ${({ theme }) => theme.transitions.fast};
+	transition: color ${({ theme }) => theme.transitions.fast};
 
 	&:hover {
-		background-color: ${({ theme }) => theme.colors.surface};
 		color: ${({ theme }) => theme.colors.textPrimary};
 	}
 
@@ -336,8 +333,9 @@ function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
 					onClick={() => setIsCollapsed(!isCollapsed)}
 					aria-expanded={!isCollapsed}
 					aria-controls="acquisitions-list"
+					aria-label={isCollapsed ? 'Afficher' : 'Masquer'}
 				>
-					{isCollapsed ? '▼ Afficher' : '▲ Masquer'}
+					{isCollapsed ? '⌄' : '⌃'}
 				</ToggleButton>
 			</SectionHeader>
 			<AcqListWrapper $isCollapsed={isCollapsed} id="acquisitions-list">
