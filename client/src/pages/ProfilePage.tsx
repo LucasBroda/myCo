@@ -67,7 +67,7 @@ const StatItem = styled.div`
 const StatValue = styled.span`
 	font-size: ${({ theme }) => theme.font.size['2xl']};
 	font-weight: ${({ theme }) => theme.font.weight.bold};
-	color: ${({ theme }) => theme.colors.textPrimary};
+	color: ${({ theme }) => theme.colors.amber};
 `
 
 const StatLabel = styled.span`
@@ -499,7 +499,7 @@ const AcqMeta = styled.span`
 const AcqPrice = styled.span`
 	font-size: ${({ theme }) => theme.font.size.sm};
 	font-weight: ${({ theme }) => theme.font.weight.semibold};
-	color: ${({ theme }) => theme.colors.textPrimary};
+	color: ${({ theme }) => theme.colors.amber};
 `
 
 const LoadMoreBtn = styled.button`
