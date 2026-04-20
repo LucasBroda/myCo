@@ -311,7 +311,7 @@ const PAGE_SIZE = 20
 
 function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
 	const [page, setPage] = useState(1)
-	const [isCollapsed, setIsCollapsed] = useState(false)
+	const [isCollapsed, setIsCollapsed] = useState(true)
 	const visible = cards.slice(0, page * PAGE_SIZE)
 	const remaining = cards.length - visible.length
 
