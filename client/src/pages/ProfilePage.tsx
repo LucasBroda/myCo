@@ -165,7 +165,7 @@ const PlannedList = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: ${({ theme }) => theme.spacing['3']};
-	max-height: 400px;
+	max-height: 280px;
 	overflow-y: auto;
 	scrollbar-width: thin;
 	scrollbar-color: ${({ theme }) => `${theme.colors.border} transparent`};
