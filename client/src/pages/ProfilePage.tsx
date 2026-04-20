@@ -227,6 +227,12 @@ const PlannedBudget = styled.span`
 	color: ${({ theme }) => theme.colors.amber};
 `
 
+const PlannedActions = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['3']};
+`
+
 const DeleteButton = styled.button`
 	display: flex;
 	align-items: center;
@@ -273,29 +279,6 @@ function TrashIcon() {
 	)
 }
 
-const AddPlannedButton = styled.button`
-	width: 100%;
-	padding: ${({ theme }) => theme.spacing['3']};
-	background: ${({ theme }) => theme.colors.amberLight};
-	border: 1px solid ${({ theme }) => theme.colors.amberBorder};
-	border-radius: ${({ theme }) => theme.radii.md};
-	color: ${({ theme }) => theme.colors.amber};
-	font-size: ${({ theme }) => theme.font.size.sm};
-	font-weight: ${({ theme }) => theme.font.weight.medium};
-	cursor: pointer;
-	font-family: inherit;
-	transition: all ${({ theme }) => theme.transitions.fast};
-
-	&:hover {
-		background-color: ${({ theme }) => theme.colors.amber};
-		color: ${({ theme }) => theme.colors.textInverse};
-	}
-
-	&:focus-visible {
-		outline: 2px solid ${({ theme }) => theme.colors.focus};
-		outline-offset: 2px;
-	}
-`
 
 const CalendarToggle = styled.button`
 	padding: ${({ theme }) => theme.spacing['2']} ${({ theme }) => theme.spacing['3']};
@@ -400,29 +383,24 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 								</PlannedMeta>
 								{item.notes && <PlannedMeta>{item.notes}</PlannedMeta>}
 							</PlannedInfo>
-							{item.budget !== null && (
-								<PlannedBudget>{formatEuros(item.budget)}</PlannedBudget>
-							)}
-							<DeleteButton
-								type="button"
-								onClick={() => handleDelete(item.id)}
-								disabled={deleting === item.id}
-								aria-label="Supprimer"
-								title="Supprimer cet achat planifié"
-							>
-								{deleting === item.id ? '⋯' : <TrashIcon />}
-							</DeleteButton>
+							<PlannedActions>
+								{item.budget !== null && (
+									<PlannedBudget>{formatEuros(item.budget)}</PlannedBudget>
+								)}
+								<DeleteButton
+									type="button"
+									onClick={() => handleDelete(item.id)}
+									disabled={deleting === item.id}
+									aria-label="Supprimer"
+									title="Supprimer cet achat planifié"
+								>
+									{deleting === item.id ? '⋯' : <TrashIcon />}
+								</DeleteButton>
+							</PlannedActions>
 						</PlannedItem>
 					))}
 				</PlannedList>
 			)}
-
-			<AddPlannedButton
-				type="button"
-				onClick={() => alert('Fonctionnalité à implémenter : ajouter un achat planifié')}
-			>
-				+ Planifier un achat
-			</AddPlannedButton>
 		</Card>
 	)
 }
