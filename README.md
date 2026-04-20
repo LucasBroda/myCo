@@ -15,31 +15,63 @@ myCo/
 
 ### 1️⃣ Prérequis
 
-- **Node.js** v18+
-- **PostgreSQL** v12+
+- **Node.js** v22.16=+
+- **PostgreSQL** v14.22=+
 - **npm** ou **yarn**
 
 ### 2️⃣ Configuration PostgreSQL
 
 ```bash
-# Se connecter à PostgreSQL
+# Permet de se connecter à la base de données PostgreSQL
 sudo -u postgres psql
 
-# Créer la base et l'utilisateur
+# Permet de créer la base et l'utilisateur correspondant, pensez bien sûr à remplacer my_user par votre nom d'utilisateur et votre mot de passe par un mot de passe sécurisé
 CREATE DATABASE myco;
-CREATE USER lucasb WITH PASSWORD 'votre_mot_de_passe';
-GRANT ALL PRIVILEGES ON DATABASE myco TO lucasb;
+CREATE USER my_user WITH PASSWORD 'votre_mot_de_passe';
+GRANT ALL PRIVILEGES ON DATABASE myco TO my_user;
 \q
 ```
 
 ### 3️⃣ Backend
 
+## Configurer les variables d'environnement
+
+Créez/modifiez le fichier `.env` à la racine du dossier `backend` :
+
+```bash
+# Base de données PostgreSQL (ajustez avec vos identifiants)
+DATABASE_URL=postgres://my_user:votre_mot_de_passe@localhost:5432/myco
+
+# Redis (optionnel pour le cache)
+REDIS_URL=redis://localhost:6379
+
+# Secrets JWT (NE PAS MODIFIER ces valeurs générées)
+ACCESS_TOKEN_SECRET=<généré_automatiquement>
+REFRESH_TOKEN_SECRET=<généré_automatiquement>
+
+# API Pokemon TCG (optionnelle)
+POKEMON_TCG_API_KEY=votre_cle_api_pokemon_tcg
+
+# APIs tierces (optionnelles)
+CARDMARKET_APP_TOKEN=
+EBAY_APP_ID=
+
+# Configuration serveur
+PORT=5000
+NODE_ENV=development
+```
+
+**⚠️ Important** :
+- Remplacez `votre_mot_de_passe` par le mot de passe PostgreSQL que vous avez défini
+- Ne committez **jamais** le fichier `.env` dans Git
+- Les secrets `ACCESS_TOKEN_SECRET` et `REFRESH_TOKEN_SECRET` doivent être uniques et longs (64+ caractères -> utiliser cette commande -> openssl rand -base64 64)
+
+
 ```bash
 cd backend
 npm install
-# Configurer le fichier .env (voir backend/.env.example ou client/README.md)
-npm run migrate      # Créer les tables
-npm run dev          # Démarrer le serveur (port 5000)
+npm run migrate      # Permet de créer les tables de la base de données
+npm run dev          # Démarre le serveur back-end(port 5000)
 ```
 
 ### 4️⃣ Client
@@ -47,7 +79,7 @@ npm run dev          # Démarrer le serveur (port 5000)
 ```bash
 cd client
 npm install
-npm run start        # Démarrer l'interface (port 3000)
+npm run dev        # Démarre le front de l'application (port 3000)
 ```
 
 ### 5️⃣ Créer un compte
@@ -55,16 +87,6 @@ npm run start        # Démarrer l'interface (port 3000)
 - Ouvrir `http://localhost:3000/register`
 - Renseigner email + mot de passe (8 caractères min)
 
----
-
-## 📖 Documentation complète
-
-👉 **Consultez le [README détaillé](client/README.md)** pour :
-- Configuration PostgreSQL détaillée
-- Variables d'environnement
-- Génération des secrets JWT
-- Scripts disponibles
-- Dépannage
 
 ---
 
@@ -72,34 +94,6 @@ npm run start        # Démarrer l'interface (port 3000)
 
 **Backend :** Node.js, Express, TypeScript, PostgreSQL, Redis, JWT  
 **Frontend :** React 19, TypeScript, Vite, Styled Components, Zustand
-
----
-
-## 📝 Scripts utiles
-
-**Backend :**
-```bash
-npm run dev        # Développement
-npm run migrate    # Migrations DB
-npm run build      # Build production
-```
-
-**Client :**
-```bash
-npm run start      # Développement
-npm run build      # Build production
-npm run lint       # Vérification code
-```
-
----
-
-## ⚠️ Problèmes courants
-
-| Erreur | Solution |
-|--------|----------|
-| `password authentication failed` | Vérifier `DATABASE_URL` dans `backend/.env` |
-| `relation "users" does not exist` | Exécuter `npm run migrate` dans `backend/` |
-| `ESLint Invalid Options` | Désactivé dans Vite, utiliser `npm run lint` |
 
 ---
 
