@@ -3,7 +3,7 @@ import { PlannedPurchase } from "../../types/models";
 
 export async function getPlanned(userId: string): Promise<PlannedPurchase[]> {
   const result = await db.query(
-    `SELECT id, user_id, card_id, set_id, planned_date, budget, notes, created_at
+    `SELECT id, user_id, card_id, set_id, card_name, set_name, planned_date, budget, notes, created_at
      FROM planned_purchases WHERE user_id = $1
      ORDER BY planned_date ASC`,
     [userId],
@@ -13,6 +13,8 @@ export async function getPlanned(userId: string): Promise<PlannedPurchase[]> {
     userId: row.user_id as string,
     cardId: row.card_id as string,
     setId: row.set_id as string,
+    cardName: row.card_name as string,
+    setName: row.set_name as string,
     plannedDate: row.planned_date as string,
     budget: row.budget as number | null,
     notes: row.notes as string | null,
@@ -22,17 +24,17 @@ export async function getPlanned(userId: string): Promise<PlannedPurchase[]> {
 
 export async function addPlanned(
   userId: string,
-  cardId: string,
-  setId: string,
+  cardName: string,
+  setName: string,
   plannedDate: string,
   budget: number | null,
   notes: string | null,
 ): Promise<PlannedPurchase> {
   const result = await db.query(
-    `INSERT INTO planned_purchases (user_id, card_id, set_id, planned_date, budget, notes)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING id, user_id, card_id, set_id, planned_date, budget, notes, created_at`,
-    [userId, cardId, setId, plannedDate, budget, notes],
+    `INSERT INTO planned_purchases (user_id, card_id, set_id, card_name, set_name, planned_date, budget, notes)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING id, user_id, card_id, set_id, card_name, set_name, planned_date, budget, notes, created_at`,
+    [userId, '', '', cardName, setName, plannedDate, budget, notes],
   );
   const row = result.rows[0];
   return {
@@ -40,6 +42,8 @@ export async function addPlanned(
     userId: row.user_id as string,
     cardId: row.card_id as string,
     setId: row.set_id as string,
+    cardName: row.card_name as string,
+    setName: row.set_name as string,
     plannedDate: row.planned_date as string,
     budget: row.budget as number | null,
     notes: row.notes as string | null,

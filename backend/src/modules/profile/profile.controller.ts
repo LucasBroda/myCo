@@ -13,25 +13,25 @@ export async function addPlannedHandler(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const { cardId, setId, plannedDate, budget, notes } = req.body as {
-    cardId?: string;
-    setId?: string;
+  const { cardName, setName, plannedDate, budget, notes } = req.body as {
+    cardName?: string;
+    setName?: string;
     plannedDate?: string;
     budget?: number | null;
     notes?: string | null;
   };
 
-  if (!cardId || !setId || !plannedDate) {
+  if (!cardName || !setName || !plannedDate) {
     res
       .status(400)
-      .json({ error: "cardId, setId and plannedDate are required" });
+      .json({ error: "cardName, setName and plannedDate are required" });
     return;
   }
 
   const planned = await addPlanned(
     req.user!.id,
-    cardId,
-    setId,
+    cardName,
+    setName,
     plannedDate,
     budget ?? null,
     notes ?? null,
