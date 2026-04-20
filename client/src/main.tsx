@@ -6,7 +6,8 @@ import AppLayout from '@layout/AppLayout'
 import AuthLayout from '@layout/AuthLayout'
 import RootLayout, { ProtectedRoute, PublicOnlyRoute } from '@layout/RootLayout'
 
-import CollectionsPage from '@pages/CollectionsPage'
+import AllCollectionsPage from '@pages/AllCollectionsPage'
+import MyCollectionsPage from '@pages/MyCollectionsPage'
 import LoginPage from '@pages/LoginPage'
 import MarketPage from '@pages/MarketPage'
 import NotFoundPage from '@pages/NotFoundPage'
@@ -18,7 +19,7 @@ const router = createBrowserRouter([
 	{
 		element: <RootLayout />,
 		children: [
-			{ index: true, element: <Navigate to="/collections" replace /> },
+			{ index: true, element: <Navigate to="/my-collections" replace /> },
 
 			{
 				element: <PublicOnlyRoute />,
@@ -39,7 +40,9 @@ const router = createBrowserRouter([
 					{
 						element: <AppLayout />,
 						children: [
-							{ path: '/collections', element: <CollectionsPage /> },
+							{ path: '/my-collections', element: <MyCollectionsPage /> },
+							{ path: '/all-collections', element: <AllCollectionsPage /> },
+							{ path: '/collections', element: <Navigate to="/my-collections" replace /> },
 							{ path: '/collections/:setId', element: <SetDetailPage /> },
 							{ path: '/profile', element: <ProfilePage /> },
 							{ path: '/market', element: <MarketPage /> },

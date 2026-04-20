@@ -1,0 +1,93 @@
+import type { PokemonSet } from '@/types/models'
+import { EmptyState } from '@components/ui/EmptyState'
+import { ErrorState } from '@components/ui/ErrorState'
+import { Spinner } from '@components/ui/Spinner'
+import { PageHeader } from '@components/layout/PageHeader'
+import { SetCard } from '@components/pokemon/SetCard'
+import { collectionService } from '@services/collectionService'
+import { cardsService } from '@services/cardsService'
+import { useCollectionStore } from '@store/collectionStore'
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router'
+import styled from 'styled-components'
+
+const Grid = styled.div`
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	gap: ${({ theme }) => theme.spacing['4']};
+`
+
+export default function MyCollectionsPage() {
+	const [sets, setSets] = useState<PokemonSet[]>([])
+	const [isLoading, setIsLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
+	const { setCollection, acquiredMap } = useCollectionStore()
+	const navigate = useNavigate()
+
+	async function loadData() {
+		setIsLoading(true)
+		setError(null)
+		try {
+			const [followedSetIds, collection, allSets] = await Promise.all([
+				collectionService.getFollowedSets(),
+				collectionService.getCollection(),
+				cardsService.getSets(),
+			])
+			setCollection(collection)
+			
+			// Filter only followed sets
+			const followedSets = allSets.filter(set => followedSetIds.includes(set.id))
+			setSets(followedSets)
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Erreur de chargement')
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	useEffect(() => {
+		loadData()
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [])
+
+	function getOwnedCount(setId: string): number {
+		return Object.values(acquiredMap)
+			.flat()
+			.filter(c => c.setId === setId).length
+	}
+
+	if (isLoading) return <Spinner center label="Chargement de vos collections…" />
+	if (error) return <ErrorState message={error} onRetry={loadData} />
+	if (sets.length === 0) {
+		return (
+			<section aria-labelledby="my-collections-title">
+				<PageHeader
+					title="Mes Collections"
+					id="my-collections-title"
+					subtitle="Aucune collection suivie"
+				/>
+				<EmptyState message="Vous ne suivez aucune collection. Allez dans 'Toutes les collections' pour en ajouter." />
+			</section>
+		)
+	}
+
+	return (
+		<section aria-labelledby="my-collections-title">
+			<PageHeader
+				title="Mes Collections"
+				id="my-collections-title"
+				subtitle={`${sets.length} collection${sets.length > 1 ? 's' : ''} suivie${sets.length > 1 ? 's' : ''}`}
+			/>
+			<Grid>
+				{sets.map(set => (
+					<SetCard
+						key={set.id}
+						set={set}
+						ownedCount={getOwnedCount(set.id)}
+						onClick={() => navigate(`/collections/${set.id}`)}
+					/>
+				))}
+			</Grid>
+		</section>
+	)
+}

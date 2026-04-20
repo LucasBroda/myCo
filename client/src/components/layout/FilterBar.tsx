@@ -66,6 +66,15 @@ export function FilterBar<T extends string>({
 	onChange,
 	label,
 }: FilterBarProps<T>) {
+	function handleClick(optValue: T) {
+		// Si on clique sur le filtre déjà actif, retourner au premier filtre (généralement "all")
+		if (value === optValue && options.length > 0) {
+			onChange(options[0].value)
+		} else {
+			onChange(optValue)
+		}
+	}
+
 	return (
 		<Bar role="group" aria-label={label}>
 			{options.map(opt => (
@@ -73,7 +82,7 @@ export function FilterBar<T extends string>({
 					key={opt.value}
 					type="button"
 					$active={value === opt.value}
-					onClick={() => onChange(opt.value)}
+					onClick={() => handleClick(opt.value)}
 					aria-pressed={value === opt.value}
 				>
 					{opt.label}

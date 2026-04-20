@@ -2,10 +2,13 @@ import { Request, Response } from "express";
 import { CardCondition } from "../../types/models";
 import {
   addCard,
+  followSet,
   getCollection,
   getCollectionWithDetails,
+  getFollowedSets,
   getStats,
   removeCard,
+  unfollowSet,
 } from "./collection.service";
 
 const VALID_CONDITIONS: CardCondition[] = [
@@ -87,4 +90,35 @@ export async function getStatsHandler(
 ): Promise<void> {
   const stats = await getStats(req.user!.id);
   res.json({ data: stats });
+}
+
+export async function followSetHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { setId } = req.body as { setId?: string };
+
+  if (!setId) {
+    res.status(400).json({ error: "setId is required" });
+    return;
+  }
+
+  const result = await followSet(req.user!.id, setId);
+  res.status(201).json({ data: result });
+}
+
+export async function unfollowSetHandler(
+  req: Request<{ setId: string }>,
+  res: Response,
+): Promise<void> {
+  await unfollowSet(req.user!.id, req.params.setId);
+  res.json({ message: "Set unfollowed" });
+}
+
+export async function getFollowedSetsHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const setIds = await getFollowedSets(req.user!.id);
+  res.json({ data: setIds });
 }
