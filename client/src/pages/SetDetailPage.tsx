@@ -358,7 +358,7 @@ function AcquireModal({ card, set, onClose, onAcquired }: AcquireModalProps) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SetDetailPage() {
-	const { setName } = useParams<{ setName: string }>()
+	const { setId } = useParams<{ setId: string }>()
 	const navigate = useNavigate()
 	const { toast } = useToast()
 
@@ -374,17 +374,17 @@ export default function SetDetailPage() {
 	const { acquiredMap, setCollection } = useCollectionStore()
 
 	async function loadData() {
-		if (!setName) return
+		if (!setId) return
 		setIsLoading(true)
 		setError(null)
 		try {
 			const [setData, collection, followedSets] = await Promise.all([
-				cardsService.getSet(setName),
+				cardsService.getSet(setId),
 				collectionService.getCollection(),
 				collectionService.getFollowedSets(),
 			])
 			setPokemonSet(setData.set)
-			setIsFollowed(followedSets.includes(setName))
+			setIsFollowed(followedSets.includes(setId))
 			// Sort cards numerically by number field
 			const sortedCards = [...setData.cards].sort((a, b) => {
 				// Extract numeric part from card numbers (e.g., "10", "TG01" -> 1, "SWSH001" -> 1)
@@ -407,7 +407,7 @@ export default function SetDetailPage() {
 	useEffect(() => {
 		loadData()
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [setName])
+	}, [setId])
 
 	function isOwnedCard(cardId: string): boolean {
 		return (acquiredMap[cardId]?.length ?? 0) > 0
@@ -449,15 +449,15 @@ export default function SetDetailPage() {
 	}
 
 	async function handleToggleFollow() {
-		if (!setName || !pokemonSet) return
+		if (!setId || !pokemonSet) return
 		
 		try {
 			if (isFollowed) {
-				await collectionService.unfollowSet(setName)
+				await collectionService.unfollowSet(setId)
 				setIsFollowed(false)
 				toast(`Collection "${pokemonSet.name}" retirée de vos suivis`, 'success')
 			} else {
-				await collectionService.followSet(setName)
+				await collectionService.followSet(setId)
 				setIsFollowed(true)
 				toast(`Collection "${pokemonSet.name}" ajoutée à vos suivis`, 'success')
 			}
@@ -480,7 +480,7 @@ export default function SetDetailPage() {
 
 			<HeaderSection>
 				<PageHeader
-					title={pokemonSet?.name ?? setName ?? ''}
+					title={pokemonSet?.name ?? setId ?? ''}
 					id="set-detail-title"
 					subtitle={pokemonSet?.series}
 				/>
