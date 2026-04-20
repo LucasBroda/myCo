@@ -321,13 +321,11 @@ const CardPreview = styled.div`
 	flex: 1;
 	display: flex;
 	flex-direction: column;
+	align-items: center;
 	gap: ${({ theme }) => theme.spacing['3']};
 	padding: ${({ theme }) => theme.spacing['4']};
-	background-color: ${({ theme }) => theme.colors.surface};
-	border: 1px solid ${({ theme }) => theme.colors.border};
-	border-radius: ${({ theme }) => theme.radii.md};
-	min-width: 200px;
-	max-width: 280px;
+	min-width: 280px;
+	max-width: 400px;
 `
 
 const CardPreviewImage = styled.img`
