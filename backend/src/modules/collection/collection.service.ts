@@ -99,6 +99,47 @@ export async function removeCard(userId: string, id: string): Promise<void> {
   }
 }
 
+export async function followSet(
+  userId: string,
+  setId: string,
+): Promise<{ setId: string; followedAt: string }> {
+  const result = await db.query(
+    `INSERT INTO followed_sets (user_id, set_id)
+     VALUES ($1, $2)
+     ON CONFLICT (user_id, set_id) DO NOTHING
+     RETURNING set_id, followed_at`,
+    [userId, setId],
+  );
+  const row = result.rows[0];
+  return {
+    setId: row.set_id as string,
+    followedAt: row.followed_at as string,
+  };
+}
+
+export async function unfollowSet(
+  userId: string,
+  setId: string,
+): Promise<void> {
+  const result = await db.query(
+    "DELETE FROM followed_sets WHERE user_id = $1 AND set_id = $2",
+    [userId, setId],
+  );
+  if (result.rowCount === 0) {
+    const err = new Error("Set not followed") as Error & { status: number };
+    err.status = 404;
+    throw err;
+  }
+}
+
+export async function getFollowedSets(userId: string): Promise<string[]> {
+  const result = await db.query(
+    "SELECT set_id FROM followed_sets WHERE user_id = $1 ORDER BY followed_at DESC",
+    [userId],
+  );
+  return result.rows.map((row) => row.set_id as string);
+}
+
 export async function getStats(userId: string): Promise<CollectionStats> {
   const totalsResult = await db.query(
     `SELECT
