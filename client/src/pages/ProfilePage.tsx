@@ -372,8 +372,9 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 						<PlannedItem key={item.id}>
 							<PlannedInfo>
 								<PlannedCardName>
-									{item.setId} - Carte {item.cardId.split('-').pop()}
+									{item.cardName}
 								</PlannedCardName>
+								<PlannedMeta>{item.setName}</PlannedMeta>
 								<PlannedMeta>
 									{new Date(item.plannedDate).toLocaleDateString('fr-FR', {
 										day: 'numeric',
