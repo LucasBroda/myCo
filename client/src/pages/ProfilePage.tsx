@@ -7,6 +7,7 @@ import { PageHeader } from '@components/layout/PageHeader'
 import { SectionTitle } from '@components/layout/SectionTitle'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
+import { useToast } from '@hooks/useToast'
 import { useEffect, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
@@ -81,7 +82,7 @@ function formatEuros(value: number) {
 	}).format(value)
 }
 
-function CollectionValueCard({ stats }: { stats: CollectionStats }) {
+function CollectionValueCard({ stats }: { readonly stats: CollectionStats }) {
 	return (
 		<Card>
 			<SectionTitle>Résumé de la collection</SectionTitle>
@@ -105,7 +106,7 @@ function CollectionValueCard({ stats }: { stats: CollectionStats }) {
 
 // ─── SpendingChart ────────────────────────────────────────────────────────────
 
-function SpendingChart({ stats }: { stats: CollectionStats }) {
+function SpendingChart({ stats }: { readonly stats: CollectionStats }) {
 	if (stats.byMonth.length === 0) {
 		return (
 			<Card>
@@ -159,15 +160,193 @@ function SpendingChart({ stats }: { stats: CollectionStats }) {
 
 // ─── PurchaseCalendar ─────────────────────────────────────────────────────────
 
-function PurchaseCalendar({ planned }: { planned: PlannedPurchase[] }) {
+const PlannedList = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['3']};
+	max-height: 400px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: ${({ theme }) => `${theme.colors.border} transparent`};
+
+	&::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: ${({ theme }) => theme.colors.border};
+		border-radius: ${({ theme }) => theme.radii.full};
+	}
+`
+
+const PlannedItem = styled.div`
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: ${({ theme }) => theme.spacing['3']};
+	padding: ${({ theme }) => theme.spacing['3']};
+	background-color: ${({ theme }) => theme.colors.surface};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.md};
+	transition: border-color ${({ theme }) => theme.transitions.fast};
+
+	&:hover {
+		border-color: ${({ theme }) => theme.colors.borderStrong};
+	}
+`
+
+const PlannedInfo = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['1']};
+	flex: 1;
+	min-width: 0;
+`
+
+const PlannedCardName = styled.span`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.textPrimary};
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+`
+
+const PlannedMeta = styled.span`
+	font-size: ${({ theme }) => theme.font.size.xs};
+	color: ${({ theme }) => theme.colors.textSecondary};
+`
+
+const PlannedBudget = styled.span`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	color: ${({ theme }) => theme.colors.amber};
+`
+
+const DeleteButton = styled.button`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	background: none;
+	border: 1px solid transparent;
+	border-radius: ${({ theme }) => theme.radii.md};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	cursor: pointer;
+	font-size: ${({ theme }) => theme.font.size.base};
+	transition: all ${({ theme }) => theme.transitions.fast};
+	flex-shrink: 0;
+
+	&:hover {
+		background-color: ${({ theme }) => theme.colors.brickLight};
+		border-color: ${({ theme }) => theme.colors.brickBorder};
+		color: ${({ theme }) => theme.colors.brick};
+	}
+
+	&:focus-visible {
+		outline: 2px solid ${({ theme }) => theme.colors.focus};
+		outline-offset: 2px;
+	}
+`
+
+const AddPlannedButton = styled.button`
+	width: 100%;
+	padding: ${({ theme }) => theme.spacing['3']};
+	background: ${({ theme }) => theme.colors.amberLight};
+	border: 1px solid ${({ theme }) => theme.colors.amberBorder};
+	border-radius: ${({ theme }) => theme.radii.md};
+	color: ${({ theme }) => theme.colors.amber};
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	cursor: pointer;
+	font-family: inherit;
+	transition: all ${({ theme }) => theme.transitions.fast};
+
+	&:hover {
+		background-color: ${({ theme }) => theme.colors.amber};
+		color: ${({ theme }) => theme.colors.textInverse};
+	}
+
+	&:focus-visible {
+		outline: 2px solid ${({ theme }) => theme.colors.focus};
+		outline-offset: 2px;
+	}
+`
+
+const CalendarToggle = styled.button`
+	padding: ${({ theme }) => theme.spacing['2']} ${({ theme }) => theme.spacing['3']};
+	background: none;
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.md};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	font-size: ${({ theme }) => theme.font.size.xs};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	cursor: pointer;
+	font-family: inherit;
+	transition: all ${({ theme }) => theme.transitions.fast};
+	margin-bottom: ${({ theme }) => theme.spacing['3']};
+
+	&:hover {
+		background-color: ${({ theme }) => theme.colors.surface};
+		border-color: ${({ theme }) => theme.colors.borderStrong};
+	}
+
+	&:focus-visible {
+		outline: 2px solid ${({ theme }) => theme.colors.focus};
+		outline-offset: 2px;
+	}
+`
+
+interface PurchaseCalendarProps {
+	readonly planned: PlannedPurchase[]
+	readonly onDelete: (id: string) => Promise<void>
+	readonly onRefresh: () => void
+}
+
+function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProps) {
+	const [showCalendar, setShowCalendar] = useState(false)
+	const [deleting, setDeleting] = useState<string | null>(null)
+	const { success, error: showError } = useToast()
 	const plannedDates = planned.map(p => new Date(p.plannedDate))
+
+	async function handleDelete(id: string) {
+		if (!confirm('Supprimer cet achat planifié ?')) return
+		setDeleting(id)
+		try {
+			await onDelete(id)
+			success('Achat planifié supprimé')
+			onRefresh()
+		} catch (err) {
+			showError(err instanceof Error ? err.message : 'Erreur lors de la suppression')
+		} finally {
+			setDeleting(null)
+		}
+	}
 
 	return (
 		<Card>
-			<SectionTitle>Achats planifiés</SectionTitle>
-			{planned.length === 0 ? (
+			<SectionTitle>Achats planifiés ({planned.length})</SectionTitle>
+			
+			{planned.length > 0 && (
+				<CalendarToggle
+					type="button"
+					onClick={() => setShowCalendar(!showCalendar)}
+				>
+					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
+				</CalendarToggle>
+			)}
+
+			{planned.length === 0 && (
 				<EmptyState message="Aucun achat planifié." icon="📅" />
-			) : (
+			)}
+
+			{planned.length > 0 && showCalendar && (
 				<>
 					<DayPickerOverride />
 					<DayPicker
@@ -185,6 +364,47 @@ function PurchaseCalendar({ planned }: { planned: PlannedPurchase[] }) {
 					/>
 				</>
 			)}
+
+			{planned.length > 0 && !showCalendar && (
+				<PlannedList>
+					{planned.map(item => (
+						<PlannedItem key={item.id}>
+							<PlannedInfo>
+								<PlannedCardName>
+									{item.setId} - Carte {item.cardId.split('-').pop()}
+								</PlannedCardName>
+								<PlannedMeta>
+									{new Date(item.plannedDate).toLocaleDateString('fr-FR', {
+										day: 'numeric',
+										month: 'long',
+										year: 'numeric',
+									})}
+								</PlannedMeta>
+								{item.notes && <PlannedMeta>{item.notes}</PlannedMeta>}
+							</PlannedInfo>
+							{item.budget !== null && (
+								<PlannedBudget>{formatEuros(item.budget)}</PlannedBudget>
+							)}
+							<DeleteButton
+								type="button"
+								onClick={() => handleDelete(item.id)}
+								disabled={deleting === item.id}
+								aria-label="Supprimer"
+								title="Supprimer cet achat planifié"
+							>
+								{deleting === item.id ? '⋯' : '🗑'}
+							</DeleteButton>
+						</PlannedItem>
+					))}
+				</PlannedList>
+			)}
+
+			<AddPlannedButton
+				type="button"
+				onClick={() => alert('Fonctionnalité à implémenter : ajouter un achat planifié')}
+			>
+				+ Planifier un achat
+			</AddPlannedButton>
 		</Card>
 	)
 }
@@ -309,7 +529,7 @@ const LoadMoreBtn = styled.button`
 
 const PAGE_SIZE = 20
 
-function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
+function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 	const [page, setPage] = useState(1)
 	const [isCollapsed, setIsCollapsed] = useState(true)
 	const visible = cards.slice(0, page * PAGE_SIZE)
@@ -350,7 +570,7 @@ function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
 								</AcqMeta>
 							</AcqInfo>
 							<AcqPrice>
-								{card.pricePaid !== null ? formatEuros(card.pricePaid) : '—'}
+								{card.pricePaid === null ? '—' : formatEuros(card.pricePaid)}
 							</AcqPrice>
 						</AcqItem>
 					))}
@@ -415,7 +635,11 @@ export default function ProfilePage() {
 					<CollectionValueCard stats={stats} />
 				</FullWidth>
 				<SpendingChart stats={stats} />
-				<PurchaseCalendar planned={planned} />
+				<PurchaseCalendar 
+					planned={planned} 
+					onDelete={profileService.deletePlanned}
+					onRefresh={loadData}
+				/>
 				<FullWidth>
 					<RecentAcquisitionsList cards={acquisitions} />
 				</FullWidth>

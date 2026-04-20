@@ -12,6 +12,7 @@ import { CardThumbnail } from '@components/pokemon/CardThumbnail'
 import { ConditionSelect } from '@components/pokemon/ConditionSelect'
 import { collectionService } from '@services/collectionService'
 import { cardsService } from '@services/cardsService'
+import { profileService } from '@services/profileService'
 import { useCollectionStore } from '@store/collectionStore'
 import { useToast } from '@hooks/useToast'
 import { useEffect, useRef, useState } from 'react'
@@ -146,6 +147,62 @@ const ErrorMessage = styled.p`
 	}
 `
 
+const InfoMessage = styled.p`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['2']};
+	padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['4']};
+	background-color: ${({ theme }) => theme.colors.amberLight};
+	color: ${({ theme }) => theme.colors.amber};
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	border-radius: ${({ theme }) => theme.radii.md};
+	border-left: 3px solid ${({ theme }) => theme.colors.amber};
+	margin: 0;
+
+	&::before {
+		content: '📅';
+		font-size: ${({ theme }) => theme.font.size.lg};
+		flex-shrink: 0;
+	}
+`
+
+const Textarea = styled.textarea`
+	width: 100%;
+	min-height: 80px;
+	padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['4']};
+	border-radius: ${({ theme }) => theme.radii.md};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	background-color: ${({ theme }) => theme.colors.surfaceElevated};
+	color: ${({ theme }) => theme.colors.textPrimary};
+	font-family: inherit;
+	font-size: ${({ theme }) => theme.font.size.base};
+	resize: vertical;
+	transition:
+		border-color ${({ theme }) => theme.transitions.fast},
+		box-shadow ${({ theme }) => theme.transitions.fast};
+
+	&::placeholder {
+		color: ${({ theme }) => theme.colors.textMuted};
+	}
+
+	&:hover:not(:disabled) {
+		border-color: ${({ theme }) => theme.colors.borderStrong};
+	}
+
+	&:focus {
+		outline: none;
+		border-color: ${({ theme }) => theme.colors.amber};
+		box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.amberLight};
+	}
+
+	&:disabled {
+		background-color: ${({ theme }) => theme.colors.surface};
+		color: ${({ theme }) => theme.colors.disabledText};
+		cursor: not-allowed;
+	}
+`
+
 interface AcquireModalProps {
 	readonly card: PokemonCard | null
 	readonly setId: string
@@ -157,27 +214,51 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 	const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
 	const [price, setPrice] = useState('')
 	const [condition, setCondition] = useState<CardCondition>('NM')
+	const [notes, setNotes] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [formError, setFormError] = useState('')
 	const { addCard: addToStore } = useCollectionStore()
 	const { success } = useToast()
 	const dateInputRef = useRef<HTMLInputElement>(null)
 
+	// Détecte si la date sélectionnée est dans le futur
+	const isFutureDate = new Date(date) > new Date()
+	
+	const actionText = isFutureDate ? 'Planifier' : 'Acquérir'
+	const modalTitle = card ? `${actionText} : ${card.name}` : ''
+	
+	const baseButtonText = isFutureDate ? 'Planifier cet achat' : 'Ajouter à la collection'
+	const submitButtonText = loading ? 'Ajout…' : baseButtonText
+
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
 		if (!card) return
 		setFormError('')
 		setLoading(true)
+		
 		try {
-			const acquired = await collectionService.addCard({
-				cardId: card.id,
-				setId,
-				acquiredDate: date,
-				pricePaid: price ? Number.parseFloat(price) : null,
-				condition,
-			})
-			addToStore(acquired)
-			success(`${card.name} ajoutée à votre collection`)
+			if (isFutureDate) {
+				// Créer un achat planifié
+				await profileService.addPlanned({
+					cardId: card.id,
+					setId,
+					plannedDate: date,
+					budget: price ? Number.parseFloat(price) : null,
+					notes: notes || null,
+				})
+				success(`${card.name} ajoutée aux achats planifiés`)
+			} else {
+				// Ajouter à la collection immédiatement
+				const acquired = await collectionService.addCard({
+					cardId: card.id,
+					setId,
+					acquiredDate: date,
+					pricePaid: price ? Number.parseFloat(price) : null,
+					condition,
+				})
+				addToStore(acquired)
+				success(`${card.name} ajoutée à votre collection`)
+			}
 			onAcquired()
 		} catch (err) {
 			setFormError(err instanceof Error ? err.message : "Erreur lors de l'ajout")
@@ -190,7 +271,7 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 		<Modal
 			isOpen={!!card}
 			onClose={onClose}
-			title={card ? `Acquérir : ${card.name}` : ''}
+			title={modalTitle}
 			initialFocusRef={dateInputRef}
 		>
 			<form onSubmit={handleSubmit}>
@@ -201,7 +282,16 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 						</ErrorMessage>
 					)}
 
-					<Field label="Date d'acquisition" htmlFor="acquire-date">
+					{isFutureDate && (
+						<InfoMessage>
+							Date future détectée : cette carte sera ajoutée à vos achats planifiés
+						</InfoMessage>
+					)}
+
+					<Field 
+						label={isFutureDate ? "Date d'achat prévue" : "Date d'acquisition"} 
+						htmlFor="acquire-date"
+					>
 						<Input
 							ref={dateInputRef}
 							id="acquire-date"
@@ -213,7 +303,7 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 					</Field>
 
 					<Field
-						label="Prix payé (optionnel)"
+						label={isFutureDate ? "Budget prévu (optionnel)" : "Prix payé (optionnel)"}
 						htmlFor="acquire-price"
 						hint="En euros"
 					>
@@ -228,20 +318,36 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 						/>
 					</Field>
 
-					<Field label="État de la carte" htmlFor="acquire-condition">
-						<ConditionSelect
-							id="acquire-condition"
-							value={condition}
-							onChange={setCondition}
-						/>
-					</Field>
+					{isFutureDate ? (
+						<Field 
+							label="Notes (optionnel)" 
+							htmlFor="acquire-notes"
+							hint="Rappel ou informations complémentaires"
+						>
+							<Textarea
+								id="acquire-notes"
+								value={notes}
+								onChange={e => setNotes(e.target.value)}
+								placeholder="Ex: Attendre la réédition, surveiller les prix..."
+								maxLength={500}
+							/>
+						</Field>
+					) : (
+						<Field label="État de la carte" htmlFor="acquire-condition">
+							<ConditionSelect
+								id="acquire-condition"
+								value={condition}
+								onChange={setCondition}
+							/>
+						</Field>
+					)}
 				</ModalBody>
 				<ModalFooter>
 					<Button variant="secondary" onClick={onClose} type="button">
 						Annuler
 					</Button>
 					<Button type="submit" loading={loading} disabled={loading}>
-						{loading ? 'Ajout…' : 'Ajouter à la collection'}
+						{submitButtonText}
 					</Button>
 				</ModalFooter>
 			</form>
