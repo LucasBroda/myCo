@@ -322,26 +322,32 @@ const CalendarToggle = styled.button`
 	}
 `
 
-const CalendarWrapper = styled.div`
+const LayoutGrid = styled.div`
 	display: flex;
-	gap: ${({ theme }) => theme.spacing['6']};
-	align-items: flex-start;
-	justify-content: flex-start;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['4']};
+`
+
+const CalendarCell = styled.div`
+	align-self: flex-start;
+`
+
+const CardsGrid = styled.div`
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: ${({ theme }) => theme.spacing['4']};
+	align-items: start;
 
 	@media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-		flex-direction: column;
+		grid-template-columns: repeat(2, 1fr);
 	}
 `
 
-const CardPreview = styled.div`
-	flex: 1;
+const CardCell = styled.div`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: ${({ theme }) => theme.spacing['6']};
-	padding: ${({ theme }) => theme.spacing['4']};
-	min-width: 280px;
-	max-width: 400px;
+	width: 100%;
 `
 
 const CardPreviewItem = styled.div`
@@ -352,21 +358,10 @@ const CardPreviewItem = styled.div`
 	gap: ${({ theme }) => theme.spacing['4']};
 `
 
-const AdditionalCardsGrid = styled.div`
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: ${({ theme }) => theme.spacing['6']};
-	margin-top: ${({ theme }) => theme.spacing['6']};
-	width: 100%;
-
-	@media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-		grid-template-columns: 1fr;
-	}
-`
-
 const CardPreviewImage = styled.img`
 	width: 100%;
 	max-width: 180px;
+	height: auto;
 	align-self: center;
 	border-radius: ${({ theme }) => theme.radii.md};
 	box-shadow: ${({ theme }) => theme.shadows.md};
@@ -374,12 +369,14 @@ const CardPreviewImage = styled.img`
 
 const CardPreviewName = styled.h4`
 	margin: 0;
-	margin-top: ${({ theme }) => theme.spacing['4']};
 	font-size: ${({ theme }) => theme.font.size.base};
 	font-weight: ${({ theme }) => theme.font.weight.semibold};
 	color: ${({ theme }) => theme.colors.textPrimary};
 	text-align: center;
 	width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 `
 
 const CardPreviewDetail = styled.div`
@@ -387,8 +384,16 @@ const CardPreviewDetail = styled.div`
 	justify-content: space-between;
 	align-items: center;
 	width: 100%;
+	gap: ${({ theme }) => theme.spacing['2']};
 	font-size: ${({ theme }) => theme.font.size.sm};
 	color: ${({ theme }) => theme.colors.textSecondary};
+	
+	& > span:last-child {
+		text-align: right;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
 `
 
 const CardPreviewBudget = styled.span`
@@ -399,7 +404,6 @@ const CardPreviewBudget = styled.span`
 
 const CardPreviewNotes = styled.p`
 	margin: 0;
-	margin-top: ${({ theme }) => theme.spacing['4']};
 	padding: ${({ theme }) => theme.spacing['2']};
 	background-color: ${({ theme }) => theme.colors.amberLight};
 	border-left: 3px solid ${({ theme }) => theme.colors.amber};
@@ -408,6 +412,7 @@ const CardPreviewNotes = styled.p`
 	color: ${({ theme }) => theme.colors.textSecondary};
 	font-style: italic;
 	width: 100%;
+	word-wrap: break-word;
 `
 
 interface PurchaseCalendarProps {
@@ -515,8 +520,8 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 			{planned.length > 0 && showCalendar && (
 				<>
 					<DayPickerOverride />
-					<CalendarWrapper>
-						<div>
+					<LayoutGrid>
+						<CalendarCell>
 							<DayPicker
 								modifiers={{ planned: plannedDates }}
 								modifiersClassNames={{ planned: 'planned-date' }}
@@ -531,59 +536,15 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 									</p>
 								}
 							/>
-						</div>
-						{selectedPurchases.length > 0 && (() => {
-							const firstPurchase = selectedPurchases[0]
-							const card = cardDetails[firstPurchase.cardId]
-							return card ? (
-								<CardPreview>
+						</CalendarCell>
+						<CardsGrid>
+						{selectedPurchases.map((purchase) => {
+							const card = cardDetails[purchase.cardId]
+							if (!card) return null
+
+							return (
+								<CardCell key={purchase.id}>
 									<CardPreviewItem>
-										<CardPreviewImage
-											src={card.images.small}
-											alt={card.name}
-											loading="lazy"
-										/>
-										<CardPreviewName>{firstPurchase.cardName}</CardPreviewName>
-										<CardPreviewDetail>
-											<span>Collection</span>
-											<span>{firstPurchase.setName}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>État</span>
-											<span>{firstPurchase.condition}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>Date prévue</span>
-											<span>
-												{new Date(firstPurchase.plannedDate).toLocaleDateString('fr-FR', {
-													day: 'numeric',
-													month: 'long',
-													year: 'numeric',
-												})}
-											</span>
-										</CardPreviewDetail>
-										{firstPurchase.budget !== null && (
-											<CardPreviewDetail>
-												<span>Budget prévu</span>
-												<CardPreviewBudget>
-													{formatEuros(firstPurchase.budget)}
-												</CardPreviewBudget>
-											</CardPreviewDetail>
-										)}
-										{firstPurchase.notes && (
-											<CardPreviewNotes>{firstPurchase.notes}</CardPreviewNotes>
-										)}
-									</CardPreviewItem>
-								</CardPreview>
-							) : null
-						})()}
-					</CalendarWrapper>
-					{selectedPurchases.length > 1 && (
-						<AdditionalCardsGrid>
-							{selectedPurchases.slice(1).map(purchase => {
-								const card = cardDetails[purchase.cardId]
-								return card ? (
-									<CardPreviewItem key={purchase.id}>
 										<CardPreviewImage
 											src={card.images.small}
 											alt={card.name}
@@ -620,13 +581,11 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 											<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
 										)}
 									</CardPreviewItem>
-								) : null
-							})}
-						</AdditionalCardsGrid>
-					)}
+								</CardCell>
+							)
+						})}						</CardsGrid>					</LayoutGrid>
 				</>
 			)}
-
 			{planned.length > 0 && !showCalendar && (
 				<PlannedList>
 					{planned.map(item => (
