@@ -350,10 +350,17 @@ const CardPreviewItem = styled.div`
 	align-items: center;
 	width: 100%;
 	gap: ${({ theme }) => theme.spacing['4']};
-	
-	&:not(:last-child) {
-		padding-bottom: ${({ theme }) => theme.spacing['6']};
-		border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const AdditionalCardsGrid = styled.div`
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: ${({ theme }) => theme.spacing['6']};
+	margin-top: ${({ theme }) => theme.spacing['6']};
+	width: 100%;
+
+	@media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+		grid-template-columns: 1fr;
 	}
 `
 
@@ -525,51 +532,98 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 								}
 							/>
 						</div>
-						{selectedPurchases.length > 0 && (
-							<CardPreview>
-								{selectedPurchases.map(purchase => {
-									const card = cardDetails[purchase.cardId]
-									return card ? (
-										<CardPreviewItem key={purchase.id}>
-											<CardPreviewImage
-												src={card.images.small}
-												alt={card.name}
-												loading="lazy"
-											/>
-											<CardPreviewName>{purchase.cardName}</CardPreviewName>
+						{selectedPurchases.length > 0 && (() => {
+							const firstPurchase = selectedPurchases[0]
+							const card = cardDetails[firstPurchase.cardId]
+							return card ? (
+								<CardPreview>
+									<CardPreviewItem>
+										<CardPreviewImage
+											src={card.images.small}
+											alt={card.name}
+											loading="lazy"
+										/>
+										<CardPreviewName>{firstPurchase.cardName}</CardPreviewName>
+										<CardPreviewDetail>
+											<span>Collection</span>
+											<span>{firstPurchase.setName}</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>
+											<span>État</span>
+											<span>{firstPurchase.condition}</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>
+											<span>Date prévue</span>
+											<span>
+												{new Date(firstPurchase.plannedDate).toLocaleDateString('fr-FR', {
+													day: 'numeric',
+													month: 'long',
+													year: 'numeric',
+												})}
+											</span>
+										</CardPreviewDetail>
+										{firstPurchase.budget !== null && (
 											<CardPreviewDetail>
-												<span>Collection</span>
-												<span>{purchase.setName}</span>
+												<span>Budget prévu</span>
+												<CardPreviewBudget>
+													{formatEuros(firstPurchase.budget)}
+												</CardPreviewBudget>
 											</CardPreviewDetail>
-											<CardPreviewDetail>											<span>État</span>
+										)}
+										{firstPurchase.notes && (
+											<CardPreviewNotes>{firstPurchase.notes}</CardPreviewNotes>
+										)}
+									</CardPreviewItem>
+								</CardPreview>
+							) : null
+						})()}
+					</CalendarWrapper>
+					{selectedPurchases.length > 1 && (
+						<AdditionalCardsGrid>
+							{selectedPurchases.slice(1).map(purchase => {
+								const card = cardDetails[purchase.cardId]
+								return card ? (
+									<CardPreviewItem key={purchase.id}>
+										<CardPreviewImage
+											src={card.images.small}
+											alt={card.name}
+											loading="lazy"
+										/>
+										<CardPreviewName>{purchase.cardName}</CardPreviewName>
+										<CardPreviewDetail>
+											<span>Collection</span>
+											<span>{purchase.setName}</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>
+											<span>État</span>
 											<span>{purchase.condition}</span>
 										</CardPreviewDetail>
-										<CardPreviewDetail>												<span>Date prévue</span>
-												<span>
-													{new Date(purchase.plannedDate).toLocaleDateString('fr-FR', {
-														day: 'numeric',
-														month: 'long',
-														year: 'numeric',
-													})}
-												</span>
+										<CardPreviewDetail>
+											<span>Date prévue</span>
+											<span>
+												{new Date(purchase.plannedDate).toLocaleDateString('fr-FR', {
+													day: 'numeric',
+													month: 'long',
+													year: 'numeric',
+												})}
+											</span>
+										</CardPreviewDetail>
+										{purchase.budget !== null && (
+											<CardPreviewDetail>
+												<span>Budget prévu</span>
+												<CardPreviewBudget>
+													{formatEuros(purchase.budget)}
+												</CardPreviewBudget>
 											</CardPreviewDetail>
-											{purchase.budget !== null && (
-												<CardPreviewDetail>
-													<span>Budget prévu</span>
-													<CardPreviewBudget>
-														{formatEuros(purchase.budget)}
-													</CardPreviewBudget>
-												</CardPreviewDetail>
-											)}
-											{purchase.notes && (
-												<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
-											)}
-										</CardPreviewItem>
-									) : null
-								})}
-							</CardPreview>
-						)}
-					</CalendarWrapper>
+										)}
+										{purchase.notes && (
+											<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
+										)}
+									</CardPreviewItem>
+								) : null
+							})}
+						</AdditionalCardsGrid>
+					)}
 				</>
 			)}
 
