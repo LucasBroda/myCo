@@ -31,6 +31,22 @@ const DayPickerOverride = createGlobalStyle`
 		--rdp-accent-color: #d97706;
 		--rdp-accent-background-color: #fef3c7;
 	}
+
+	.rdp-day.planned-date {
+		background-color: #fef3c7;
+		color: #d97706;
+		font-weight: 600;
+		border-radius: 50%;
+		cursor: pointer;
+	}
+
+	.rdp-day.planned-date:hover {
+		background-color: #fde68a;
+	}
+
+	.rdp-day.planned-date:active {
+		background-color: #fcd34d;
+	}
 `
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
@@ -396,7 +412,7 @@ interface PurchaseCalendarProps {
 function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProps) {
 	const [showCalendar, setShowCalendar] = useState(false)
 	const [deleting, setDeleting] = useState<string | null>(null)
-	const [hoveredDate, setHoveredDate] = useState<Date | null>(null)
+	const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
 	const { success, error: showError } = useToast()
 	const plannedDates = planned.map(p => new Date(p.plannedDate))
@@ -422,17 +438,41 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 		}
 	}, [planned])
 
-	// Trouver les achats planifiés pour la date survolée
-	const hoveredPurchases = hoveredDate
+	// Trouver les achats planifiés pour la date sélectionnée
+	const selectedPurchases = selectedDate
 		? planned.filter(p => {
 				const purchaseDate = new Date(p.plannedDate)
 				return (
-					purchaseDate.getDate() === hoveredDate.getDate() &&
-					purchaseDate.getMonth() === hoveredDate.getMonth() &&
-					purchaseDate.getFullYear() === hoveredDate.getFullYear()
+					purchaseDate.getDate() === selectedDate.getDate() &&
+					purchaseDate.getMonth() === selectedDate.getMonth() &&
+					purchaseDate.getFullYear() === selectedDate.getFullYear()
 				)
 		  })
 		: []
+
+	function handleDayClick(date: Date) {
+		// Vérifier si cette date a des achats planifiés
+		const hasPlannedPurchases = planned.some(p => {
+			const purchaseDate = new Date(p.plannedDate)
+			return (
+				purchaseDate.getDate() === date.getDate() &&
+				purchaseDate.getMonth() === date.getMonth() &&
+				purchaseDate.getFullYear() === date.getFullYear()
+			)
+		})
+		
+		// Si la date a des achats planifiés, la sélectionner (ou la désélectionner si déjà sélectionnée)
+		if (hasPlannedPurchases) {
+			setSelectedDate(prev => {
+				if (prev?.getDate() === date.getDate() &&
+					prev?.getMonth() === date.getMonth() &&
+					prev?.getFullYear() === date.getFullYear()) {
+					return null // Désélectionner si même date
+				}
+				return date // Sélectionner la nouvelle date
+			})
+		}
+	}
 
 	async function handleDelete(id: string) {
 		if (!confirm('Supprimer cet achat planifié ?')) return
@@ -471,10 +511,9 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 					<CalendarWrapper>
 						<div>
 							<DayPicker
-								mode="multiple"
-								selected={plannedDates}
-								onDayMouseEnter={setHoveredDate}
-								onDayMouseLeave={() => setHoveredDate(null)}
+								modifiers={{ planned: plannedDates }}
+								modifiersClassNames={{ planned: 'planned-date' }}
+								onDayClick={handleDayClick}
 								footer={
 									<p
 										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
@@ -486,9 +525,9 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 								}
 							/>
 						</div>
-						{hoveredPurchases.length > 0 && (
+						{selectedPurchases.length > 0 && (
 							<CardPreview>
-								{hoveredPurchases.map(purchase => {
+								{selectedPurchases.map(purchase => {
 									const card = cardDetails[purchase.cardId]
 									return card ? (
 										<CardPreviewItem key={purchase.id}>
