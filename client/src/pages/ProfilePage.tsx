@@ -322,10 +322,23 @@ const CardPreview = styled.div`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: ${({ theme }) => theme.spacing['4']};
+	gap: ${({ theme }) => theme.spacing['6']};
 	padding: ${({ theme }) => theme.spacing['4']};
 	min-width: 280px;
 	max-width: 400px;
+`
+
+const CardPreviewItem = styled.div`
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	gap: ${({ theme }) => theme.spacing['4']};
+	
+	&:not(:last-child) {
+		padding-bottom: ${({ theme }) => theme.spacing['6']};
+		border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+	}
 `
 
 const CardPreviewImage = styled.img`
@@ -342,12 +355,15 @@ const CardPreviewName = styled.h4`
 	font-size: ${({ theme }) => theme.font.size.base};
 	font-weight: ${({ theme }) => theme.font.weight.semibold};
 	color: ${({ theme }) => theme.colors.textPrimary};
+	text-align: center;
+	width: 100%;
 `
 
 const CardPreviewDetail = styled.div`
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
+	width: 100%;
 	font-size: ${({ theme }) => theme.font.size.sm};
 	color: ${({ theme }) => theme.colors.textSecondary};
 `
@@ -368,6 +384,7 @@ const CardPreviewNotes = styled.p`
 	font-size: ${({ theme }) => theme.font.size.xs};
 	color: ${({ theme }) => theme.colors.textSecondary};
 	font-style: italic;
+	width: 100%;
 `
 
 interface PurchaseCalendarProps {
@@ -474,7 +491,7 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 								{hoveredPurchases.map(purchase => {
 									const card = cardDetails[purchase.cardId]
 									return card ? (
-										<div key={purchase.id}>
+										<CardPreviewItem key={purchase.id}>
 											<CardPreviewImage
 												src={card.images.small}
 												alt={card.name}
@@ -508,7 +525,7 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 											{purchase.notes && (
 												<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
 											)}
-										</div>
+										</CardPreviewItem>
 									) : null
 								})}
 							</CardPreview>
