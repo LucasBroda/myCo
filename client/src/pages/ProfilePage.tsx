@@ -626,30 +626,23 @@ const SectionHeader = styled.div`
 	align-items: center;
 	justify-content: space-between;
 	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	cursor: pointer;
+	user-select: none;
+
+	&:hover span {
+		color: ${({ theme }) => theme.colors.textPrimary};
+	}
 `
 
-const ToggleButton = styled.button`
+const ToggleButton = styled.span`
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	padding: ${({ theme }) => theme.spacing['2']};
-	background: none;
-	border: none;
-	border-radius: ${({ theme }) => theme.radii.md};
 	font-size: ${({ theme }) => theme.font.size['2xl']};
 	color: ${({ theme }) => theme.colors.textSecondary};
-	cursor: pointer;
-	font-family: inherit;
+	pointer-events: none;
 	transition: color ${({ theme }) => theme.transitions.fast};
-
-	&:hover {
-		color: ${({ theme }) => theme.colors.textPrimary};
-	}
-
-	&:focus-visible {
-		outline: 2px solid ${({ theme }) => theme.colors.focus};
-		outline-offset: 2px;
-	}
 `
 
 const AcqListWrapper = styled.div<{ $isCollapsed: boolean }>`
@@ -756,15 +749,16 @@ function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 
 	return (
 		<Card>
-			<SectionHeader>
+			<SectionHeader
+				role="button"
+				tabIndex={0}
+				onClick={() => setIsCollapsed(!isCollapsed)}
+				onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setIsCollapsed(!isCollapsed)}
+				aria-expanded={!isCollapsed}
+				aria-controls="acquisitions-list"
+			>
 				<SectionTitle>Acquisitions récentes</SectionTitle>
-				<ToggleButton
-					type="button"
-					onClick={() => setIsCollapsed(!isCollapsed)}
-					aria-expanded={!isCollapsed}
-					aria-controls="acquisitions-list"
-					aria-label={isCollapsed ? 'Afficher' : 'Masquer'}
-				>
+				<ToggleButton aria-hidden="true">
 					{isCollapsed ? '⌄' : '⌃'}
 				</ToggleButton>
 			</SectionHeader>
