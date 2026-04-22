@@ -256,8 +256,8 @@ function AcquireModal({ card, set, onClose, onAcquired, addToPlannedStore }: Acq
 			} else {
 				// Ajouter à la collection immédiatement
 				const acquired = await collectionService.addCard({
-					cardName: card.name,
-					setName: set.name,
+					cardId: card.id,
+					setId: set.id,
 					acquiredDate: date,
 					pricePaid: price ? Number.parseFloat(price) : null,
 					condition,
