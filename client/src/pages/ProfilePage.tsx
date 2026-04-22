@@ -324,30 +324,24 @@ const CalendarToggle = styled.button`
 
 const LayoutGrid = styled.div`
 	display: flex;
-	flex-direction: column;
-	gap: ${({ theme }) => theme.spacing['4']};
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	align-items: flex-start;
+	gap: ${({ theme }) => theme.spacing['10']};
 `
 
 const CalendarCell = styled.div`
+	flex-shrink: 0;
 	align-self: flex-start;
-`
-
-const CardsGrid = styled.div`
-	display: grid;
-	grid-template-columns: repeat(4, 1fr);
-	gap: ${({ theme }) => theme.spacing['4']};
-	align-items: start;
-
-	@media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-		grid-template-columns: repeat(2, 1fr);
-	}
 `
 
 const CardCell = styled.div`
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	width: 100%;
+	width: 160px;
+	flex-shrink: 0;
 `
 
 const CardPreviewItem = styled.div`
@@ -359,29 +353,6 @@ const CardPreviewItem = styled.div`
 `
 
 const CardPreviewImage = styled.img`
-	width: 160px;
-	height: 224px;
-	object-fit: cover;
-	border-radius: ${({ theme }) => theme.radii.md};
-	box-shadow: ${({ theme }) => theme.shadows.md};
-`
-
-const CalendarRow = styled.div`
-	display: flex;
-	flex-direction: row;
-	gap: ${({ theme }) => theme.spacing['4']};
-	align-items: flex-start;
-`
-
-const FirstCardCell = styled.div`
-	display: flex;
-	flex: 1;
-	justify-content: center;
-	align-items: center;
-	align-self: flex-start;
-`
-
-const FirstCardImage = styled.img`
 	width: 160px;
 	height: 224px;
 	object-fit: cover;
@@ -543,119 +514,68 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 				<>
 					<DayPickerOverride />
 					<LayoutGrid>
-						<CalendarRow>
-							<CalendarCell>
-								<DayPicker
-									modifiers={{ planned: plannedDates }}
-									modifiersClassNames={{ planned: 'planned-date' }}
-									onDayClick={handleDayClick}
-									footer={
-										<p
-											style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
-											aria-live="polite"
-										>
-											{planned.length} achat{planned.length > 1 ? 's' : ''} planifié
-											{planned.length > 1 ? 's' : ''}
-										</p>
-									}
-								/>
-							</CalendarCell>
-						{selectedPurchases.length > 0 && cardDetails[selectedPurchases[0].cardId] && (() => {
-							const firstPurchase = selectedPurchases[0]
-							const firstCard = cardDetails[firstPurchase.cardId]
+						<CalendarCell>
+							<DayPicker
+								modifiers={{ planned: plannedDates }}
+								modifiersClassNames={{ planned: 'planned-date' }}
+								onDayClick={handleDayClick}
+								footer={
+									<p
+										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
+										aria-live="polite"
+									>
+										{planned.length} achat{planned.length > 1 ? 's' : ''} planifié
+										{planned.length > 1 ? 's' : ''}
+									</p>
+								}
+							/>
+						</CalendarCell>
+						{selectedPurchases.map((purchase) => {
+							const card = cardDetails[purchase.cardId]
+							if (!card) return null
+
 							return (
-								<FirstCardCell>
+								<CardCell key={purchase.id}>
 									<CardPreviewItem>
-										<FirstCardImage
-											src={firstCard.images.small}
-											alt={firstCard.name}
+										<CardPreviewImage
+											src={card.images.small}
+											alt={card.name}
 											loading="lazy"
 										/>
-										<CardPreviewName>{firstPurchase.cardName}</CardPreviewName>
+										<CardPreviewName>{purchase.cardName}</CardPreviewName>
 										<CardPreviewDetail>
 											<span>Collection</span>
-											<span>{firstPurchase.setName}</span>
+											<span>{purchase.setName}</span>
 										</CardPreviewDetail>
 										<CardPreviewDetail>
 											<span>État</span>
-											<span>{firstPurchase.condition}</span>
+											<span>{purchase.condition}</span>
 										</CardPreviewDetail>
 										<CardPreviewDetail>
 											<span>Date prévue</span>
 											<span>
-												{new Date(firstPurchase.plannedDate).toLocaleDateString('fr-FR', {
+												{new Date(purchase.plannedDate).toLocaleDateString('fr-FR', {
 													day: 'numeric',
 													month: 'long',
 													year: 'numeric',
 												})}
 											</span>
 										</CardPreviewDetail>
-										{firstPurchase.budget !== null && (
+										{purchase.budget !== null && (
 											<CardPreviewDetail>
 												<span>Budget prévu</span>
 												<CardPreviewBudget>
-													{formatEuros(firstPurchase.budget)}
+													{formatEuros(purchase.budget)}
 												</CardPreviewBudget>
 											</CardPreviewDetail>
 										)}
-										{firstPurchase.notes && (
-											<CardPreviewNotes>{firstPurchase.notes}</CardPreviewNotes>
+										{purchase.notes && (
+											<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
 										)}
 									</CardPreviewItem>
-								</FirstCardCell>
+								</CardCell>
 							)
-						})()}
-						</CalendarRow>
-						{selectedPurchases.length > 1 && (
-							<CardsGrid>
-								{selectedPurchases.slice(1).map((purchase) => {
-									const card = cardDetails[purchase.cardId]
-									if (!card) return null
-
-									return (
-										<CardCell key={purchase.id}>
-											<CardPreviewItem>
-												<CardPreviewImage
-													src={card.images.small}
-													alt={card.name}
-													loading="lazy"
-												/>
-												<CardPreviewName>{purchase.cardName}</CardPreviewName>
-												<CardPreviewDetail>
-													<span>Collection</span>
-													<span>{purchase.setName}</span>
-												</CardPreviewDetail>
-												<CardPreviewDetail>
-													<span>État</span>
-													<span>{purchase.condition}</span>
-												</CardPreviewDetail>
-												<CardPreviewDetail>
-													<span>Date prévue</span>
-													<span>
-														{new Date(purchase.plannedDate).toLocaleDateString('fr-FR', {
-															day: 'numeric',
-															month: 'long',
-															year: 'numeric',
-														})}
-													</span>
-												</CardPreviewDetail>
-												{purchase.budget !== null && (
-													<CardPreviewDetail>
-														<span>Budget prévu</span>
-														<CardPreviewBudget>
-															{formatEuros(purchase.budget)}
-														</CardPreviewBudget>
-													</CardPreviewDetail>
-												)}
-												{purchase.notes && (
-													<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
-												)}
-											</CardPreviewItem>
-										</CardCell>
-									)
-								})}
-							</CardsGrid>
-						)}
+						})}
 					</LayoutGrid>
 				</>
 			)}
