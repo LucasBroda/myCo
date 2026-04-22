@@ -1,4 +1,4 @@
-import type { CollectionStats, PlannedPurchase, AcquiredCard } from '@/types/models'
+import type { CollectionStats, PlannedPurchase, AcquiredCard, PokemonCard } from '@/types/models'
 import { Card } from '@components/ui/Card'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
@@ -7,6 +7,9 @@ import { PageHeader } from '@components/layout/PageHeader'
 import { SectionTitle } from '@components/layout/SectionTitle'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
+import { cardsService } from '@services/cardsService'
+import { usePlannedStore } from '@store/plannedStore'
+import { useToast } from '@hooks/useToast'
 import { useEffect, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
@@ -27,6 +30,22 @@ const DayPickerOverride = createGlobalStyle`
 	.rdp-root {
 		--rdp-accent-color: #d97706;
 		--rdp-accent-background-color: #fef3c7;
+	}
+
+	.rdp-day.planned-date {
+		background-color: #fef3c7;
+		color: #d97706;
+		font-weight: 600;
+		border-radius: 50%;
+		cursor: pointer;
+	}
+
+	.rdp-day.planned-date:hover {
+		background-color: #fde68a;
+	}
+
+	.rdp-day.planned-date:active {
+		background-color: #fcd34d;
 	}
 `
 
@@ -65,7 +84,7 @@ const StatItem = styled.div`
 const StatValue = styled.span`
 	font-size: ${({ theme }) => theme.font.size['2xl']};
 	font-weight: ${({ theme }) => theme.font.weight.bold};
-	color: ${({ theme }) => theme.colors.textPrimary};
+	color: ${({ theme }) => theme.colors.amber};
 `
 
 const StatLabel = styled.span`
@@ -81,7 +100,7 @@ function formatEuros(value: number) {
 	}).format(value)
 }
 
-function CollectionValueCard({ stats }: { stats: CollectionStats }) {
+function CollectionValueCard({ stats }: { readonly stats: CollectionStats }) {
 	return (
 		<Card>
 			<SectionTitle>Résumé de la collection</SectionTitle>
@@ -105,7 +124,7 @@ function CollectionValueCard({ stats }: { stats: CollectionStats }) {
 
 // ─── SpendingChart ────────────────────────────────────────────────────────────
 
-function SpendingChart({ stats }: { stats: CollectionStats }) {
+function SpendingChart({ stats }: { readonly stats: CollectionStats }) {
 	if (stats.byMonth.length === 0) {
 		return (
 			<Card>
@@ -159,31 +178,442 @@ function SpendingChart({ stats }: { stats: CollectionStats }) {
 
 // ─── PurchaseCalendar ─────────────────────────────────────────────────────────
 
-function PurchaseCalendar({ planned }: { planned: PlannedPurchase[] }) {
+const PlannedList = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['3']};
+	max-height: 280px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	scrollbar-color: ${({ theme }) => `${theme.colors.border} transparent`};
+
+	&::-webkit-scrollbar {
+		width: 8px;
+	}
+
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: ${({ theme }) => theme.colors.border};
+		border-radius: ${({ theme }) => theme.radii.full};
+	}
+`
+
+const PlannedItem = styled.div`
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: ${({ theme }) => theme.spacing['3']};
+	padding: ${({ theme }) => theme.spacing['3']};
+	background-color: ${({ theme }) => theme.colors.surface};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.md};
+	transition: border-color ${({ theme }) => theme.transitions.fast};
+
+	&:hover {
+		border-color: ${({ theme }) => theme.colors.borderStrong};
+	}
+`
+
+const PlannedInfo = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['1']};
+	flex: 1;
+	min-width: 0;
+`
+
+const PlannedCardName = styled.span`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.textPrimary};
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+`
+
+const PlannedMeta = styled.span`
+	font-size: ${({ theme }) => theme.font.size.xs};
+	color: ${({ theme }) => theme.colors.textSecondary};
+`
+
+const PlannedBudget = styled.span`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	color: ${({ theme }) => theme.colors.amber};
+`
+
+const PlannedActions = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['3']};
+`
+
+const DeleteButton = styled.button`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	background: none;
+	border: 1px solid transparent;
+	border-radius: ${({ theme }) => theme.radii.md};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	cursor: pointer;
+	transition: all ${({ theme }) => theme.transitions.fast};
+	flex-shrink: 0;
+
+	svg {
+		width: 16px;
+		height: 16px;
+		stroke: currentColor;
+		fill: none;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	&:hover {
+		background-color: ${({ theme }) => theme.colors.brickLight};
+		border-color: ${({ theme }) => theme.colors.brickBorder};
+		color: ${({ theme }) => theme.colors.brick};
+	}
+
+	&:focus-visible {
+		outline: 2px solid ${({ theme }) => theme.colors.focus};
+		outline-offset: 2px;
+	}
+`
+
+function TrashIcon() {
+	return (
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z" />
+			<path d="M10 11v6M14 11v6" />
+		</svg>
+	)
+}
+
+
+const CalendarToggle = styled.button`
+	padding: ${({ theme }) => theme.spacing['2']} ${({ theme }) => theme.spacing['3']};
+	background: none;
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.md};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	font-size: ${({ theme }) => theme.font.size.xs};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	cursor: pointer;
+	font-family: inherit;
+	transition: all ${({ theme }) => theme.transitions.fast};
+	margin-bottom: ${({ theme }) => theme.spacing['3']};
+
+	&:hover {
+		background-color: ${({ theme }) => theme.colors.surface};
+		border-color: ${({ theme }) => theme.colors.borderStrong};
+	}
+
+	&:focus-visible {
+		outline: 2px solid ${({ theme }) => theme.colors.focus};
+		outline-offset: 2px;
+	}
+`
+
+const LayoutGrid = styled.div`
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	align-items: flex-start;
+	gap: ${({ theme }) => theme.spacing['10']};
+`
+
+const CalendarCell = styled.div`
+	flex-shrink: 0;
+	align-self: flex-start;
+`
+
+const CardCell = styled.div`
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 160px;
+	flex-shrink: 0;
+`
+
+const CardPreviewItem = styled.div`
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	width: 100%;
+	gap: ${({ theme }) => theme.spacing['4']};
+`
+
+const CardPreviewImage = styled.img`
+	width: 160px;
+	height: 224px;
+	object-fit: cover;
+	border-radius: ${({ theme }) => theme.radii.md};
+	box-shadow: ${({ theme }) => theme.shadows.md};
+`
+
+const CardPreviewName = styled.h4`
+	margin: 0;
+	font-size: ${({ theme }) => theme.font.size.base};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.textPrimary};
+	text-align: center;
+	width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+`
+
+const CardPreviewDetail = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	width: 100%;
+	gap: ${({ theme }) => theme.spacing['2']};
+	font-size: ${({ theme }) => theme.font.size.sm};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	
+	& > span:last-child {
+		text-align: right;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+`
+
+const CardPreviewBudget = styled.span`
+	font-size: ${({ theme }) => theme.font.size.base};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.amber};
+`
+
+const CardPreviewNotes = styled.p`
+	margin: 0;
+	padding: ${({ theme }) => theme.spacing['2']};
+	background-color: ${({ theme }) => theme.colors.amberLight};
+	border-left: 3px solid ${({ theme }) => theme.colors.amber};
+	border-radius: ${({ theme }) => theme.radii.sm};
+	font-size: ${({ theme }) => theme.font.size.xs};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	font-style: italic;
+	width: 100%;
+	word-wrap: break-word;
+`
+
+interface PurchaseCalendarProps {
+	readonly planned: PlannedPurchase[]
+	readonly onDelete: (id: string) => Promise<void>
+	readonly onRefresh: () => void
+}
+
+function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProps) {
+	const [showCalendar, setShowCalendar] = useState(false)
+	const [deleting, setDeleting] = useState<string | null>(null)
+	const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
+	const { success, error: showError } = useToast()
 	const plannedDates = planned.map(p => new Date(p.plannedDate))
+
+	// Charger les détails des cartes au montage
+	useEffect(() => {
+		async function loadCardDetails() {
+			const details: Record<string, PokemonCard> = {}
+			for (const purchase of planned) {
+				if (!details[purchase.cardId]) {
+					try {
+						const card = await cardsService.getCard(purchase.cardId)
+						details[purchase.cardId] = card
+					} catch (err) {
+						console.error(`Failed to load card ${purchase.cardId}`, err)
+					}
+				}
+			}
+			setCardDetails(details)
+		}
+		if (planned.length > 0) {
+			loadCardDetails()
+		}
+	}, [planned])
+
+	// Trouver les achats planifiés pour la date sélectionnée
+	const selectedPurchases = selectedDate
+		? planned.filter(p => {
+				const purchaseDate = new Date(p.plannedDate)
+				return (
+					purchaseDate.getDate() === selectedDate.getDate() &&
+					purchaseDate.getMonth() === selectedDate.getMonth() &&
+					purchaseDate.getFullYear() === selectedDate.getFullYear()
+				)
+		  })
+		: []
+
+	function handleDayClick(date: Date) {
+		// Vérifier si cette date a des achats planifiés
+		const hasPlannedPurchases = planned.some(p => {
+			const purchaseDate = new Date(p.plannedDate)
+			return (
+				purchaseDate.getDate() === date.getDate() &&
+				purchaseDate.getMonth() === date.getMonth() &&
+				purchaseDate.getFullYear() === date.getFullYear()
+			)
+		})
+		
+		// Si la date a des achats planifiés, la sélectionner (ou la désélectionner si déjà sélectionnée)
+		if (hasPlannedPurchases) {
+			setSelectedDate(prev => {
+				if (prev?.getDate() === date.getDate() &&
+					prev?.getMonth() === date.getMonth() &&
+					prev?.getFullYear() === date.getFullYear()) {
+					return null // Désélectionner si même date
+				}
+				return date // Sélectionner la nouvelle date
+			})
+		}
+	}
+
+	async function handleDelete(id: string) {
+		if (!confirm('Supprimer cet achat planifié ?')) return
+		setDeleting(id)
+		try {
+			await onDelete(id)
+			success('Achat planifié supprimé')
+			onRefresh()
+		} catch (err) {
+			showError(err instanceof Error ? err.message : 'Erreur lors de la suppression')
+		} finally {
+			setDeleting(null)
+		}
+	}
 
 	return (
 		<Card>
-			<SectionTitle>Achats planifiés</SectionTitle>
-			{planned.length === 0 ? (
+			<SectionTitle>Achats planifiés ({planned.length})</SectionTitle>
+			
+			{planned.length > 0 && (
+				<CalendarToggle
+					type="button"
+					onClick={() => setShowCalendar(!showCalendar)}
+				>
+					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
+				</CalendarToggle>
+			)}
+
+			{planned.length === 0 && (
 				<EmptyState message="Aucun achat planifié." icon="📅" />
-			) : (
+			)}
+
+			{planned.length > 0 && showCalendar && (
 				<>
 					<DayPickerOverride />
-					<DayPicker
-						mode="multiple"
-						selected={plannedDates}
-						footer={
-							<p
-								style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
-								aria-live="polite"
-							>
-								{planned.length} achat{planned.length > 1 ? 's' : ''} planifié
-								{planned.length > 1 ? 's' : ''}
-							</p>
-						}
-					/>
+					<LayoutGrid>
+						<CalendarCell>
+							<DayPicker
+								modifiers={{ planned: plannedDates }}
+								modifiersClassNames={{ planned: 'planned-date' }}
+								onDayClick={handleDayClick}
+								footer={
+									<p
+										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
+										aria-live="polite"
+									>
+										{planned.length} achat{planned.length > 1 ? 's' : ''} planifié
+										{planned.length > 1 ? 's' : ''}
+									</p>
+								}
+							/>
+						</CalendarCell>
+						{selectedPurchases.map((purchase) => {
+							const card = cardDetails[purchase.cardId]
+							if (!card) return null
+
+							return (
+								<CardCell key={purchase.id}>
+									<CardPreviewItem>
+										<CardPreviewImage
+											src={card.images.small}
+											alt={card.name}
+											loading="lazy"
+										/>
+										<CardPreviewName>{purchase.cardName}</CardPreviewName>
+										<CardPreviewDetail>
+											<span>Collection</span>
+											<span>{purchase.setName}</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>
+											<span>État</span>
+											<span>{purchase.condition}</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>
+											<span>Date prévue</span>
+											<span>
+												{new Date(purchase.plannedDate).toLocaleDateString('fr-FR', {
+													day: 'numeric',
+													month: 'long',
+													year: 'numeric',
+												})}
+											</span>
+										</CardPreviewDetail>
+										{purchase.budget !== null && (
+											<CardPreviewDetail>
+												<span>Budget prévu</span>
+												<CardPreviewBudget>
+													{formatEuros(purchase.budget)}
+												</CardPreviewBudget>
+											</CardPreviewDetail>
+										)}
+										{purchase.notes && (
+											<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
+										)}
+									</CardPreviewItem>
+								</CardCell>
+							)
+						})}
+					</LayoutGrid>
 				</>
+			)}
+			{planned.length > 0 && !showCalendar && (
+				<PlannedList>
+					{planned.map(item => (
+						<PlannedItem key={item.id}>
+							<PlannedInfo>
+								<PlannedCardName>
+									{item.cardName}
+								</PlannedCardName>
+								<PlannedMeta>{item.setName}</PlannedMeta>
+								<PlannedMeta>
+									{new Date(item.plannedDate).toLocaleDateString('fr-FR', {
+										day: 'numeric',
+										month: 'long',
+										year: 'numeric',
+									})}
+								</PlannedMeta>
+								{item.notes && <PlannedMeta>{item.notes}</PlannedMeta>}
+							</PlannedInfo>
+							<PlannedActions>
+								{item.budget !== null && (
+									<PlannedBudget>{formatEuros(item.budget)}</PlannedBudget>
+								)}
+								<DeleteButton
+									type="button"
+									onClick={() => handleDelete(item.id)}
+									disabled={deleting === item.id}
+									aria-label="Supprimer"
+									title="Supprimer cet achat planifié"
+								>
+									{deleting === item.id ? '⋯' : <TrashIcon />}
+								</DeleteButton>
+							</PlannedActions>
+						</PlannedItem>
+					))}
+				</PlannedList>
 			)}
 		</Card>
 	)
@@ -281,7 +711,7 @@ const AcqMeta = styled.span`
 const AcqPrice = styled.span`
 	font-size: ${({ theme }) => theme.font.size.sm};
 	font-weight: ${({ theme }) => theme.font.weight.semibold};
-	color: ${({ theme }) => theme.colors.textPrimary};
+	color: ${({ theme }) => theme.colors.amber};
 `
 
 const LoadMoreBtn = styled.button`
@@ -309,7 +739,7 @@ const LoadMoreBtn = styled.button`
 
 const PAGE_SIZE = 20
 
-function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
+function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 	const [page, setPage] = useState(1)
 	const [isCollapsed, setIsCollapsed] = useState(true)
 	const visible = cards.slice(0, page * PAGE_SIZE)
@@ -350,7 +780,7 @@ function RecentAcquisitionsList({ cards }: { cards: AcquiredCard[] }) {
 								</AcqMeta>
 							</AcqInfo>
 							<AcqPrice>
-								{card.pricePaid !== null ? formatEuros(card.pricePaid) : '—'}
+								{card.pricePaid === null ? '—' : formatEuros(card.pricePaid)}
 							</AcqPrice>
 						</AcqItem>
 					))}
@@ -373,6 +803,7 @@ export default function ProfilePage() {
 	const [planned, setPlanned] = useState<PlannedPurchase[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const { setPlanned: setPlannedStore, removePlanned } = usePlannedStore()
 
 	async function loadData() {
 		setIsLoading(true)
@@ -392,6 +823,7 @@ export default function ProfilePage() {
 				)
 			)
 			setPlanned(plannedData)
+			setPlannedStore(plannedData)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Erreur de chargement')
 		} finally {
@@ -402,6 +834,11 @@ export default function ProfilePage() {
 	useEffect(() => {
 		loadData()
 	}, [])
+
+	async function handleDeletePlanned(id: string) {
+		await profileService.deletePlanned(id)
+		removePlanned(id)
+	}
 
 	if (isLoading) return <Spinner center label="Chargement du profil…" />
 	if (error) return <ErrorState message={error} onRetry={loadData} />
@@ -415,7 +852,11 @@ export default function ProfilePage() {
 					<CollectionValueCard stats={stats} />
 				</FullWidth>
 				<SpendingChart stats={stats} />
-				<PurchaseCalendar planned={planned} />
+				<PurchaseCalendar 
+					planned={planned} 
+					onDelete={handleDeletePlanned}
+					onRefresh={loadData}
+				/>
 				<FullWidth>
 					<RecentAcquisitionsList cards={acquisitions} />
 				</FullWidth>

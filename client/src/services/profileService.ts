@@ -10,8 +10,11 @@ export const profileService = {
 	async addPlanned(payload: {
 		cardId: string
 		setId: string
+		cardName: string
+		setName: string
 		plannedDate: string
 		budget: number | null
+		condition: import('@/types/models').CardCondition
 		notes: string | null
 	}): Promise<PlannedPurchase> {
 		const res = await http.post<{ data: PlannedPurchase }>(

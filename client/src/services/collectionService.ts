@@ -19,8 +19,8 @@ export const collectionService = {
 	},
 
 	async addCard(payload: {
-		cardId: string
-		setId: string
+		cardName: string,
+		setName: string,
 		acquiredDate: string
 		pricePaid: number | null
 		condition: CardCondition
