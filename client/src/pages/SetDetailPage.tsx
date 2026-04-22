@@ -12,7 +12,9 @@ import { CardThumbnail } from '@components/pokemon/CardThumbnail'
 import { ConditionSelect } from '@components/pokemon/ConditionSelect'
 import { collectionService } from '@services/collectionService'
 import { cardsService } from '@services/cardsService'
+import { profileService } from '@services/profileService'
 import { useCollectionStore } from '@store/collectionStore'
+import { usePlannedStore } from '@store/plannedStore'
 import { useToast } from '@hooks/useToast'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
@@ -146,38 +148,123 @@ const ErrorMessage = styled.p`
 	}
 `
 
+const InfoMessage = styled.p`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['2']};
+	padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['4']};
+	background-color: ${({ theme }) => theme.colors.amberLight};
+	color: ${({ theme }) => theme.colors.amber};
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	border-radius: ${({ theme }) => theme.radii.md};
+	border-left: 3px solid ${({ theme }) => theme.colors.amber};
+	margin: 0;
+
+	&::before {
+		content: '📅';
+		font-size: ${({ theme }) => theme.font.size.lg};
+		flex-shrink: 0;
+	}
+`
+
+const Textarea = styled.textarea`
+	width: 100%;
+	min-height: 80px;
+	padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['4']};
+	border-radius: ${({ theme }) => theme.radii.md};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	background-color: ${({ theme }) => theme.colors.surfaceElevated};
+	color: ${({ theme }) => theme.colors.textPrimary};
+	font-family: inherit;
+	font-size: ${({ theme }) => theme.font.size.base};
+	resize: vertical;
+	transition:
+		border-color ${({ theme }) => theme.transitions.fast},
+		box-shadow ${({ theme }) => theme.transitions.fast};
+
+	&::placeholder {
+		color: ${({ theme }) => theme.colors.textMuted};
+	}
+
+	&:hover:not(:disabled) {
+		border-color: ${({ theme }) => theme.colors.borderStrong};
+	}
+
+	&:focus {
+		outline: none;
+		border-color: ${({ theme }) => theme.colors.amber};
+		box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.amberLight};
+	}
+
+	&:disabled {
+		background-color: ${({ theme }) => theme.colors.surface};
+		color: ${({ theme }) => theme.colors.disabledText};
+		cursor: not-allowed;
+	}
+`
+
 interface AcquireModalProps {
 	readonly card: PokemonCard | null
-	readonly setId: string
+	readonly set: PokemonSet | null
 	readonly onClose: () => void
 	readonly onAcquired: () => void
+	readonly addToPlannedStore: (purchase: import('@/types/models').PlannedPurchase) => void
 }
 
-function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
+function AcquireModal({ card, set, onClose, onAcquired, addToPlannedStore }: AcquireModalProps) {
 	const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
 	const [price, setPrice] = useState('')
 	const [condition, setCondition] = useState<CardCondition>('NM')
+	const [notes, setNotes] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [formError, setFormError] = useState('')
 	const { addCard: addToStore } = useCollectionStore()
 	const { success } = useToast()
 	const dateInputRef = useRef<HTMLInputElement>(null)
 
-	async function handleSubmit(e: React.FormEvent) {
+	// Détecte si la date sélectionnée est dans le futur
+	const isFutureDate = new Date(date) > new Date()
+	
+	const actionText = isFutureDate ? 'Planifier' : 'Acquérir'
+	const modalTitle = card ? `${actionText} : ${card.name}` : ''
+	
+	const baseButtonText = isFutureDate ? 'Planifier cet achat' : 'Ajouter à la collection'
+	const submitButtonText = loading ? 'Ajout…' : baseButtonText
+
+	async function handleSubmit(e: { preventDefault: () => void }) {
 		e.preventDefault()
-		if (!card) return
+		if (!card || !set) return
 		setFormError('')
 		setLoading(true)
+		
 		try {
-			const acquired = await collectionService.addCard({
-				cardId: card.id,
-				setId,
-				acquiredDate: date,
-				pricePaid: price ? Number.parseFloat(price) : null,
-				condition,
-			})
-			addToStore(acquired)
-			success(`${card.name} ajoutée à votre collection`)
+			if (isFutureDate) {
+				// Créer un achat planifié
+				const planned = await profileService.addPlanned({
+					cardId: card.id,
+					setId: set.id,
+					cardName: card.name,
+					setName: set.name,
+					plannedDate: date,
+					budget: price ? Number.parseFloat(price) : null,
+					condition,
+					notes: notes || null,
+				})
+				addToPlannedStore(planned)
+				success(`${card.name} ajoutée aux achats planifiés`)
+			} else {
+				// Ajouter à la collection immédiatement
+				const acquired = await collectionService.addCard({
+					cardName: card.name,
+					setName: set.name,
+					acquiredDate: date,
+					pricePaid: price ? Number.parseFloat(price) : null,
+					condition,
+				})
+				addToStore(acquired)
+				success(`${card.name} ajoutée à votre collection`)
+			}
 			onAcquired()
 		} catch (err) {
 			setFormError(err instanceof Error ? err.message : "Erreur lors de l'ajout")
@@ -190,7 +277,7 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 		<Modal
 			isOpen={!!card}
 			onClose={onClose}
-			title={card ? `Acquérir : ${card.name}` : ''}
+			title={modalTitle}
 			initialFocusRef={dateInputRef}
 		>
 			<form onSubmit={handleSubmit}>
@@ -201,7 +288,16 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 						</ErrorMessage>
 					)}
 
-					<Field label="Date d'acquisition" htmlFor="acquire-date">
+					{isFutureDate && (
+						<InfoMessage>
+							Date future détectée : cette carte sera ajoutée à vos achats planifiés
+						</InfoMessage>
+					)}
+
+					<Field 
+						label={isFutureDate ? "Date d'achat prévue" : "Date d'acquisition"} 
+						htmlFor="acquire-date"
+					>
 						<Input
 							ref={dateInputRef}
 							id="acquire-date"
@@ -213,7 +309,7 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 					</Field>
 
 					<Field
-						label="Prix payé (optionnel)"
+						label={isFutureDate ? "Budget prévu (optionnel)" : "Prix payé (optionnel)"}
 						htmlFor="acquire-price"
 						hint="En euros"
 					>
@@ -235,13 +331,29 @@ function AcquireModal({ card, setId, onClose, onAcquired }: AcquireModalProps) {
 							onChange={setCondition}
 						/>
 					</Field>
+
+					{isFutureDate && (
+						<Field 
+							label="Notes (optionnel)" 
+							htmlFor="acquire-notes"
+							hint="Rappel ou informations complémentaires"
+						>
+							<Textarea
+								id="acquire-notes"
+								value={notes}
+								onChange={e => setNotes(e.target.value)}
+								placeholder="Ex: Attendre la réédition, surveiller les prix..."
+								maxLength={500}
+							/>
+						</Field>
+					)}
 				</ModalBody>
 				<ModalFooter>
 					<Button variant="secondary" onClick={onClose} type="button">
 						Annuler
 					</Button>
 					<Button type="submit" loading={loading} disabled={loading}>
-						{loading ? 'Ajout…' : 'Ajouter à la collection'}
+						{submitButtonText}
 					</Button>
 				</ModalFooter>
 			</form>
@@ -266,16 +378,18 @@ export default function SetDetailPage() {
 	const [isFollowed, setIsFollowed] = useState(false)
 
 	const { acquiredMap, setCollection } = useCollectionStore()
+	const { plannedMap, setPlanned, addPlanned: addToPlannedStore } = usePlannedStore()
 
 	async function loadData() {
 		if (!setId) return
 		setIsLoading(true)
 		setError(null)
 		try {
-			const [setData, collection, followedSets] = await Promise.all([
+			const [setData, collection, followedSets, plannedPurchases] = await Promise.all([
 				cardsService.getSet(setId),
 				collectionService.getCollection(),
 				collectionService.getFollowedSets(),
+				profileService.getPlanned(),
 			])
 			setPokemonSet(setData.set)
 			setIsFollowed(followedSets.includes(setId))
@@ -291,6 +405,7 @@ export default function SetDetailPage() {
 			})
 			setCards(sortedCards)
 			setCollection(collection)
+			setPlanned(plannedPurchases)
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Erreur de chargement')
 		} finally {
@@ -305,6 +420,20 @@ export default function SetDetailPage() {
 
 	function isOwnedCard(cardId: string): boolean {
 		return (acquiredMap[cardId]?.length ?? 0) > 0
+	}
+
+	function isPlannedCard(cardId: string): boolean {
+		return (plannedMap[cardId]?.length ?? 0) > 0
+	}
+
+	function getPlannedDate(cardId: string): string | undefined {
+		const planned = plannedMap[cardId]
+		if (!planned || planned.length === 0) return undefined
+		// Retourner la date du premier achat planifié (ou celui avec la date la plus proche)
+		const sorted = [...planned].sort((a, b) => 
+			new Date(a.plannedDate).getTime() - new Date(b.plannedDate).getTime()
+		)
+		return sorted[0].plannedDate
 	}
 
 	const ownedCount = cards.filter(c => isOwnedCard(c.id)).length
@@ -337,6 +466,18 @@ export default function SetDetailPage() {
 	function handleCardClick(card: PokemonCard) {
 		if (isOwnedCard(card.id)) {
 			toast(`${card.name} est déjà dans votre collection`)
+			return
+		}
+		if (isPlannedCard(card.id)) {
+			const date = getPlannedDate(card.id)
+			if (date) {
+				const formattedDate = new Date(date).toLocaleDateString('fr-FR', {
+					day: 'numeric',
+					month: 'long',
+					year: 'numeric',
+				})
+				toast(`${card.name} est déjà planifiée pour le ${formattedDate}`)
+			}
 			return
 		}
 		setSelectedCard(card)
@@ -419,6 +560,8 @@ export default function SetDetailPage() {
 							key={card.id}
 							card={card}
 							owned={isOwnedCard(card.id)}
+							planned={isPlannedCard(card.id)}
+							plannedDate={getPlannedDate(card.id)}
 							onClick={() => handleCardClick(card)}
 						/>
 					))}
@@ -427,9 +570,10 @@ export default function SetDetailPage() {
 
 			<AcquireModal
 				card={selectedCard}
-				setId={setId ?? ''}
+				set={pokemonSet}
 				onClose={() => setSelectedCard(null)}
 				onAcquired={() => setSelectedCard(null)}
+				addToPlannedStore={addToPlannedStore}
 			/>
 		</section>
 	)
