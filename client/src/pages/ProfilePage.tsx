@@ -124,6 +124,68 @@ function CollectionValueCard({ stats }: { readonly stats: CollectionStats }) {
 
 // ─── SpendingChart ────────────────────────────────────────────────────────────
 
+const ChartWrapper = styled.div`
+	padding: ${({ theme }) => theme.spacing['2']} 0;
+`
+
+const TooltipContainer = styled.div`
+	background-color: #ffffff;
+	border: none;
+	border-radius: 12px;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
+	padding: 12px 16px;
+`
+
+const TooltipItem = styled.div`
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 14px;
+	color: #78716c;
+	margin-bottom: 4px;
+
+	&:last-child {
+		margin-bottom: 0;
+	}
+`
+
+const TooltipValue = styled.span`
+	font-weight: 600;
+	color: #d97706;
+`
+
+interface CustomTooltipProps {
+	active?: boolean
+	payload?: Array<{
+		value: number
+		payload: {
+			month: string
+			depenses: number
+			cardCount: number
+		}
+	}>
+	label?: string
+}
+
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
+	if (!active || !payload || payload.length === 0) return null
+
+	const data = payload[0].payload
+
+	return (
+		<TooltipContainer>
+			<TooltipItem>
+				<span>Dépenses :</span>
+				<TooltipValue>{formatEuros(data.depenses)}</TooltipValue>
+			</TooltipItem>
+			<TooltipItem>
+				<span>Cartes achetées :</span>
+				<TooltipValue>{data.cardCount}</TooltipValue>
+			</TooltipItem>
+		</TooltipContainer>
+	)
+}
+
 function SpendingChart({ stats }: { readonly stats: CollectionStats }) {
 	if (stats.byMonth.length === 0) {
 		return (
@@ -137,41 +199,51 @@ function SpendingChart({ stats }: { readonly stats: CollectionStats }) {
 	const data = stats.byMonth.map(m => ({
 		month: m.month,
 		depenses: m.totalSpent,
+		cardCount: m.cardCount,
 	}))
 
 	return (
 		<Card>
 			<SectionTitle>Dépenses mensuelles</SectionTitle>
-			<ResponsiveContainer width="100%" height={220}>
-				<BarChart data={data} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
-					<CartesianGrid strokeDasharray="3 3" stroke="#e7e5e4" />
-					<XAxis
-						dataKey="month"
-						tick={{ fontSize: 12, fill: '#78716c' }}
-						axisLine={{ stroke: '#e7e5e4' }}
-						tickLine={false}
-					/>
-					<YAxis
-						tick={{ fontSize: 12, fill: '#78716c' }}
-						axisLine={false}
-						tickLine={false}
-						tickFormatter={v => `${v}€`}
-					/>
-					<Tooltip
-						formatter={value =>
-							typeof value === 'number'
-								? [formatEuros(value), 'Dépenses']
-								: [String(value), 'Dépenses']
-						}
-						contentStyle={{
-							border: '1px solid #e7e5e4',
-							borderRadius: '8px',
-							fontSize: '13px',
-						}}
-					/>
-					<Bar dataKey="depenses" fill="#d97706" radius={[4, 4, 0, 0]} />
-				</BarChart>
-			</ResponsiveContainer>
+			<ChartWrapper>
+				<ResponsiveContainer width="100%" height={260}>
+					<BarChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+						<defs>
+							<linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
+								<stop offset="100%" stopColor="#d97706" stopOpacity={1} />
+							</linearGradient>
+						</defs>
+						<CartesianGrid 
+							strokeDasharray="3 3" 
+							stroke="#f5f5f4" 
+							vertical={false}
+							strokeOpacity={0.5}
+						/>
+						<XAxis
+							dataKey="month"
+							tick={{ fontSize: 13, fill: '#57534e', fontWeight: 500 }}
+							axisLine={false}
+							tickLine={false}
+							dy={8}
+						/>
+						<YAxis
+							tick={{ fontSize: 13, fill: '#78716c', fontWeight: 500 }}
+							axisLine={false}
+							tickLine={false}
+							tickFormatter={v => `${v}€`}
+							width={50}
+						/>
+						<Tooltip content={<CustomTooltip />} cursor={{ fill: '#fef3c7', opacity: 0.3 }} />
+						<Bar 
+							dataKey="depenses" 
+							fill="url(#barGradient)" 
+							radius={[8, 8, 0, 0]}
+							maxBarSize={60}
+						/>
+					</BarChart>
+				</ResponsiveContainer>
+			</ChartWrapper>
 		</Card>
 	)
 }
