@@ -28,6 +28,7 @@ export interface PokemonCard {
 		name: string
 	}
 	cardmarket?: {
+		url: string
 		prices: {
 			averageSellPrice: number
 			lowPrice: number

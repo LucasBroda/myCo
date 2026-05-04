@@ -6,26 +6,28 @@ const TTL_MARKET = 1800; // 30 minutes
 
 /**
  * Fetch CardMarket price for a card via Pokémon TCG API data
- * The Pokémon TCG API includes cardmarket.prices on card objects.
+ * The Pokémon TCG API includes cardmarket.prices and url on card objects.
  */
 async function getCardMarketPrice(
   card: PokemonCard,
 ): Promise<{ price: number | null; url: string | null }> {
   const price = card.cardmarket?.prices?.averageSellPrice ?? null;
-  const url = card.cardmarket
-    ? `https://www.cardmarket.com/en/Pokemon/Products/Singles/${encodeURIComponent(card.set.name)}/${encodeURIComponent(card.name)}`
-    : null;
+  // Use the URL provided by the API directly
+  const url = card.cardmarket?.url ?? null;
   return { price, url };
 }
 
 /**
  * eBay price is not available via official API without credentials.
- * Placeholder returns null — integrate with eBay Finding API when APP_ID is available.
+ * Generate a search URL to help users find the card on eBay.
  */
 async function getEbayPrice(
-  _card: PokemonCard,
+  card: PokemonCard,
 ): Promise<{ price: number | null; url: string | null }> {
-  return { price: null, url: null };
+  // Generate an eBay search URL with card name, set, and number
+  const searchQuery = `${card.name} ${card.set.name} ${card.number}`;
+  const url = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(searchQuery)}&_sacat=2536`;
+  return { price: null, url };
 }
 
 export async function compareCard(cardId: string): Promise<MarketPrice> {
