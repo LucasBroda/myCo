@@ -161,11 +161,33 @@ export async function getStats(userId: string): Promise<CollectionStats> {
     [userId],
   );
 
+  // Calculate estimated value based on current market prices
+  let estimatedValue = 0;
+  const acquiredCards = await getCollection(userId);
+  
+  // Fetch market prices for all cards in parallel
+  const pricePromises = acquiredCards.map(async (acquired) => {
+    try {
+      const card = await cardsService.getCard(acquired.cardId);
+      // Use average sell price, fallback to trend price, or 0 if unavailable
+      const marketPrice = card.cardmarket?.prices?.averageSellPrice 
+        || card.cardmarket?.prices?.trendPrice 
+        || 0;
+      return marketPrice;
+    } catch (error) {
+      console.error(`Failed to fetch price for card ${acquired.cardId}:`, error);
+      return 0;
+    }
+  });
+
+  const prices = await Promise.all(pricePromises);
+  estimatedValue = prices.reduce((sum, price) => sum + price, 0);
+
   const totals = totalsResult.rows[0];
   return {
     totalCards: totals.total_cards as number,
     totalSpent: parseFloat(totals.total_spent as string),
-    estimatedValue: 0, // enriched by market service when needed
+    estimatedValue: estimatedValue,
     byMonth: monthsResult.rows.map((row) => ({
       month: row.month as string,
       totalSpent: parseFloat(row.total_spent as string),
