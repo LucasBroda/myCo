@@ -95,7 +95,8 @@ const frenchToEnglishTerms: Record<string, string[]> = {
 	'niveau': ['level'],
 }
 
-function normalizeString(str: string): string {
+function normalizeString(str: string | undefined | null): string {
+	if (!str) return ''
 	return str
 		.toLowerCase()
 		.normalize('NFD')
@@ -224,8 +225,8 @@ export default function MyCardsPage() {
 				if (setCompare !== 0) return setCompare
 
 				// Ensuite par numéro
-			const numA = Number.parseInt(a.number.replaceAll(/\D/g, ''), 10) || 0
-			const numB = Number.parseInt(b.number.replaceAll(/\D/g, ''), 10) || 0
+				const numA = Number.parseInt(a.number.replaceAll(/\D/g, ''), 10) || 0
+				const numB = Number.parseInt(b.number.replaceAll(/\D/g, ''), 10) || 0
 				if (numA !== numB) return numA - numB
 				return a.number.localeCompare(b.number)
 			})
