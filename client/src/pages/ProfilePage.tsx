@@ -158,10 +158,13 @@ interface CustomTooltipProps {
 	active?: boolean
 	payload?: Array<{
 		value: number
+		dataKey: string
 		payload: {
 			month: string
 			depenses: number
 			cardCount: number
+			budgetPlanifie: number
+			plannedCount: number
 		}
 	}>
 	label?: string
@@ -174,20 +177,59 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 
 	return (
 		<TooltipContainer>
-			<TooltipItem>
-				<span>Dépenses :</span>
-				<TooltipValue>{formatEuros(data.depenses)}</TooltipValue>
-			</TooltipItem>
-			<TooltipItem>
-				<span>Cartes achetées :</span>
-				<TooltipValue>{data.cardCount}</TooltipValue>
-			</TooltipItem>
+			{data.depenses > 0 && (
+				<>
+					<TooltipItem>
+						<span>Dépenses réelles :</span>
+						<TooltipValue>{formatEuros(data.depenses)}</TooltipValue>
+					</TooltipItem>
+					<TooltipItem>
+						<span>Cartes achetées :</span>
+						<TooltipValue>{data.cardCount}</TooltipValue>
+					</TooltipItem>
+				</>
+			)}
+			{data.budgetPlanifie > 0 && (
+				<>
+					<TooltipItem>
+						<span>Budget planifié :</span>
+						<TooltipValue style={{ color: '#f59e0b' }}>{formatEuros(data.budgetPlanifie)}</TooltipValue>
+					</TooltipItem>
+					<TooltipItem>
+						<span>Achats planifiés :</span>
+						<TooltipValue style={{ color: '#f59e0b' }}>{data.plannedCount}</TooltipValue>
+					</TooltipItem>
+				</>
+			)}
 		</TooltipContainer>
 	)
 }
 
-function SpendingChart({ stats }: { readonly stats: CollectionStats }) {
-	if (stats.byMonth.length === 0) {
+interface SpendingChartProps {
+	readonly stats: CollectionStats
+	readonly planned: PlannedPurchase[]
+}
+
+function SpendingChart({ stats, planned }: SpendingChartProps) {
+	// Agréger les budgets planifiés par mois
+	const plannedByMonth = planned.reduce((acc, p) => {
+		if (p.budget === null) return acc
+		const date = new Date(p.plannedDate)
+		const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+		if (!acc[monthKey]) {
+			acc[monthKey] = { total: 0, count: 0 }
+		}
+		acc[monthKey].total += p.budget
+		acc[monthKey].count += 1
+		return acc
+	}, {} as Record<string, { total: number; count: number }>)
+
+	// Créer une liste de tous les mois (réels + planifiés)
+	const allMonths = new Set<string>()
+	stats.byMonth.forEach(m => allMonths.add(m.month))
+	Object.keys(plannedByMonth).forEach(m => allMonths.add(m))
+
+	if (allMonths.size === 0) {
 		return (
 			<Card>
 				<SectionTitle>Dépenses mensuelles</SectionTitle>
@@ -196,11 +238,28 @@ function SpendingChart({ stats }: { readonly stats: CollectionStats }) {
 		)
 	}
 
-	const data = stats.byMonth.map(m => ({
-		month: m.month,
-		depenses: m.totalSpent,
-		cardCount: m.cardCount,
-	}))
+	// Formater les mois pour l'affichage (ex: "2026-05" -> "Mai 26")
+	const formatMonth = (monthKey: string) => {
+		const [year, month] = monthKey.split('-')
+		const date = new Date(parseInt(year), parseInt(month) - 1)
+		return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+	}
+
+	// Combiner les données réelles et planifiées
+	const data = Array.from(allMonths)
+		.sort()
+		.map(monthKey => {
+			const realData = stats.byMonth.find(m => m.month === monthKey)
+			const plannedData = plannedByMonth[monthKey]
+
+			return {
+				month: formatMonth(monthKey),
+				depenses: realData?.totalSpent || 0,
+				cardCount: realData?.cardCount || 0,
+				budgetPlanifie: plannedData?.total || 0,
+				plannedCount: plannedData?.count || 0,
+			}
+		})
 
 	return (
 		<Card>
@@ -209,9 +268,13 @@ function SpendingChart({ stats }: { readonly stats: CollectionStats }) {
 				<ResponsiveContainer width="100%" height={260}>
 					<BarChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
 						<defs>
-							<linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
-								<stop offset="0%" stopColor="#f59e0b" stopOpacity={0.9} />
-								<stop offset="100%" stopColor="#d97706" stopOpacity={1} />
+							<linearGradient id="barGradientReal" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
+								<stop offset="100%" stopColor="#059669" stopOpacity={1} />
+							</linearGradient>
+							<linearGradient id="barGradientPlanned" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#fbbf24" stopOpacity={0.7} />
+								<stop offset="100%" stopColor="#f59e0b" stopOpacity={0.8} />
 							</linearGradient>
 						</defs>
 						<CartesianGrid 
@@ -237,9 +300,17 @@ function SpendingChart({ stats }: { readonly stats: CollectionStats }) {
 						<Tooltip content={<CustomTooltip />} cursor={{ fill: '#fef3c7', opacity: 0.3 }} />
 						<Bar 
 							dataKey="depenses" 
-							fill="url(#barGradient)" 
+							fill="url(#barGradientReal)" 
 							radius={[8, 8, 0, 0]}
-							maxBarSize={60}
+							maxBarSize={40}
+							name="Dépenses réelles"
+						/>
+						<Bar 
+							dataKey="budgetPlanifie" 
+							fill="url(#barGradientPlanned)" 
+							radius={[8, 8, 0, 0]}
+							maxBarSize={40}
+							name="Budget planifié"
 						/>
 					</BarChart>
 				</ResponsiveContainer>
@@ -917,7 +988,7 @@ export default function ProfilePage() {
 				<FullWidth>
 					<CollectionValueCard stats={stats} />
 				</FullWidth>
-				<SpendingChart stats={stats} />
+				<SpendingChart stats={stats} planned={planned} />
 				<PurchaseCalendar 
 					planned={planned} 
 					onDelete={handleDeletePlanned}
