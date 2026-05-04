@@ -34,10 +34,14 @@ export interface PokemonCard {
     name: string;
   };
   cardmarket?: {
+    url: string;
     prices: {
       averageSellPrice: number;
       lowPrice: number;
       trendPrice: number;
+      avg1: number;
+      avg7: number;
+      avg30: number;
     };
     updatedAt: string;
   };
@@ -76,6 +80,7 @@ export interface MarketPrice {
   ebayPrice: number | null;
   cardMarketUrl: string | null;
   ebayUrl: string | null;
+  percentChange30d: number | null;
   fetchedAt: string;
 }
 
