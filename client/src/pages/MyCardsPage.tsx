@@ -63,11 +63,41 @@ const ChartContainer = styled.div`
 	border-radius: ${({ theme }) => theme.radii.lg};
 `
 
+const ChartHeader = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	cursor: pointer;
+	user-select: none;
+
+	&:hover span {
+		color: ${({ theme }) => theme.colors.textPrimary};
+	}
+`
+
 const ChartTitle = styled.h3`
 	font-size: ${({ theme }) => theme.font.size.lg};
 	font-weight: ${({ theme }) => theme.font.weight.semibold};
 	color: ${({ theme }) => theme.colors.textPrimary};
-	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	margin: 0;
+`
+
+const ToggleButton = styled.span`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: ${({ theme }) => theme.spacing['2']};
+	font-size: ${({ theme }) => theme.font.size['2xl']};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	pointer-events: none;
+	transition: color ${({ theme }) => theme.transitions.fast};
+`
+
+const ChartContent = styled.div<{ $isExpanded: boolean }>`
+	max-height: ${({ $isExpanded }) => ($isExpanded ? '2000px' : '0')};
+	overflow: ${({ $isExpanded }) => ($isExpanded ? 'visible' : 'hidden')};
+	transition: max-height ${({ theme }) => theme.transitions.base};
 `
 
 const ChartWrapper = styled.div`
@@ -267,6 +297,7 @@ export default function MyCardsPage() {
 	const [rarityFilter, setRarityFilter] = useState<string>('all')
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
+	const [isChartExpanded, setIsChartExpanded] = useState(true)
 	const { acquiredMap, setCollection } = useCollectionStore()
 	const navigate = useNavigate()
 
@@ -450,47 +481,61 @@ export default function MyCardsPage() {
 
 			{chartData.length > 0 && (
 				<ChartContainer>
-					<ChartTitle>Répartition par Set</ChartTitle>
-					<ChartWrapper>
-						<ResponsiveContainer width="100%" height="100%">
-							<PieChart>
-								<Pie
-									data={chartData}
-									cx="50%"
-									cy="50%"
-									labelLine={false}
-									label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
-									outerRadius={120}
-									fill="#8884d8"
-									dataKey="value"
-								>
-								{chartData.map((entry) => (
-									<Cell key={entry.setId} fill={entry.color} />
-									))}
-								</Pie>
-								<Tooltip 
-									formatter={(value) => {
-										const count = typeof value === 'number' ? value : 0
-										return [`${count} carte${count > 1 ? 's' : ''}`, 'Nombre']
-									}}
-								/>
-							</PieChart>
-						</ResponsiveContainer>
-					</ChartWrapper>
-					<LegendContainer>
-						{chartData.map((entry) => (
-							<LegendItem key={entry.setId}>
-								<ColorDot color={entry.color} />
-								{entry.logo && (
-									<SetLogo src={entry.logo} alt={entry.name} />
-								)}
-								<LegendText>
-									<LegendSetName>{entry.name}</LegendSetName>
-									<LegendCount>{entry.value} carte{entry.value > 1 ? 's' : ''}</LegendCount>
-								</LegendText>
-							</LegendItem>
-						))}
-					</LegendContainer>
+					<ChartHeader
+						role="button"
+						tabIndex={0}
+						onClick={() => setIsChartExpanded(!isChartExpanded)}
+						onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && setIsChartExpanded(!isChartExpanded)}
+						aria-expanded={isChartExpanded}
+						aria-controls="chart-content"
+					>
+						<ChartTitle>Répartition par Set</ChartTitle>
+						<ToggleButton aria-hidden="true">
+							{isChartExpanded ? '⌃' : '⌄'}
+						</ToggleButton>
+					</ChartHeader>
+					<ChartContent $isExpanded={isChartExpanded} id="chart-content">
+						<ChartWrapper>
+							<ResponsiveContainer width="100%" height="100%">
+								<PieChart>
+									<Pie
+										data={chartData}
+										cx="50%"
+										cy="50%"
+										labelLine={false}
+										label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
+										outerRadius={120}
+										fill="#8884d8"
+										dataKey="value"
+									>
+									{chartData.map((entry) => (
+										<Cell key={entry.setId} fill={entry.color} />
+										))}
+									</Pie>
+									<Tooltip 
+										formatter={(value) => {
+											const count = typeof value === 'number' ? value : 0
+											return [`${count} carte${count > 1 ? 's' : ''}`, 'Nombre']
+										}}
+									/>
+								</PieChart>
+							</ResponsiveContainer>
+						</ChartWrapper>
+						<LegendContainer>
+							{chartData.map((entry) => (
+								<LegendItem key={entry.setId}>
+									<ColorDot color={entry.color} />
+									{entry.logo && (
+										<SetLogo src={entry.logo} alt={entry.name} />
+									)}
+									<LegendText>
+										<LegendSetName>{entry.name}</LegendSetName>
+										<LegendCount>{entry.value} carte{entry.value > 1 ? 's' : ''}</LegendCount>
+									</LegendText>
+								</LegendItem>
+							))}
+						</LegendContainer>
+					</ChartContent>
 				</ChartContainer>
 			)}
 
