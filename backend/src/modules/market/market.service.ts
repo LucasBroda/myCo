@@ -1,4 +1,5 @@
 import { cache } from "../../config/redis";
+import { searchEbayPrice } from "../../config/ebay";
 import { MarketPrice, PokemonCard } from "../../types/models";
 import { getCard, searchCards } from "../cards/cards.service";
 
@@ -18,16 +19,13 @@ async function getCardMarketPrice(
 }
 
 /**
- * eBay price is not available via official API without credentials.
- * Generate a search URL to help users find the card on eBay.
+ * Fetch eBay price for a card using eBay Browse API
+ * Returns average price from top listings and a direct search URL
  */
 async function getEbayPrice(
   card: PokemonCard,
 ): Promise<{ price: number | null; url: string | null }> {
-  // Generate an eBay search URL with card name, set, and number
-  const searchQuery = `${card.name} ${card.set.name} ${card.number}`;
-  const url = `https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(searchQuery)}&_sacat=2536`;
-  return { price: null, url };
+  return searchEbayPrice(card.name, card.set.name, card.number);
 }
 
 export async function compareCard(cardId: string): Promise<MarketPrice> {
