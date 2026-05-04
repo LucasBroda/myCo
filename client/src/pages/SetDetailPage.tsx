@@ -628,7 +628,7 @@ export default function SetDetailPage() {
 			<SearchContainer>
 				<Input
 					type="text"
-					placeholder="Rechercher une carte (ex: Pikachu, 025, feu, brillant)..."
+					placeholder="Rechercher une carte (ex: Pikachu, 025)..."
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
 					inputSize="md"
