@@ -71,6 +71,7 @@ export interface MarketPrice {
 	ebayPrice: number | null
 	cardMarketUrl: string | null
 	ebayUrl: string | null
+	percentChange30d: number | null
 	fetchedAt: string
 }
 
