@@ -35,9 +35,9 @@ const RightPane = styled.div`
 	flex-direction: column;
 	gap: ${({ theme }) => theme.spacing['4']};
 	position: sticky;
-	top: 24px;
+	top: 0;
 	align-self: flex-start;
-	max-height: calc(100vh - 48px);
+	max-height: calc(100vh - 24px);
 	overflow-y: auto;
 `
 
@@ -350,11 +350,7 @@ function PriceComparisonPanel({
 					<PriceRow>
 						<PriceSource>CardMarket</PriceSource>
 						<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-							<PriceTag 
-								price={price.cardMarketPrice} 
-								trend={price.percentChange30d}
-								showTrend={true}
-							/>
+							<PriceTag price={price.cardMarketPrice} />
 							{price.cardMarketUrl && (
 								<BuyLink
 									href={price.cardMarketUrl}
