@@ -1,5 +1,4 @@
 import type { MarketPrice, PokemonCard } from '@/types/models'
-import { Badge } from '@components/ui/Badge'
 import { Card } from '@components/ui/Card'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
@@ -21,7 +20,7 @@ const PageLayout = styled.div`
 	gap: ${({ theme }) => theme.spacing['6']};
 
 	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
-		grid-template-columns: 1fr 380px;
+		grid-template-columns: 1fr 400px;
 	}
 `
 
@@ -29,6 +28,27 @@ const LeftPane = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: ${({ theme }) => theme.spacing['4']};
+`
+
+const RightPane = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['4']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		position: sticky;
+		top: 0;
+		align-self: flex-start;
+		max-height: 100vh;
+		overflow-y: auto;
+	}
+`
+
+// Spacer invisible pour aligner le RightPane avec les résultats de recherche
+const SearchBarSpacer = styled.div`
+	@media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
+		display: none;
+	}
 `
 
 // ─── SearchBar ────────────────────────────────────────────────────────────────
@@ -44,7 +64,7 @@ const SearchHint = styled.p`
 `
 
 interface SearchBarProps {
-	onSearch: (query: string) => void
+	readonly onSearch: (query: string) => void
 }
 
 function MarketSearchBar({ onSearch }: SearchBarProps) {
@@ -81,128 +101,48 @@ function MarketSearchBar({ onSearch }: SearchBarProps) {
 	)
 }
 
-// ─── DealCard ─────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface MarketCard extends PokemonCard {
 	market: MarketPrice
 }
 
-interface DealCard extends MarketCard {
-	discountPercent: number
-}
+// ─── SearchResults ────────────────────────────────────────────────────────────
 
-const DealItem = styled.li`
-	display: flex;
-	align-items: center;
-	gap: ${({ theme }) => theme.spacing['3']};
-	padding: ${({ theme }) => `${theme.spacing['3']} 0`};
-	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-	cursor: pointer;
-
-	&:last-child {
-		border-bottom: none;
-	}
-
-	&:hover {
-		background-color: ${({ theme }) => theme.colors.surface};
-		margin: 0 -${({ theme }) => theme.spacing['3']};
-		padding-left: ${({ theme }) => theme.spacing['3']};
-		padding-right: ${({ theme }) => theme.spacing['3']};
-		border-radius: ${({ theme }) => theme.radii.md};
-	}
-
-	&:focus-visible {
-		outline: 2px solid ${({ theme }) => theme.colors.focus};
-		outline-offset: 2px;
-	}
+const WelcomeCard = styled(Card)`
+	text-align: center;
+	padding: ${({ theme }) => theme.spacing['8']};
 `
 
-const DealCardImg = styled.img`
-	width: 48px;
-	height: 68px;
-	object-fit: cover;
-	border-radius: ${({ theme }) => theme.radii.sm};
-	flex-shrink: 0;
+const WelcomeIcon = styled.div`
+	font-size: 64px;
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
 `
 
-const DealInfo = styled.div`
-	flex: 1;
-	min-width: 0;
-`
-
-const DealName = styled.span`
-	display: block;
-	font-size: ${({ theme }) => theme.font.size.sm};
-	font-weight: ${({ theme }) => theme.font.weight.medium};
+const WelcomeTitle = styled.h2`
+	font-size: ${({ theme }) => theme.font.size.xl};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
 	color: ${({ theme }) => theme.colors.textPrimary};
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	margin: 0 0 ${({ theme }) => theme.spacing['2']};
 `
 
-const DealSet = styled.span`
-	display: block;
-	font-size: ${({ theme }) => theme.font.size.xs};
+const WelcomeText = styled.p`
+	font-size: ${({ theme }) => theme.font.size.sm};
 	color: ${({ theme }) => theme.colors.textMuted};
+	margin: 0;
 `
 
-const DealPrices = styled.div`
-	display: flex;
-	flex-direction: column;
-	align-items: flex-end;
-	gap: 2px;
-	flex-shrink: 0;
-`
-
-function DealsList({
-	deals,
-	onSelect,
-}: {
-	deals: DealCard[]
-	onSelect: (card: DealCard) => void
-}) {
-	if (deals.length === 0) {
-		return <EmptyState message="Aucun deal disponible." icon="🏷️" />
-	}
-
+function WelcomeMessage() {
 	return (
-		<Card>
-			<SectionTitle>Meilleures offres du moment</SectionTitle>
-			<ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-				{deals.map(deal => (
-					<DealItem
-						key={deal.id}
-						tabIndex={0}
-						role="button"
-						onClick={() => onSelect(deal)}
-						onKeyDown={e => (e.key === 'Enter' || e.key === ' ') && onSelect(deal)}
-						aria-label={`${deal.name} — ${deal.discountPercent}% sous le marché`}
-					>
-						<DealCardImg
-							src={deal.images.small}
-							alt={`${deal.name} — ${deal.number} ${deal.set.name}`}
-							loading="lazy"
-						/>
-						<DealInfo>
-							<DealName>{deal.name}</DealName>
-							<DealSet>
-								{deal.set.name} · #{deal.number}
-							</DealSet>
-						</DealInfo>
-						<DealPrices>
-							<Badge variant="forest" size="sm">
-								-{deal.discountPercent}%
-							</Badge>
-							<PriceTag price={deal.market.cardMarketPrice} variant="deal" />
-						</DealPrices>
-					</DealItem>
-				))}
-			</ul>
-		</Card>
+		<WelcomeCard>
+			<WelcomeIcon>🔍</WelcomeIcon>
+			<WelcomeTitle>Comparez les prix des cartes Pokémon</WelcomeTitle>
+			<WelcomeText>
+				Recherchez une carte pour comparer les prix entre CardMarket et eBay.
+			</WelcomeText>
+		</WelcomeCard>
 	)
 }
-
-// ─── SearchResults ────────────────────────────────────────────────────────────
 
 const ResultItem = styled.li`
 	display: flex;
@@ -253,8 +193,8 @@ function SearchResults({
 	results,
 	onSelect,
 }: {
-	results: MarketCard[]
-	onSelect: (card: MarketCard) => void
+	readonly results: MarketCard[]
+	readonly onSelect: (card: MarketCard) => void
 }) {
 	if (results.length === 0) {
 		return <EmptyState message="Aucun résultat pour cette recherche." icon="🔍" />
@@ -284,7 +224,11 @@ function SearchResults({
 								{card.set.name} · #{card.number}
 							</ResultMeta>
 						</ResultInfo>
-						<PriceTag price={card.market?.cardMarketPrice ?? null} />
+						<PriceTag 
+							price={card.market?.cardMarketPrice ?? null}
+							trend={card.market?.percentChange30d ?? null}
+							showTrend={true}
+						/>
 					</ResultItem>
 				))}
 			</ul>
@@ -318,7 +262,7 @@ const PanelName = styled.h3`
 
 const PriceRow = styled.div`
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
 	padding: ${({ theme }) => `${theme.spacing['3']} 0`};
 	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -356,35 +300,26 @@ const BuyLink = styled.a`
 	}
 `
 
-const EmptyPanel = styled.div`
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: ${({ theme }) => theme.spacing['3']};
-	height: 200px;
-	color: ${({ theme }) => theme.colors.textMuted};
-	font-size: ${({ theme }) => theme.font.size.sm};
-	text-align: center;
-	padding: ${({ theme }) => theme.spacing['4']};
-`
-
 function PriceComparisonPanel({
 	card,
 }: {
-	card: MarketCard | DealCard | null
+	readonly card: MarketCard | null
 }) {
 	const [price, setPrice] = useState<MarketPrice | null>(null)
 	const [loading, setLoading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
 	useEffect(() => {
-		if (!card) return
+		if (!card) {
+			setPrice(null)
+			return
+		}
 		void (async () => {
 			setLoading(true)
 			setError(null)
 			try {
-				setPrice(await marketService.compare(card.id))
+				const priceData = await marketService.compare(card.id)
+				setPrice(priceData)
 			} catch (err) {
 				setError(err instanceof Error ? err.message : 'Erreur de chargement')
 			} finally {
@@ -394,78 +329,66 @@ function PriceComparisonPanel({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [card?.id])
 
-	return (
-		<Card style={{ position: 'sticky', top: '24px' }}>
-			<SectionTitle>Comparateur de prix</SectionTitle>
+	if (!card) return null
 
-			{!card && (
-				<EmptyPanel>
-					Sélectionnez une carte pour comparer les prix
-				</EmptyPanel>
+	return (
+		<Card>
+			<SectionTitle>Liens d'achat 🛒</SectionTitle>
+
+			<PanelHeader>
+				<PanelImg
+					src={card.images.small}
+					alt={`${card.name} — ${card.number} ${card.set.name}`}
+				/>
+				<div>
+					<PanelName>{card.name}</PanelName>
+					<span
+						style={{ fontSize: '13px', color: '#78716c' }}
+					>{`${card.set.name} · #${card.number}`}</span>
+				</div>
+			</PanelHeader>
+
+			{loading && <Spinner center size="sm" label="Chargement des prix…" />}
+			{error && (
+				<p style={{ fontSize: '13px', color: '#b91c1c', margin: 0 }}>
+					{error}
+				</p>
 			)}
 
-			{card && (
+			{price && !loading && (
 				<>
-					<PanelHeader>
-						<PanelImg
-							src={card.images.small}
-							alt={`${card.name} — ${card.number} ${card.set.name}`}
-						/>
-						<div>
-							<PanelName>{card.name}</PanelName>
-							<span
-								style={{ fontSize: '13px', color: '#78716c' }}
-							>{`${card.set.name} · #${card.number}`}</span>
+					<PriceRow>
+						<PriceSource>CardMarket</PriceSource>
+						<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+							<PriceTag price={price.cardMarketPrice} />
+							{price.cardMarketUrl && (
+								<BuyLink
+									href={price.cardMarketUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`Voir ${card.name} sur CardMarket`}
+								>
+									Voir l'offre →
+								</BuyLink>
+							)}
 						</div>
-					</PanelHeader>
-
-					{loading && <Spinner center size="sm" label="Chargement des prix…" />}
-					{error && (
-						<p style={{ fontSize: '13px', color: '#b91c1c', margin: 0 }}>
-							{error}
-						</p>
-					)}
-
-					{price && !loading && (
-						<>
-							<PriceRow>
-								<PriceSource>CardMarket</PriceSource>
-								<div
-									style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+					</PriceRow>
+					<PriceRow>
+						<PriceSource>eBay</PriceSource>
+						<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+							<PriceTag price={price.ebayPrice} />
+							{price.ebayUrl && (
+								<BuyLink
+									href={price.ebayUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`Voir ${card.name} sur eBay`}
 								>
-									<PriceTag price={price.cardMarketPrice} />
-									{price.cardMarketUrl && (
-										<BuyLink
-											href={price.cardMarketUrl}
-											target="_blank"
-											rel="noopener noreferrer"
-											aria-label={`Acheter ${card.name} sur CardMarket`}
-										>
-											Acheter
-										</BuyLink>
-									)}
-								</div>
-							</PriceRow>
-							<PriceRow>
-								<PriceSource>eBay</PriceSource>
-								<div
-									style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-								>
-									<PriceTag price={price.ebayPrice} />
-									{price.ebayUrl && (
-										<BuyLink
-											href={price.ebayUrl}
-											target="_blank"
-											rel="noopener noreferrer"
-											aria-label={`Acheter ${card.name} sur eBay`}
-										>
-											Acheter
-										</BuyLink>
-									)}
-								</div>
-							</PriceRow>
-						</>
-					)}
+									Voir l'offre →
+								</BuyLink>
+							)}
+						</div>
+					</PriceRow>
 				</>
 			)}
 		</Card>
@@ -477,23 +400,9 @@ function PriceComparisonPanel({
 export default function MarketPage() {
 	const [query, setQuery] = useState('')
 	const [searchResults, setSearchResults] = useState<MarketCard[]>([])
-	const [deals, setDeals] = useState<DealCard[]>([])
-	const [selectedCard, setSelectedCard] = useState<MarketCard | DealCard | null>(null)
+	const [selectedCard, setSelectedCard] = useState<MarketCard | null>(null)
 	const [isSearching, setIsSearching] = useState(false)
-	const [isLoadingDeals, setIsLoadingDeals] = useState(true)
 	const [searchError, setSearchError] = useState<string | null>(null)
-	const [dealsError, setDealsError] = useState<string | null>(null)
-
-	// Load deals on mount
-	useEffect(() => {
-		marketService
-			.getDeals()
-			.then(d => setDeals(d as unknown as DealCard[]))
-			.catch(err =>
-				setDealsError(err instanceof Error ? err.message : 'Erreur de chargement')
-			)
-			.finally(() => setIsLoadingDeals(false))
-	}, [])
 
 	// Trigger search when debounced query changes
 	const handleSearch = useCallback((q: string) => {
@@ -524,23 +433,22 @@ export default function MarketPage() {
 					<MarketSearchBar onSearch={handleSearch} />
 
 					{showSearch ? (
-						isSearching ? (
-							<Spinner center label="Recherche en cours…" />
-						) : searchError ? (
-							<ErrorState message={searchError} />
-						) : (
-							<SearchResults results={searchResults} onSelect={setSelectedCard} />
-						)
-					) : isLoadingDeals ? (
-						<Spinner center label="Chargement des deals…" />
-					) : dealsError ? (
-						<ErrorState message={dealsError} />
+						<>
+							{isSearching && <Spinner center label="Recherche en cours…" />}
+							{!isSearching && searchError && <ErrorState message={searchError} />}
+							{!isSearching && !searchError && (
+								<SearchResults results={searchResults} onSelect={setSelectedCard} />
+							)}
+						</>
 					) : (
-						<DealsList deals={deals} onSelect={setSelectedCard} />
+						<WelcomeMessage />
 					)}
 				</LeftPane>
 
-				<PriceComparisonPanel card={selectedCard} />
+				<RightPane>
+					<SearchBarSpacer style={{ height: '88px' }} />
+					<PriceComparisonPanel card={selectedCard} />
+				</RightPane>
 			</PageLayout>
 		</section>
 	)

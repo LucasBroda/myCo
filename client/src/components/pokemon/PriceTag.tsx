@@ -1,3 +1,4 @@
+import { PriceTrend } from './PriceTrend'
 import styled from 'styled-components'
 
 const formatEuros = (value: number) =>
@@ -10,6 +11,13 @@ const formatEuros = (value: number) =>
 interface TagProps {
 	$variant: 'default' | 'deal'
 }
+
+const PriceContainer = styled.div`
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 2px;
+`
 
 const Tag = styled.span<TagProps>`
 	display: inline-flex;
@@ -28,13 +36,33 @@ const Label = styled.span`
 `
 
 interface Props {
-	price: number | null
-	label?: string
-	variant?: 'default' | 'deal'
+	readonly price: number | null
+	readonly label?: string
+	readonly variant?: 'default' | 'deal'
+	readonly trend?: number | null
+	readonly showTrend?: boolean
 }
 
-export function PriceTag({ price, label, variant = 'default' }: Props) {
+export function PriceTag({ 
+	price, 
+	label, 
+	variant = 'default',
+	trend,
+	showTrend = false 
+}: Props) {
 	if (price === null) return <Label>N/A</Label>
+
+	if (showTrend && trend !== undefined) {
+		return (
+			<PriceContainer>
+				<Tag $variant={variant}>
+					{label && <Label>{label}</Label>}
+					{formatEuros(price)}
+				</Tag>
+				<PriceTrend percentChange={trend} />
+			</PriceContainer>
+		)
+	}
 
 	return (
 		<Tag $variant={variant}>
