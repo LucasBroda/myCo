@@ -16,11 +16,16 @@ import { profileService } from '@services/profileService'
 import { useCollectionStore } from '@store/collectionStore'
 import { usePlannedStore } from '@store/plannedStore'
 import { useToast } from '@hooks/useToast'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import styled from 'styled-components'
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
+
+const SearchContainer = styled.div`
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	max-width: 500px;
+`
 
 const HeaderSection = styled.div`
 	display: flex;
@@ -87,6 +92,83 @@ const BackLink = styled.button`
 `
 
 // ─── Filter options ───────────────────────────────────────────────────────────
+
+// Mapping français -> anglais pour les termes Pokémon
+const frenchToEnglishTerms: Record<string, string[]> = {
+	// Types
+	'feu': ['fire'],
+	'eau': ['water'],
+	'plante': ['grass'],
+	'électrik': ['lightning', 'electric'],
+	'electrique': ['lightning', 'electric'],
+	'psy': ['psychic'],
+	'combat': ['fighting'],
+	'ténèbres': ['darkness', 'dark'],
+	'métal': ['metal'],
+	'fée': ['fairy'],
+	'dragon': ['dragon'],
+	'incolore': ['colorless'],
+	// Raretés
+	'commune': ['common'],
+	'peu commune': ['uncommon'],
+	'rare': ['rare'],
+	'holo': ['holo'],
+	'ultra': ['ultra'],
+	'secrète': ['secret'],
+	'arc-en-ciel': ['rainbow'],
+	'brillant': ['shining', 'shiny', 'brilliant'],
+	'illustration': ['illustration'],
+	'hyper': ['hyper'],
+	'amazing': ['amazing'],
+	'radiant': ['radiant'],
+	// Termes généraux
+	'dresseur': ['trainer'],
+	'énergie': ['energy'],
+	'support': ['supporter'],
+	'objet': ['item'],
+	'stade': ['stadium'],
+	'évolution': ['evolution'],
+	'base': ['basic'],
+	'niveau': ['level'],
+}
+
+function normalizeString(str: string): string {
+	return str
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '') // Retire les accents
+		.trim()
+}
+
+function matchesCardSearch(card: PokemonCard, searchQuery: string): boolean {
+	if (!searchQuery) return true
+
+	const normalizedQuery = normalizeString(searchQuery)
+	const normalizedName = normalizeString(card.name)
+	const normalizedNumber = normalizeString(card.number)
+	const normalizedRarity = normalizeString(card.rarity)
+
+	// Recherche directe dans le nom, numéro ou rareté
+	if (normalizedName.includes(normalizedQuery)) return true
+	if (normalizedNumber.includes(normalizedQuery)) return true
+	if (normalizedRarity.includes(normalizedQuery)) return true
+
+	// Recherche via le mapping français-anglais
+	for (const [frenchTerm, englishTerms] of Object.entries(frenchToEnglishTerms)) {
+		const normalizedFrench = normalizeString(frenchTerm)
+		if (normalizedFrench.includes(normalizedQuery) || normalizedQuery.includes(normalizedFrench)) {
+			// Si le terme français correspond, vérifier si un des termes anglais est dans la carte
+			const matches = englishTerms.some(englishTerm => {
+				const normalized = normalizeString(englishTerm)
+				return normalizedName.includes(normalized) || 
+				       normalizedRarity.includes(normalized)
+			})
+			if (matches) return true
+		}
+	}
+
+	return false
+}
 
 type CardFilter = 'all' | 'owned' | 'missing'
 
@@ -374,6 +456,7 @@ export default function SetDetailPage() {
 	const [error, setError] = useState<string | null>(null)
 	const [filter, setFilter] = useState<CardFilter>('all')
 	const [rarityFilter, setRarityFilter] = useState<string>('all')
+	const [searchQuery, setSearchQuery] = useState('')
 	const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null)
 	const [isFollowed, setIsFollowed] = useState(false)
 
@@ -452,16 +535,21 @@ export default function SetDetailPage() {
 	]
 
 	// Apply filters
-	const filteredCards = cards.filter(card => {
-		// Filter by ownership status
-		if (filter === 'owned' && !isOwnedCard(card.id)) return false
-		if (filter === 'missing' && isOwnedCard(card.id)) return false
-		
-		// Filter by rarity
-		if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false
-		
-		return true
-	})
+	const filteredCards = useMemo(() => {
+		return cards.filter(card => {
+			// Filter by search query
+			if (!matchesCardSearch(card, searchQuery)) return false
+			
+			// Filter by ownership status
+			if (filter === 'owned' && !isOwnedCard(card.id)) return false
+			if (filter === 'missing' && isOwnedCard(card.id)) return false
+			
+			// Filter by rarity
+			if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false
+			
+			return true
+		})
+	}, [cards, searchQuery, filter, rarityFilter, acquiredMap])
 
 	function handleCardClick(card: PokemonCard) {
 		if (isOwnedCard(card.id)) {
@@ -537,19 +625,29 @@ export default function SetDetailPage() {
 				</ProgressSection>
 			)}
 
-			<FilterBar
-				options={filterOptions}
-				value={filter}
-				onChange={setFilter}
-				label="Filtrer les cartes"
-			/>
+			<SearchContainer>
+				<Input
+					type="text"
+					placeholder="Rechercher une carte (ex: Pikachu, 025, feu, brillant)..."
+					value={searchQuery}
+					onChange={(e) => setSearchQuery(e.target.value)}
+					inputSize="md"
+				/>
+			</SearchContainer>
 
-			<FilterBar
-				options={rarityOptions}
-				value={rarityFilter}
-				onChange={setRarityFilter}
-				label="Filtrer par rareté"
-			/>
+		<FilterBar
+			options={filterOptions}
+			value={filter}
+			onChange={setFilter}
+			label="Filtrer les cartes"
+		/>
+
+		<FilterBar
+			options={rarityOptions}
+			value={rarityFilter}
+			onChange={setRarityFilter}
+			label="Filtrer par rareté"
+		/>
 
 			{filteredCards.length === 0 ? (
 				<EmptyState message="Aucune carte pour ce filtre." />
