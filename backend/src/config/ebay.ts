@@ -65,7 +65,7 @@ async function getAccessToken(): Promise<string> {
       throw new Error(`eBay OAuth failed: ${response.statusText}`);
     }
 
-    const data: EbayTokenResponse = await response.json();
+    const data = (await response.json()) as EbayTokenResponse;
 
     // Cache token for 55 minutes (expires in 60, but refresh early)
     await cache.set(EBAY_TOKEN_CACHE_KEY, data.access_token, 3300);
@@ -120,7 +120,7 @@ export async function searchEbayPrice(
       throw new Error(`eBay API error: ${response.statusText}`);
     }
 
-    const data: EbaySearchResponse = await response.json();
+    const data = (await response.json()) as EbaySearchResponse;
 
     // If no results, return search URL
     if (!data.itemSummaries || data.itemSummaries.length === 0) {
