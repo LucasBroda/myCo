@@ -1,4 +1,4 @@
-import type { PokemonCard, PokemonSet } from '@/types/models'
+import type { PokemonCard, PokemonSet, AcquiredCard } from '@/types/models'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
 import { Spinner } from '@components/ui/Spinner'
@@ -6,11 +6,11 @@ import { Input } from '@components/ui/Input'
 import { FilterBar, type FilterOption } from '@components/layout/FilterBar'
 import { PageHeader } from '@components/layout/PageHeader'
 import { CardThumbnail } from '@components/pokemon/CardThumbnail'
+import { CardDetailsModal } from '@components/pokemon/CardDetailsModal'
 import { collectionService } from '@services/collectionService'
 import { cardsService } from '@services/cardsService'
 import { useCollectionStore } from '@store/collectionStore'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router'
 import styled from 'styled-components'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
@@ -293,13 +293,14 @@ const CHART_COLORS = [
 export default function MyCardsPage() {
 	const [cards, setCards] = useState<PokemonCard[]>([])
 	const [sets, setSets] = useState<Map<string, PokemonSet>>(new Map())
+	const [acquisitions, setAcquisitions] = useState<AcquiredCard[]>([])
 	const [searchQuery, setSearchQuery] = useState('')
 	const [rarityFilter, setRarityFilter] = useState<string>('all')
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [isChartExpanded, setIsChartExpanded] = useState(true)
+	const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null)
 	const { acquiredMap, setCollection } = useCollectionStore()
-	const navigate = useNavigate()
 
 	async function loadData() {
 		setIsLoading(true)
@@ -307,6 +308,7 @@ export default function MyCardsPage() {
 		try {
 			const collection = await collectionService.getCollection()
 			setCollection(collection)
+			setAcquisitions(collection)
 
 			// Récupérer les IDs des cartes possédées
 			const ownedCardIds = Object.keys(acquiredMap)
@@ -437,8 +439,18 @@ export default function MyCardsPage() {
 	}, [cards, sets])
 
 	function handleCardClick(card: PokemonCard) {
-		navigate(`/collections/${card.set.id}`)
+		setSelectedCard(card)
 	}
+
+	function handleCloseModal() {
+		setSelectedCard(null)
+	}
+
+	// Get acquisitions for selected card
+	const selectedCardAcquisitions = useMemo(() => {
+		if (!selectedCard) return []
+		return acquisitions.filter(acq => acq.cardId === selectedCard.id)
+	}, [selectedCard, acquisitions])
 
 	if (isLoading) return <Spinner center label="Chargement de vos cartes…" />
 	if (error) return <ErrorState message={error} onRetry={loadData} />
@@ -570,6 +582,14 @@ export default function MyCardsPage() {
 						/>
 					))}
 				</CardGrid>
+			)}
+
+			{selectedCard && (
+				<CardDetailsModal
+					card={selectedCard}
+					acquisitions={selectedCardAcquisitions}
+					onClose={handleCloseModal}
+				/>
 			)}
 		</section>
 	)
