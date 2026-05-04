@@ -8,6 +8,7 @@ import { SectionTitle } from '@components/layout/SectionTitle'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
 import { cardsService } from '@services/cardsService'
+import { PriceTrend } from '@components/pokemon/PriceTrend'
 import { usePlannedStore } from '@store/plannedStore'
 import { useToast } from '@hooks/useToast'
 import { useEffect, useState } from 'react'
@@ -85,6 +86,10 @@ const StatValue = styled.span`
 	font-size: ${({ theme }) => theme.font.size['2xl']};
 	font-weight: ${({ theme }) => theme.font.weight.bold};
 	color: ${({ theme }) => theme.colors.amber};
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['2']};
+	flex-wrap: wrap;
 `
 
 const StatLabel = styled.span`
@@ -118,6 +123,11 @@ function CollectionValueCard({ stats, planned }: CollectionValueCardProps) {
 		return sum + (p.budget ? Number(p.budget) : 0)
 	}, 0)
 
+	// Calculer l'évolution de la valeur (plus-value ou moins-value)
+	const valueChange = stats.totalSpent > 0 
+		? ((stats.estimatedValue - stats.totalSpent) / stats.totalSpent) * 100 
+		: null
+
 	return (
 		<Card>
 			<SectionTitle>Résumé de la collection</SectionTitle>
@@ -132,7 +142,10 @@ function CollectionValueCard({ stats, planned }: CollectionValueCardProps) {
 				</StatItem>
 				<StatItem>
 					<StatValue>
-						{formatEuros(stats.estimatedValue)}
+						<span>{formatEuros(stats.estimatedValue)}</span>
+						{valueChange !== null && stats.estimatedValue > 0 && (
+							<PriceTrend percentChange={valueChange} />
+						)}
 						{plannedTotal > 0 && (
 							<PlannedValueIndicator>
 								(+ {formatEuros(plannedTotal)} prévus)
