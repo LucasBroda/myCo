@@ -34,11 +34,21 @@ const RightPane = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: ${({ theme }) => theme.spacing['4']};
-	position: sticky;
-	top: 0;
-	align-self: flex-start;
-	max-height: calc(100vh - 24px);
-	overflow-y: auto;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		position: sticky;
+		top: 0;
+		align-self: flex-start;
+		max-height: 100vh;
+		overflow-y: auto;
+	}
+`
+
+// Spacer invisible pour aligner le RightPane avec les résultats de recherche
+const SearchBarSpacer = styled.div`
+	@media (max-width: ${({ theme }) => theme.breakpoints.lg}) {
+		display: none;
+	}
 `
 
 // ─── SearchBar ────────────────────────────────────────────────────────────────
@@ -436,6 +446,7 @@ export default function MarketPage() {
 				</LeftPane>
 
 				<RightPane>
+					<SearchBarSpacer style={{ height: '88px' }} />
 					<PriceComparisonPanel card={selectedCard} />
 				</RightPane>
 			</PageLayout>
