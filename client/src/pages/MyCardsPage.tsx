@@ -1,4 +1,4 @@
-import type { PokemonCard } from '@/types/models'
+import type { PokemonCard, PokemonSet } from '@/types/models'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
 import { Spinner } from '@components/ui/Spinner'
@@ -12,6 +12,7 @@ import { useCollectionStore } from '@store/collectionStore'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import styled from 'styled-components'
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts'
 
 // ─── Styled Components ────────────────────────────────────────────────────────
 
@@ -52,6 +53,81 @@ const StatValue = styled.span`
 	font-size: ${({ theme }) => theme.font.size.xl};
 	font-weight: ${({ theme }) => theme.font.weight.bold};
 	color: ${({ theme }) => theme.colors.textPrimary};
+`
+
+const ChartContainer = styled.div`
+	margin-bottom: ${({ theme }) => theme.spacing['6']};
+	padding: ${({ theme }) => theme.spacing['6']};
+	background-color: ${({ theme }) => theme.colors.surfaceElevated};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.lg};
+`
+
+const ChartTitle = styled.h3`
+	font-size: ${({ theme }) => theme.font.size.lg};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.textPrimary};
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+`
+
+const ChartWrapper = styled.div`
+	height: 400px;
+	width: 100%;
+`
+
+const LegendContainer = styled.div`
+	display: flex;
+	flex-wrap: wrap;
+	gap: ${({ theme }) => theme.spacing['3']};
+	margin-top: ${({ theme }) => theme.spacing['4']};
+	justify-content: center;
+`
+
+const LegendItem = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['2']};
+	padding: ${({ theme }) => theme.spacing['2']} ${({ theme }) => theme.spacing['3']};
+	background-color: ${({ theme }) => theme.colors.surface};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.md};
+	transition: transform 0.2s ease;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+	}
+`
+
+const SetLogo = styled.img`
+	width: 32px;
+	height: 32px;
+	object-fit: contain;
+`
+
+const LegendText = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+`
+
+const LegendSetName = styled.span`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	color: ${({ theme }) => theme.colors.textPrimary};
+`
+
+const LegendCount = styled.span`
+	font-size: ${({ theme }) => theme.font.size.xs};
+	color: ${({ theme }) => theme.colors.textSecondary};
+`
+
+const ColorDot = styled.div<{ color: string }>`
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	background-color: ${({ color }) => color};
+	flex-shrink: 0;
 `
 
 // ─── Search & Filter Functions ────────────────────────────────────────────────
@@ -166,10 +242,27 @@ const rarityOrder: Record<string, number> = {
 	'Promo': 26,
 }
 
+// Modern color palette for the pie chart
+const CHART_COLORS = [
+	'#3b82f6', // blue
+	'#8b5cf6', // purple
+	'#ec4899', // pink
+	'#f59e0b', // amber
+	'#10b981', // emerald
+	'#06b6d4', // cyan
+	'#f97316', // orange
+	'#6366f1', // indigo
+	'#14b8a6', // teal
+	'#a855f7', // violet
+	'#ef4444', // red
+	'#84cc16', // lime
+]
+
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function MyCardsPage() {
 	const [cards, setCards] = useState<PokemonCard[]>([])
+	const [sets, setSets] = useState<Map<string, PokemonSet>>(new Map())
 	const [searchQuery, setSearchQuery] = useState('')
 	const [rarityFilter, setRarityFilter] = useState<string>('all')
 	const [isLoading, setIsLoading] = useState(true)
@@ -209,11 +302,18 @@ export default function MyCardsPage() {
 			// Récupérer les cartes de chaque set
 			const allCardsPromises = Array.from(cardsBySet.entries()).map(async ([setId]) => {
 				const setData = await cardsService.getSet(setId)
-				return setData.cards
+				return setData
 			})
 
-			const allCardsArrays = await Promise.all(allCardsPromises)
-			const allCards = allCardsArrays.flat()
+			const allSetsData = await Promise.all(allCardsPromises)
+			const allCards = allSetsData.flatMap(setData => setData.cards)
+			
+			// Stocker les informations des sets avec leurs logos
+			const setsMap = new Map<string, PokemonSet>()
+			for (const setData of allSetsData) {
+				setsMap.set(setData.set.id, setData.set)
+			}
+			setSets(setsMap)
 
 			// Filtrer pour ne garder que les cartes possédées
 			const ownedCards = allCards.filter(card => ownedCardIds.includes(card.id))
@@ -279,6 +379,32 @@ export default function MyCardsPage() {
 	const uniqueSets = new Set(cards.map(c => c.set.id)).size
 	const totalCopies = Object.values(acquiredMap).flat().length
 
+	// Calculate chart data - cards distribution by set
+	const chartData = useMemo(() => {
+		const setDistribution = new Map<string, number>()
+		
+		// Count cards per set
+		for (const card of cards) {
+			const count = setDistribution.get(card.set.id) || 0
+			setDistribution.set(card.set.id, count + 1)
+		}
+
+		// Convert to chart format with set info
+		return Array.from(setDistribution.entries())
+			.map(([setId, count], index) => {
+				const set = sets.get(setId)
+				return {
+					name: set?.name || setId,
+					value: count,
+					setId,
+					logo: set?.images.logo,
+					symbol: set?.images.symbol,
+					color: CHART_COLORS[index % CHART_COLORS.length],
+				}
+			})
+			.sort((a, b) => b.value - a.value) // Sort by count descending
+	}, [cards, sets])
+
 	function handleCardClick(card: PokemonCard) {
 		navigate(`/collections/${card.set.id}`)
 	}
@@ -321,6 +447,52 @@ export default function MyCardsPage() {
 					<StatValue>{uniqueSets}</StatValue>
 				</StatItem>
 			</StatsContainer>
+
+			{chartData.length > 0 && (
+				<ChartContainer>
+					<ChartTitle>Répartition par Set</ChartTitle>
+					<ChartWrapper>
+						<ResponsiveContainer width="100%" height="100%">
+							<PieChart>
+								<Pie
+									data={chartData}
+									cx="50%"
+									cy="50%"
+									labelLine={false}
+									label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
+									outerRadius={120}
+									fill="#8884d8"
+									dataKey="value"
+								>
+								{chartData.map((entry) => (
+									<Cell key={entry.setId} fill={entry.color} />
+									))}
+								</Pie>
+								<Tooltip 
+									formatter={(value) => {
+										const count = typeof value === 'number' ? value : 0
+										return [`${count} carte${count > 1 ? 's' : ''}`, 'Nombre']
+									}}
+								/>
+							</PieChart>
+						</ResponsiveContainer>
+					</ChartWrapper>
+					<LegendContainer>
+						{chartData.map((entry) => (
+							<LegendItem key={entry.setId}>
+								<ColorDot color={entry.color} />
+								{entry.logo && (
+									<SetLogo src={entry.logo} alt={entry.name} />
+								)}
+								<LegendText>
+									<LegendSetName>{entry.name}</LegendSetName>
+									<LegendCount>{entry.value} carte{entry.value > 1 ? 's' : ''}</LegendCount>
+								</LegendText>
+							</LegendItem>
+						))}
+					</LegendContainer>
+				</ChartContainer>
+			)}
 
 			<SearchContainer>
 				<Input
