@@ -144,7 +144,7 @@ function CollectionValueCard({ stats, planned }: CollectionValueCardProps) {
 					<StatValue>
 						<span>{formatEuros(stats.estimatedValue)}</span>
 						{valueChange !== null && stats.estimatedValue > 0 && (
-							<PriceTrend percentChange={valueChange} />
+							<PriceTrend percentChange={valueChange} inverted={true} />
 						)}
 						{plannedTotal > 0 && (
 							<PlannedValueIndicator>
