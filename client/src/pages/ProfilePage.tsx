@@ -100,7 +100,24 @@ function formatEuros(value: number) {
 	}).format(value)
 }
 
-function CollectionValueCard({ stats }: { readonly stats: CollectionStats }) {
+const PlannedValueIndicator = styled.span`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	margin-left: ${({ theme }) => theme.spacing['2']};
+`
+
+interface CollectionValueCardProps {
+	readonly stats: CollectionStats
+	readonly planned: PlannedPurchase[]
+}
+
+function CollectionValueCard({ stats, planned }: CollectionValueCardProps) {
+	// Calculer la valeur totale des achats planifiés
+	const plannedTotal = planned.reduce((sum, p) => {
+		return sum + (p.budget ? Number(p.budget) : 0)
+	}, 0)
+
 	return (
 		<Card>
 			<SectionTitle>Résumé de la collection</SectionTitle>
@@ -114,7 +131,14 @@ function CollectionValueCard({ stats }: { readonly stats: CollectionStats }) {
 					<StatLabel>Total dépensé</StatLabel>
 				</StatItem>
 				<StatItem>
-					<StatValue>{formatEuros(stats.estimatedValue)}</StatValue>
+					<StatValue>
+						{formatEuros(stats.estimatedValue)}
+						{plannedTotal > 0 && (
+							<PlannedValueIndicator>
+								(+ {formatEuros(plannedTotal)} prévus)
+							</PlannedValueIndicator>
+						)}
+					</StatValue>
 					<StatLabel>Valeur estimée</StatLabel>
 				</StatItem>
 			</StatsRow>
@@ -1003,7 +1027,7 @@ export default function ProfilePage() {
 			<PageHeader title="Mon Profil" id="profile-title" />
 			<PageGrid>
 				<FullWidth>
-					<CollectionValueCard stats={stats} />
+					<CollectionValueCard stats={stats} planned={planned} />
 				</FullWidth>
 				<SpendingChart stats={stats} planned={planned} />
 				<PurchaseCalendar 
