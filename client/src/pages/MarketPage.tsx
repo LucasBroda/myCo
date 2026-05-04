@@ -214,7 +214,11 @@ function SearchResults({
 								{card.set.name} · #{card.number}
 							</ResultMeta>
 						</ResultInfo>
-						<PriceTag price={card.market?.cardMarketPrice ?? null} />
+						<PriceTag 
+							price={card.market?.cardMarketPrice ?? null}
+							trend={card.market?.percentChange30d ?? null}
+							showTrend={true}
+						/>
 					</ResultItem>
 				))}
 			</ul>
@@ -248,7 +252,7 @@ const PanelName = styled.h3`
 
 const PriceRow = styled.div`
 	display: flex;
-	align-items: center;
+	align-items: flex-start;
 	justify-content: space-between;
 	padding: ${({ theme }) => `${theme.spacing['3']} 0`};
 	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -304,7 +308,8 @@ function PriceComparisonPanel({
 			setLoading(true)
 			setError(null)
 			try {
-				setPrice(await marketService.compare(card.id))
+				const priceData = await marketService.compare(card.id)
+				setPrice(priceData)
 			} catch (err) {
 				setError(err instanceof Error ? err.message : 'Erreur de chargement')
 			} finally {
@@ -343,36 +348,40 @@ function PriceComparisonPanel({
 			{price && !loading && (
 				<>
 					<PriceRow>
-						<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-							<PriceSource>CardMarket</PriceSource>
-							<PriceTag price={price.cardMarketPrice} />
+						<PriceSource>CardMarket</PriceSource>
+						<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+							<PriceTag 
+								price={price.cardMarketPrice} 
+								trend={price.percentChange30d}
+								showTrend={true}
+							/>
+							{price.cardMarketUrl && (
+								<BuyLink
+									href={price.cardMarketUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`Voir ${card.name} sur CardMarket`}
+								>
+									Voir l'offre →
+								</BuyLink>
+							)}
 						</div>
-						{price.cardMarketUrl && (
-							<BuyLink
-								href={price.cardMarketUrl}
-								target="_blank"
-								rel="noopener noreferrer"
-								aria-label={`Voir ${card.name} sur CardMarket`}
-							>
-								Voir l'offre →
-							</BuyLink>
-						)}
 					</PriceRow>
 					<PriceRow>
-						<div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-							<PriceSource>eBay</PriceSource>
+						<PriceSource>eBay</PriceSource>
+						<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
 							<PriceTag price={price.ebayPrice} />
+							{price.ebayUrl && (
+								<BuyLink
+									href={price.ebayUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`Voir ${card.name} sur eBay`}
+								>
+									Voir l'offre →
+								</BuyLink>
+							)}
 						</div>
-						{price.ebayUrl && (
-							<BuyLink
-								href={price.ebayUrl}
-								target="_blank"
-								rel="noopener noreferrer"
-								aria-label={`Voir ${card.name} sur eBay`}
-							>
-								Voir l'offre →
-							</BuyLink>
-						)}
 					</PriceRow>
 				</>
 			)}
