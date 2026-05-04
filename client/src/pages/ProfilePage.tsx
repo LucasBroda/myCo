@@ -165,6 +165,7 @@ interface CustomTooltipProps {
 			cardCount: number
 			budgetPlanifie: number
 			plannedCount: number
+			realBudget: number
 		}
 	}>
 	label?: string
@@ -189,12 +190,14 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 					</TooltipItem>
 				</>
 			)}
-			{data.budgetPlanifie > 0 && (
+			{data.plannedCount > 0 && (
 				<>
-					<TooltipItem>
-						<span>Budget planifié :</span>
-						<TooltipValue style={{ color: '#f59e0b' }}>{formatEuros(data.budgetPlanifie)}</TooltipValue>
-					</TooltipItem>
+					{data.realBudget > 0 && (
+						<TooltipItem>
+							<span>Budget planifié :</span>
+							<TooltipValue style={{ color: '#f59e0b' }}>{formatEuros(data.realBudget)}</TooltipValue>
+						</TooltipItem>
+					)}
 					<TooltipItem>
 						<span>Achats planifiés :</span>
 						<TooltipValue style={{ color: '#f59e0b' }}>{data.plannedCount}</TooltipValue>
@@ -213,16 +216,20 @@ interface SpendingChartProps {
 function SpendingChart({ stats, planned }: SpendingChartProps) {
 	// Agréger les budgets planifiés par mois
 	const plannedByMonth = planned.reduce((acc, p) => {
-		if (p.budget === null) return acc
 		const date = new Date(p.plannedDate)
 		const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 		if (!acc[monthKey]) {
 			acc[monthKey] = { total: 0, count: 0 }
 		}
-		acc[monthKey].total += p.budget
+		// Ajouter le budget seulement s'il est défini, mais compter tous les achats
+		// IMPORTANT : Convertir en nombre car la DB peut retourner des strings
+		if (p.budget !== null) {
+			acc[monthKey].total += Number(p.budget)
+		}
 		acc[monthKey].count += 1
 		return acc
 	}, {} as Record<string, { total: number; count: number }>)
+
 
 	// Créer une liste de tous les mois (réels + planifiés)
 	const allMonths = new Set<string>()
@@ -252,12 +259,22 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 			const realData = stats.byMonth.find(m => m.month === monthKey)
 			const plannedData = plannedByMonth[monthKey]
 
+			// Si des achats sont planifiés mais sans budget, utiliser une valeur indicative minimale
+			const plannedValue = plannedData?.total || 0
+			const plannedCountValue = plannedData?.count || 0
+			// Afficher au moins 1€ par achat planifié s'il n'y a pas de budget défini
+			const displayValue = plannedCountValue > 0 && plannedValue === 0 
+				? plannedCountValue * 1 
+				: plannedValue
+
 			return {
 				month: formatMonth(monthKey),
+				monthKey,
 				depenses: realData?.totalSpent || 0,
 				cardCount: realData?.cardCount || 0,
-				budgetPlanifie: plannedData?.total || 0,
-				plannedCount: plannedData?.count || 0,
+				budgetPlanifie: displayValue,
+				plannedCount: plannedCountValue,
+				realBudget: plannedValue, // Budget réel pour le tooltip
 			}
 		})
 
