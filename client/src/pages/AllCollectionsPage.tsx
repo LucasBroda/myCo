@@ -253,7 +253,7 @@ export default function AllCollectionsPage() {
 	return (
 		<section aria-labelledby="all-collections-title">
 			<PageHeader
-				title="Toutes les Collections"
+				title="Toutes les collections"
 				id="all-collections-title"
 				subtitle={subtitle}
 			/>
