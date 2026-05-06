@@ -289,12 +289,13 @@ const Textarea = styled.textarea`
 interface AcquireModalProps {
 	readonly card: PokemonCard | null
 	readonly set: PokemonSet | null
+	readonly ownedCount?: number
 	readonly onClose: () => void
 	readonly onAcquired: () => void
 	readonly addToPlannedStore: (purchase: import('@/types/models').PlannedPurchase) => void
 }
 
-function AcquireModal({ card, set, onClose, onAcquired, addToPlannedStore }: AcquireModalProps) {
+function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPlannedStore }: AcquireModalProps) {
 	const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
 	const [price, setPrice] = useState('')
 	const [condition, setCondition] = useState<CardCondition>('NM')
@@ -368,6 +369,12 @@ function AcquireModal({ card, set, onClose, onAcquired, addToPlannedStore }: Acq
 						<ErrorMessage role="alert">
 							{formError}
 						</ErrorMessage>
+					)}
+
+					{ownedCount > 0 && !isFutureDate && (
+						<InfoMessage>
+							Vous possédez déjà {ownedCount} copie{ownedCount > 1 ? 's' : ''} de cette carte
+						</InfoMessage>
 					)}
 
 					{isFutureDate && (
@@ -552,11 +559,7 @@ export default function SetDetailPage() {
 	}, [cards, searchQuery, filter, rarityFilter, acquiredMap])
 
 	function handleCardClick(card: PokemonCard) {
-		if (isOwnedCard(card.id)) {
-			toast(`${card.name} est déjà dans votre collection`)
-			return
-		}
-		if (isPlannedCard(card.id)) {
+		if (isPlannedCard(card.id) && !isOwnedCard(card.id)) {
 			const date = getPlannedDate(card.id)
 			if (date) {
 				const formattedDate = new Date(date).toLocaleDateString('fr-FR', {
@@ -669,6 +672,7 @@ export default function SetDetailPage() {
 			<AcquireModal
 				card={selectedCard}
 				set={pokemonSet}
+				ownedCount={selectedCard ? (acquiredMap[selectedCard.id]?.length ?? 0) : 0}
 				onClose={() => setSelectedCard(null)}
 				onAcquired={() => setSelectedCard(null)}
 				addToPlannedStore={addToPlannedStore}
