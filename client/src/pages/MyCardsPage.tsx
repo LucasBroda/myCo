@@ -58,9 +58,10 @@ const StatValue = styled.span`
 const ChartContainer = styled.div`
 	margin-bottom: ${({ theme }) => theme.spacing['6']};
 	padding: ${({ theme }) => theme.spacing['6']};
-	background-color: ${({ theme }) => theme.colors.surfaceElevated};
+	background: linear-gradient(135deg, ${({ theme }) => theme.colors.surface} 0%, ${({ theme }) => theme.colors.surfaceElevated} 100%);
 	border: 1px solid ${({ theme }) => theme.colors.border};
-	border-radius: ${({ theme }) => theme.radii.lg};
+	border-radius: ${({ theme }) => theme.radii.xl};
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
 `
 
 const ChartHeader = styled.div`
@@ -103,6 +104,9 @@ const ChartContent = styled.div<{ $isExpanded: boolean }>`
 const ChartWrapper = styled.div`
 	height: 400px;
 	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 `
 
 const LegendContainer = styled.div`
@@ -116,16 +120,18 @@ const LegendContainer = styled.div`
 const LegendItem = styled.div`
 	display: flex;
 	align-items: center;
-	gap: ${({ theme }) => theme.spacing['2']};
-	padding: ${({ theme }) => theme.spacing['2']} ${({ theme }) => theme.spacing['3']};
+	gap: ${({ theme }) => theme.spacing['3']};
+	padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['4']};
 	background-color: ${({ theme }) => theme.colors.surface};
 	border: 1px solid ${({ theme }) => theme.colors.border};
-	border-radius: ${({ theme }) => theme.radii.md};
-	transition: transform 0.2s ease;
+	border-radius: ${({ theme }) => theme.radii.lg};
+	transition: all 0.2s ease;
+	cursor: default;
 
 	&:hover {
 		transform: translateY(-2px);
-		box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+		box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+		border-color: ${({ theme }) => theme.colors.textSecondary};
 	}
 `
 
@@ -153,11 +159,12 @@ const LegendCount = styled.span`
 `
 
 const ColorDot = styled.div<{ color: string }>`
-	width: 12px;
-	height: 12px;
-	border-radius: 50%;
+	width: 16px;
+	height: 16px;
+	border-radius: 4px;
 	background-color: ${({ color }) => color};
 	flex-shrink: 0;
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `
 
 // ─── Search & Filter Functions ────────────────────────────────────────────────
@@ -272,20 +279,21 @@ const rarityOrder: Record<string, number> = {
 	'Promo': 26,
 }
 
-// Modern color palette for the pie chart
+// Palette harmonieuse et naturelle inspirée de la nature
+// Tons terreux, chauds et organiques pour un rendu doux et moderne
 const CHART_COLORS = [
-	'#3b82f6', // blue
-	'#8b5cf6', // purple
-	'#ec4899', // pink
-	'#f59e0b', // amber
-	'#10b981', // emerald
-	'#06b6d4', // cyan
-	'#f97316', // orange
-	'#6366f1', // indigo
-	'#14b8a6', // teal
-	'#a855f7', // violet
-	'#ef4444', // red
-	'#84cc16', // lime
+	'#94a3b8', // slate-400 - gris ardoise doux
+	'#fbbf24', // amber-400 - ambre lumineux
+	'#34d399', // emerald-400 - vert émeraude
+	'#fb923c', // orange-400 - orange doux
+	'#818cf8', // indigo-400 - indigo pastel (subtil)
+	'#4ade80', // green-400 - vert prairie
+	'#f87171', // red-400 - rouge corail
+	'#a8a29e', // stone-400 - pierre claire
+	'#a3e635', // lime-400 - citron vert
+	'#e879f9', // fuchsia-400 - rose naturel (subtil)
+	'#fdba74', // orange-300 - pêche
+	'#67e8f9', // cyan-300 - turquoise claire
 ]
 
 // ─── Page Component ───────────────────────────────────────────────────────────
@@ -514,20 +522,29 @@ export default function MyCardsPage() {
 										data={chartData}
 										cx="50%"
 										cy="50%"
-										labelLine={false}
-										label={({ name, percent }) => `${name}: ${percent ? (percent * 100).toFixed(0) : 0}%`}
-										outerRadius={120}
+										innerRadius={80}
+										outerRadius={140}
 										fill="#8884d8"
 										dataKey="value"
+										paddingAngle={2}
 									>
 									{chartData.map((entry) => (
-										<Cell key={entry.setId} fill={entry.color} />
+										<Cell key={entry.setId} fill={entry.color} stroke="none" />
 										))}
 									</Pie>
 									<Tooltip 
-										formatter={(value) => {
+										contentStyle={{
+											backgroundColor: 'rgba(255, 255, 255, 0.96)',
+											border: '1px solid #e5e7eb',
+											borderRadius: '8px',
+											padding: '12px',
+											boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+										}}
+										formatter={(value, _name, props) => {
 											const count = typeof value === 'number' ? value : 0
-											return [`${count} carte${count > 1 ? 's' : ''}`, 'Nombre']
+											const total = chartData.reduce((sum, item) => sum + item.value, 0)
+											const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0
+											return [`${count} carte${count > 1 ? 's' : ''} (${percentage}%)`, props.payload.name]
 										}}
 									/>
 								</PieChart>
