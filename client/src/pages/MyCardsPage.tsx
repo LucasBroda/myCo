@@ -401,7 +401,10 @@ export default function MyCardsPage() {
 	const rarityOptions: FilterOption<string>[] = useMemo(() => {
 		return [
 			{ value: 'all', label: 'Toutes les raretés' },
-			...availableRarities.map(rarity => ({ value: rarity, label: rarity })),
+			...availableRarities.map(rarity => ({ 
+				value: rarity, 
+				label: (!rarity || !rarityOrder[rarity]) ? 'Autres' : rarity 
+			})),
 		]
 	}, [availableRarities])
 
