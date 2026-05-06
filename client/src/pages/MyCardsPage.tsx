@@ -3,6 +3,7 @@ import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
 import { Spinner } from '@components/ui/Spinner'
 import { Input } from '@components/ui/Input'
+import { Select, type SelectOption } from '@components/ui/Select'
 import { FilterBar, type FilterOption } from '@components/layout/FilterBar'
 import { PageHeader } from '@components/layout/PageHeader'
 import { CardThumbnail } from '@components/pokemon/CardThumbnail'
@@ -304,6 +305,7 @@ export default function MyCardsPage() {
 	const [acquisitions, setAcquisitions] = useState<AcquiredCard[]>([])
 	const [searchQuery, setSearchQuery] = useState('')
 	const [rarityFilter, setRarityFilter] = useState<string>('all')
+	const [setFilter, setSetFilter] = useState<string>('all')
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [isChartExpanded, setIsChartExpanded] = useState(true)
@@ -402,6 +404,27 @@ export default function MyCardsPage() {
 		]
 	}, [availableRarities])
 
+	// Extract unique sets from cards and sort alphabetically
+	const availableSets = useMemo(() => {
+		const setIds = Array.from(new Set(cards.map(c => c.set.id)))
+		return setIds
+			.map(setId => {
+				const set = sets.get(setId)
+				return {
+					id: setId,
+					name: set?.name || setId,
+				}
+			})
+			.sort((a, b) => a.name.localeCompare(b.name))
+	}, [cards, sets])
+
+	const setOptions: SelectOption<string>[] = useMemo(() => {
+		return [
+			{ value: 'all', label: 'Toutes les collections' },
+			...availableSets.map(set => ({ value: set.id, label: set.name })),
+		]
+	}, [availableSets])
+
 	// Apply filters
 	const filteredCards = useMemo(() => {
 		return cards.filter(card => {
@@ -411,9 +434,12 @@ export default function MyCardsPage() {
 			// Filter by rarity
 			if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false
 			
+			// Filter by set
+			if (setFilter !== 'all' && card.set.id !== setFilter) return false
+			
 			return true
 		})
-	}, [cards, searchQuery, rarityFilter])
+	}, [cards, searchQuery, rarityFilter, setFilter])
 
 	// Calculate stats
 	const totalCards = cards.length
@@ -577,6 +603,14 @@ export default function MyCardsPage() {
 					inputSize="md"
 				/>
 			</SearchContainer>
+
+			<Select
+				options={setOptions}
+				value={setFilter}
+				onChange={setSetFilter}
+				label="Collection"
+				id="set-filter"
+			/>
 
 			<FilterBar
 				options={rarityOptions}
