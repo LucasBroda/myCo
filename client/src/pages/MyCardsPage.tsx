@@ -686,6 +686,7 @@ export default function MyCardsPage() {
 							owned={true}
 							planned={false}
 							onClick={() => handleCardClick(card)}
+							showInfoBadge={true}
 						/>
 					))}
 				</CardGrid>
