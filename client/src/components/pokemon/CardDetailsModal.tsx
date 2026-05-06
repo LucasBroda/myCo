@@ -48,6 +48,10 @@ const DetailValue = styled.span`
 	text-align: right;
 `
 
+const GainLossValue = styled(DetailValue)<{ $isPositive: boolean }>`
+	color: ${({ $isPositive }) => ($isPositive ? '#16a34a' : '#dc2626')};
+`
+
 const PriceValue = styled(DetailValue)`
 	display: flex;
 	align-items: center;
@@ -116,7 +120,8 @@ interface Props {
 	readonly onClose: () => void
 }
 
-function formatEuros(value: number) {
+function formatEuros(value: number | null) {
+	if (value === null) return '—'
 	return new Intl.NumberFormat('fr-FR', {
 		style: 'currency',
 		currency: 'EUR',
@@ -129,15 +134,46 @@ function calculateAveragePrice(acquisitions: AcquiredCard[]): number | null {
 	return prices.reduce((sum, p) => sum + p, 0) / prices.length
 }
 
+function calculateTotalPaid(acquisitions: AcquiredCard[]): number | null {
+	const prices = acquisitions.map(a => a.pricePaid).filter((p): p is number => p !== null)
+	if (prices.length === 0) return null
+	return prices.reduce((sum, p) => sum + p, 0)
+}
+
+function calculateTotalCurrentValue(price: number, quantity: number): number {
+	return price * quantity
+}
+
+function calculateTotalGainLoss(currentValue: number, totalPaid: number | null): number | null {
+	if (totalPaid === null) return null
+	return currentValue - totalPaid
+}
+
 function calculatePercentChange(current: number, average: number | null): number | null {
 	if (average === null || average === 0) return null
 	return ((current - average) / average) * 100
 }
 
 export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
-	const currentPrice = card.cardmarket?.prices?.trendPrice ?? null
+	const currentPricePerCard = card.cardmarket?.prices?.trendPrice ?? null
+	const totalPaid = calculateTotalPaid(acquisitions)
 	const averagePricePaid = calculateAveragePrice(acquisitions)
-	const percentChange = currentPrice && averagePricePaid ? calculatePercentChange(currentPrice, averagePricePaid) : null
+	const numberOfCopies = acquisitions.length
+	
+	// Calculer la valeur actuelle totale de toutes les copies
+	const totalCurrentValue = currentPricePerCard !== null 
+		? calculateTotalCurrentValue(currentPricePerCard, numberOfCopies) 
+		: null
+	
+	// Calculer la plus/moins-value totale
+	const totalGainLoss = totalCurrentValue !== null && totalPaid !== null
+		? calculateTotalGainLoss(totalCurrentValue, totalPaid)
+		: null
+	
+	// Calculer le pourcentage de changement basé sur le prix moyen
+	const percentChange = currentPricePerCard !== null && averagePricePaid !== null 
+		? calculatePercentChange(currentPricePerCard, averagePricePaid) 
+		: null
 
 	// Group acquisitions by condition
 	const conditionCounts = acquisitions.reduce((acc, acq) => {
@@ -181,11 +217,17 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 
 				<SectionTitle>Prix</SectionTitle>
 				<DetailSection>
-					{currentPrice !== null && (
+					{currentPricePerCard !== null && (
 						<DetailRow>
-							<DetailLabel>Prix actuel</DetailLabel>
+							<DetailLabel>Prix unitaire actuel</DetailLabel>
+							<DetailValue>{formatEuros(currentPricePerCard)}</DetailValue>
+						</DetailRow>
+					)}
+					{totalCurrentValue !== null && numberOfCopies > 1 && (
+						<DetailRow>
+							<DetailLabel>Valeur totale actuelle ({numberOfCopies} copies)</DetailLabel>
 							<PriceValue>
-								{formatEuros(currentPrice)}
+								{formatEuros(totalCurrentValue)}
 								{percentChange !== null && (
 									<PriceTrend percentChange={percentChange} inverted={true} />
 								)}
@@ -198,12 +240,18 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 							<DetailValue>{formatEuros(averagePricePaid)}</DetailValue>
 						</DetailRow>
 					)}
-					{currentPrice !== null && averagePricePaid !== null && (
+					{totalPaid !== null && numberOfCopies > 1 && (
+						<DetailRow>
+							<DetailLabel>Total payé</DetailLabel>
+							<DetailValue>{formatEuros(totalPaid)}</DetailValue>
+						</DetailRow>
+					)}
+					{totalGainLoss !== null && (
 						<DetailRow>
 							<DetailLabel>Plus/Moins-value</DetailLabel>
-							<DetailValue>
-								{formatEuros(currentPrice - averagePricePaid)}
-							</DetailValue>
+							<GainLossValue $isPositive={totalGainLoss >= 0}>
+								{totalGainLoss >= 0 ? '+' : ''}{formatEuros(totalGainLoss)}
+							</GainLossValue>
 						</DetailRow>
 					)}
 				</DetailSection>
