@@ -306,6 +306,7 @@ export default function MyCardsPage() {
 	const [searchQuery, setSearchQuery] = useState('')
 	const [rarityFilter, setRarityFilter] = useState<string>('all')
 	const [setFilter, setSetFilter] = useState<string>('all')
+	const [conditionFilter, setConditionFilter] = useState<string>('all')
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [isChartExpanded, setIsChartExpanded] = useState(true)
@@ -425,6 +426,43 @@ export default function MyCardsPage() {
 		]
 	}, [availableSets])
 
+	// Extract unique conditions from acquisitions and sort by condition quality
+	const conditionOrder: Record<string, number> = {
+		'Mint': 1,
+		'NM': 2,
+		'LP': 3,
+		'MP': 4,
+		'HP': 5,
+		'Damaged': 6,
+	}
+
+	const conditionLabels: Record<string, string> = {
+		'Mint': 'Mint',
+		'NM': 'Near Mint',
+		'LP': 'Light Played',
+		'MP': 'Moderately Played',
+		'HP': 'Heavy Played',
+		'Damaged': 'Damaged',
+	}
+
+	const availableConditions = useMemo(() => {
+		return Array.from(new Set(acquisitions.map(acq => acq.condition))).sort((a, b) => {
+			const orderA = conditionOrder[a] ?? 999
+			const orderB = conditionOrder[b] ?? 999
+			return orderA - orderB
+		})
+	}, [acquisitions])
+
+	const conditionOptions: SelectOption<string>[] = useMemo(() => {
+		return [
+			{ value: 'all', label: 'Tous les états' },
+			...availableConditions.map(condition => ({ 
+				value: condition, 
+				label: conditionLabels[condition] || condition 
+			})),
+		]
+	}, [availableConditions])
+
 	// Apply filters
 	const filteredCards = useMemo(() => {
 		return cards.filter(card => {
@@ -437,9 +475,16 @@ export default function MyCardsPage() {
 			// Filter by set
 			if (setFilter !== 'all' && card.set.id !== setFilter) return false
 			
+			// Filter by condition - check if card has at least one acquisition with this condition
+			if (conditionFilter !== 'all') {
+				const cardAcquisitions = acquisitions.filter(acq => acq.cardId === card.id)
+				const hasCondition = cardAcquisitions.some(acq => acq.condition === conditionFilter)
+				if (!hasCondition) return false
+			}
+			
 			return true
 		})
-	}, [cards, searchQuery, rarityFilter, setFilter])
+	}, [cards, searchQuery, rarityFilter, setFilter, conditionFilter, acquisitions])
 
 	// Calculate stats
 	const totalCards = cards.length
@@ -610,6 +655,14 @@ export default function MyCardsPage() {
 				onChange={setSetFilter}
 				label="Collection"
 				id="set-filter"
+			/>
+
+			<Select
+				options={conditionOptions}
+				value={conditionFilter}
+				onChange={setConditionFilter}
+				label="État de la carte"
+				id="condition-filter"
 			/>
 
 			<FilterBar
