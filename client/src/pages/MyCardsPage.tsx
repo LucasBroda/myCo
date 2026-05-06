@@ -403,7 +403,7 @@ export default function MyCardsPage() {
 			{ value: 'all', label: 'Toutes les raretés' },
 			...availableRarities.map(rarity => ({ 
 				value: rarity, 
-				label: (!rarity || !rarityOrder[rarity]) ? 'Autres' : rarity 
+				label: rarity || 'Autres'
 			})),
 		]
 	}, [availableRarities])
