@@ -420,14 +420,14 @@ export default function MyCardsPage() {
 	const uniqueSets = new Set(cards.map(c => c.set.id)).size
 	const totalCopies = Object.values(acquiredMap).flat().length
 
-	// Calculate chart data - cards distribution by set
+	// Calculate chart data - cards distribution by set (counting all copies)
 	const chartData = useMemo(() => {
 		const setDistribution = new Map<string, number>()
 		
-		// Count cards per set
-		for (const card of cards) {
-			const count = setDistribution.get(card.set.id) || 0
-			setDistribution.set(card.set.id, count + 1)
+		// Count all acquisitions per set (including multiple copies of same card)
+		for (const acquisition of acquisitions) {
+			const count = setDistribution.get(acquisition.setId) || 0
+			setDistribution.set(acquisition.setId, count + 1)
 		}
 
 		// Convert to chart format with set info
@@ -444,7 +444,7 @@ export default function MyCardsPage() {
 				}
 			})
 			.sort((a, b) => b.value - a.value) // Sort by count descending
-	}, [cards, sets])
+	}, [acquisitions, sets])
 
 	function handleCardClick(card: PokemonCard) {
 		setSelectedCard(card)
