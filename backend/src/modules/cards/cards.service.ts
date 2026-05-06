@@ -76,7 +76,8 @@ export async function searchCards(
   query: string,
   setId?: string,
 ): Promise<PokemonCard[]> {
-  let q = `name:"*${query}*"`;
+  // Recherche multi-critères : nom, numéro, collection, artiste
+  let q = `(name:"*${query}*" OR number:"*${query}*" OR set.name:"*${query}*" OR artist:"*${query}*")`;
   if (setId) q += ` set.id:${setId}`;
 
   const cacheKey = `cache:search:${q}`;

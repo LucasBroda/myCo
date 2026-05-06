@@ -171,7 +171,7 @@ export default function MyCollectionsPage() {
 		return (
 			<section aria-labelledby="my-collections-title">
 				<PageHeader
-					title="Mes Collections"
+					title="Mes collections"
 					id="my-collections-title"
 					subtitle="Aucune collection suivie"
 				/>
@@ -188,7 +188,7 @@ export default function MyCollectionsPage() {
 	return (
 		<section aria-labelledby="my-collections-title">
 			<PageHeader
-				title="Mes Collections"
+				title="Mes collections"
 				id="my-collections-title"
 				subtitle={subtitle}
 			/>
