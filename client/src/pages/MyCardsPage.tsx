@@ -541,7 +541,7 @@ export default function MyCardsPage() {
 		return (
 			<section aria-labelledby="my-cards-title">
 				<PageHeader
-					title="Mes Cartes"
+					title="Mes cartes"
 					id="my-cards-title"
 					subtitle="Aucune carte dans votre collection"
 				/>
@@ -553,7 +553,7 @@ export default function MyCardsPage() {
 	return (
 		<section aria-labelledby="my-cards-title">
 			<PageHeader
-				title="Mes Cartes"
+				title="Mes cartes"
 				id="my-cards-title"
 				subtitle={`${totalCopies} carte${totalCopies > 1 ? 's' : ''} dans votre collection`}
 			/>
