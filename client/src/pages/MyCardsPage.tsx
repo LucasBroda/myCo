@@ -279,21 +279,21 @@ const rarityOrder: Record<string, number> = {
 	'Promo': 26,
 }
 
-// Palette harmonieuse et naturelle inspirée de la nature
-// Tons terreux, chauds et organiques pour un rendu doux et moderne
+// Palette sobre et apaisée - tons désaturés et naturels
+// Couleurs douces et élégantes pour un rendu professionnel
 const CHART_COLORS = [
-	'#94a3b8', // slate-400 - gris ardoise doux
-	'#fbbf24', // amber-400 - ambre lumineux
-	'#34d399', // emerald-400 - vert émeraude
-	'#fb923c', // orange-400 - orange doux
-	'#818cf8', // indigo-400 - indigo pastel (subtil)
-	'#4ade80', // green-400 - vert prairie
-	'#f87171', // red-400 - rouge corail
-	'#a8a29e', // stone-400 - pierre claire
-	'#a3e635', // lime-400 - citron vert
-	'#e879f9', // fuchsia-400 - rose naturel (subtil)
-	'#fdba74', // orange-300 - pêche
-	'#67e8f9', // cyan-300 - turquoise claire
+	'#64748b', // slate-500 - ardoise neutre
+	'#d97706', // amber-600 - ambre doux
+	'#059669', // emerald-600 - vert forêt
+	'#ea580c', // orange-600 - terre cuite
+	'#78716c', // stone-500 - pierre naturelle
+	'#16a34a', // green-600 - vert sapin
+	'#dc2626', // red-600 - rouge brique
+	'#57534e', // stone-600 - taupe
+	'#84cc16', // lime-500 - olive
+	'#ca8a04', // yellow-600 - moutarde
+	'#0891b2', // cyan-600 - bleu canard
+	'#475569', // slate-600 - gris foncé
 ]
 
 // ─── Page Component ───────────────────────────────────────────────────────────
