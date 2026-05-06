@@ -142,6 +142,7 @@ const Main = styled.main`
 const navItems = [
 	{ to: '/my-collections', label: 'Mes Collections' },
 	{ to: '/all-collections', label: 'Toutes les Collections' },
+	{ to: '/my-cards', label: 'Mes Cartes' },
 	{ to: '/profile', label: 'Profil' },
 	{ to: '/market', label: 'Marché' },
 ]
