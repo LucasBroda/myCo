@@ -15,13 +15,16 @@ export async function getCollection(userId: string): Promise<AcquiredCard[]> {
   );
   return result.rows.map((row) => ({
     id: row.id as string,
-    cardName: row.card_name as string,
-    setName: row.set_name as string,
+    // Note: cardName and setName are not stored in DB, use placeholders
+    // For full details with names, use getCollectionWithDetails
+    cardName: "",
+    setName: "",
     userId: row.user_id as string,
     cardId: row.card_id as string,
     setId: row.set_id as string,
     acquiredDate: row.acquired_date as string,
-    pricePaid: row.price_paid as number | null,
+    // PostgreSQL returns NUMERIC as string, convert to number
+    pricePaid: row.price_paid ? parseFloat(row.price_paid) : null,
     condition: row.condition as CardCondition,
     createdAt: row.created_at as string,
   }));
@@ -73,15 +76,28 @@ export async function addCard(
     [userId, cardId, setId, acquiredDate, pricePaid, condition],
   );
   const row = result.rows[0];
+  
+  // Fetch card details to get names
+  let cardName = cardId;
+  let setName = "Unknown Set";
+  try {
+    const card = await cardsService.getCard(cardId);
+    cardName = card.name;
+    setName = card.set.name;
+  } catch (error) {
+    console.error(`Failed to fetch card details for ${cardId}:`, error);
+  }
+  
   return {
     id: row.id as string,
-    cardName: row.card_name as string,
-    setName: row.set_name as string,
+    cardName,
+    setName,
     userId: row.user_id as string,
     cardId: row.card_id as string,
     setId: row.set_id as string,
     acquiredDate: row.acquired_date as string,
-    pricePaid: row.price_paid as number | null,
+    // PostgreSQL returns NUMERIC as string, convert to number
+    pricePaid: row.price_paid ? parseFloat(row.price_paid) : null,
     condition: row.condition as CardCondition,
     createdAt: row.created_at as string,
   };

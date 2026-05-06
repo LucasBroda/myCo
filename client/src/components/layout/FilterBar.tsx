@@ -7,6 +7,7 @@ const Bar = styled.div`
 	gap: ${({ theme }) => theme.spacing['2']};
 	flex-wrap: wrap;
 	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	width: 100%;
 `
 
 interface ChipProps {
@@ -21,6 +22,8 @@ const Chip = styled.button<ChipProps>`
 	border: 1px solid ${({ theme }) => theme.colors.border};
 	cursor: pointer;
 	font-family: inherit;
+	white-space: nowrap;
+	flex-shrink: 0;
 	transition:
 		background-color ${({ theme }) => theme.transitions.fast},
 		color ${({ theme }) => theme.transitions.fast},
@@ -54,10 +57,10 @@ export interface FilterOption<T extends string> {
 }
 
 interface FilterBarProps<T extends string> {
-	options: FilterOption<T>[]
-	value: T
-	onChange: (value: T) => void
-	label: string
+	readonly options: FilterOption<T>[]
+	readonly value: T
+	readonly onChange: (value: T) => void
+	readonly label: string
 }
 
 export function FilterBar<T extends string>({

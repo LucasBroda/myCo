@@ -137,12 +137,34 @@ const Overlay = styled.div`
 	right: 0;
 	padding: ${({ theme }) => `${theme.spacing['1']} ${theme.spacing['2']}`};
 	background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 100%);
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
 `
 
 const NumberBadge = styled.span`
 	font-size: ${({ theme }) => theme.font.size.xs};
 	color: #fff;
 	font-weight: ${({ theme }) => theme.font.weight.medium};
+`
+
+const InfoBadge = styled.div`
+	width: 18px;
+	height: 18px;
+	border-radius: ${({ theme }) => theme.radii.full};
+	background-color: rgba(100, 116, 139, 0.9);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	font-weight: ${({ theme }) => theme.font.weight.bold};
+	color: #fff;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+	transition: background-color ${({ theme }) => theme.transitions.fast};
+
+	${Wrapper}:hover & {
+		background-color: rgba(217, 119, 6, 0.95);
+	}
 `
 
 function ClockIcon() {
@@ -160,9 +182,10 @@ interface Props {
 	readonly planned?: boolean
 	readonly plannedDate?: string
 	readonly onClick?: () => void
+	readonly showInfoBadge?: boolean
 }
 
-export function CardThumbnail({ card, owned = false, planned = false, plannedDate, onClick }: Props) {
+export function CardThumbnail({ card, owned = false, planned = false, plannedDate, onClick, showInfoBadge = false }: Props) {
 	const getAriaLabel = () => {
 		let status = ' (manquante)'
 		if (owned) status = ' (possédée)'
@@ -201,7 +224,7 @@ export function CardThumbnail({ card, owned = false, planned = false, plannedDat
 				$owned={owned}
 				$planned={planned}
 			/>
-			{owned && (
+			{owned && !showInfoBadge && (
 				<OwnedBadge aria-hidden="true" title="Possédée">
 					✓
 				</OwnedBadge>
@@ -220,6 +243,11 @@ export function CardThumbnail({ card, owned = false, planned = false, plannedDat
 			)}
 			<Overlay>
 				<NumberBadge aria-hidden="true">#{card.number}</NumberBadge>
+				{showInfoBadge && (
+					<InfoBadge aria-label="Cliquer pour plus d'informations" title="Plus d'informations">
+						i
+					</InfoBadge>
+				)}
 			</Overlay>
 		</Wrapper>
 	)
