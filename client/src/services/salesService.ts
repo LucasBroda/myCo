@@ -12,8 +12,8 @@ export const salesService = {
 	},
 
 	async getSalesStats(): Promise<SalesStats> {
-		const res = await http.get<SalesStats>('/sales/stats')
-		return res
+		const res = await http.get<{ data: SalesStats }>('/sales/stats')
+		return res.data
 	},
 
 	async addPotentialSale(payload: {

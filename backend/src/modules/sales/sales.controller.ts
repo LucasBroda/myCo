@@ -65,7 +65,7 @@ export async function updatePotentialSale(req: Request, res: Response) {
       notes || null,
     );
 
-    res.json(sale);
+    res.json({ data: sale });
   } catch (error) {
     console.error("Error updating potential sale:", error);
     if (error instanceof Error && error.message.includes("not found")) {
@@ -102,7 +102,7 @@ export async function getSalesStats(req: Request, res: Response) {
   try {
     const userId = req.user!.id;
     const stats = await salesService.getSalesStats(userId);
-    res.json(stats);
+    res.json({ data: stats });
   } catch (error) {
     console.error("Error fetching sales stats:", error);
     res.status(500).json({ error: "Failed to fetch sales stats" });
