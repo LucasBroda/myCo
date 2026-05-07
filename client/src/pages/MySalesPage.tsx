@@ -19,7 +19,8 @@ import styled from 'styled-components'
 const PageContainer = styled.div`
 	display: flex;
 	flex-direction: column;
-	gap: ${({ theme }) => theme.spacing['6']};
+	gap: ${({ theme }) => theme.spacing['8']};
+	padding-bottom: ${({ theme }) => theme.spacing['8']};
 `
 
 const SectionCard = styled.div`
@@ -28,6 +29,7 @@ const SectionCard = styled.div`
 	border: 1px solid ${({ theme }) => theme.colors.border};
 	border-radius: ${({ theme }) => theme.radii.xl};
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+	margin-top: ${({ theme }) => theme.spacing['4']};
 `
 
 const SectionTitle = styled.h2`
@@ -474,7 +476,7 @@ export default function MySalesPage() {
 				<SectionCard>
 					<SectionTitle>Ventes enregistrées</SectionTitle>
 					
-					{sales.length === 0 ? (
+					{(sales?.length ?? 0) === 0 ? (
 						<EmptyState message="Aucune vente enregistrée. Sélectionnez une carte ci-dessous pour commencer." />
 					) : (
 						<SalesTable>
@@ -490,7 +492,7 @@ export default function MySalesPage() {
 									</tr>
 								</Thead>
 								<Tbody>
-									{sales.map(sale => {
+									{sales?.map(sale => {
 										const card = cards.find(c => c.id === sale.cardId)
 										return (
 											<Tr key={sale.id}>
@@ -637,8 +639,11 @@ export default function MySalesPage() {
 						<Label htmlFor="notes">Notes</Label>
 						<TextArea
 							id="notes"
-							/>
-						</FormGroup>
+							value={notes}
+							onChange={(e) => setNotes(e.target.value)}
+							placeholder="Ajoutez des notes sur cette vente..."
+						/>
+					</FormGroup>
 
 						<ModalActions>
 							<Button variant="ghost" onClick={handleCloseModal}>
