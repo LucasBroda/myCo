@@ -75,6 +75,20 @@ export interface PlannedPurchase {
   createdAt: string;
 }
 
+export interface PotentialSale {
+  id: string;
+  userId: string;
+  cardId: string;
+  setId: string;
+  cardName: string;
+  setName: string;
+  salePrice: number;
+  saleDate: string;
+  condition: CardCondition;
+  notes: string | null;
+  createdAt: string;
+}
+
 export interface MarketPrice {
   cardId: string;
   cardMarketPrice: number | null;
