@@ -321,10 +321,8 @@ export default function MyCardsPage() {
 			setCollection(collection)
 			setAcquisitions(collection)
 
-			// Récupérer les IDs des cartes possédées
-			const ownedCardIds = Object.keys(acquiredMap)
-
-			if (ownedCardIds.length === 0) {
+			// Récupérer les IDs des cartes possédées directement depuis collection
+			if (collection.length === 0) {
 				setCards([])
 				setIsLoading(false)
 				return
@@ -360,7 +358,8 @@ export default function MyCardsPage() {
 			setSets(setsMap)
 
 			// Filtrer pour ne garder que les cartes possédées
-			const ownedCards = allCards.filter(card => ownedCardIds.includes(card.id))
+			const ownedCardIds = new Set(collection.map(c => c.cardId))
+			const ownedCards = allCards.filter(card => ownedCardIds.has(card.id))
 
 			// Trier par nom de set puis par numéro de carte
 			const sortedCards = [...ownedCards].sort((a, b) => {
