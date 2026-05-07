@@ -143,6 +143,7 @@ const navItems = [
 	{ to: '/my-collections', label: 'Mes collections' },
 	{ to: '/all-collections', label: 'Toutes les collections' },
 	{ to: '/my-cards', label: 'Mes cartes' },
+	{ to: '/my-sales', label: 'Mes ventes' },
 	{ to: '/profile', label: 'Profil' },
 	{ to: '/market', label: 'Marché' },
 ]
