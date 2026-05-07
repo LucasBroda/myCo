@@ -306,10 +306,8 @@ export default function MySalesPage() {
 			const collection = await collectionService.getCollection()
 			setCollection(collection)
 
-			// Récupérer les IDs des cartes possédées
-			const ownedCardIds = Object.keys(acquiredMap)
-
-			if (ownedCardIds.length === 0) {
+			// Récupérer les IDs des cartes possédées directement depuis collection
+			if (collection.length === 0) {
 				setCards([])
 				setIsLoading(false)
 				return
@@ -332,7 +330,9 @@ export default function MySalesPage() {
 			const allSetsData = await Promise.all(allCardsPromises)
 			const allCards = allSetsData.flatMap(setData => setData.cards)
 			
-			const ownedCards = allCards.filter(card => ownedCardIds.includes(card.id))
+			// Créer une map des cartes possédées
+			const ownedCardIds = new Set(collection.map(c => c.cardId))
+			const ownedCards = allCards.filter(card => ownedCardIds.has(card.id))
 
 			// Trier par nom
 			const sortedCards = [...ownedCards].sort((a, b) => a.name.localeCompare(b.name))
