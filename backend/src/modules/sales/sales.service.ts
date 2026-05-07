@@ -56,6 +56,18 @@ export async function addPotentialSale(
   condition: CardCondition,
   notes: string | null,
 ): Promise<PotentialSale> {
+  // Remove one instance of this card from the user's collection
+  // Match by cardId and condition to remove the right card
+  await db.query(
+    `DELETE FROM acquired_cards 
+     WHERE id = (
+       SELECT id FROM acquired_cards 
+       WHERE user_id = $1 AND card_id = $2 AND condition = $3
+       LIMIT 1
+     )`,
+    [userId, cardId, condition],
+  );
+
   const result = await db.query(
     `INSERT INTO potential_sales (user_id, card_id, set_id, sale_price, sale_date, condition, notes)
      VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -151,4 +163,24 @@ export async function deletePotentialSale(
   if (result.rowCount === 0) {
     throw new Error("Potential sale not found or unauthorized");
   }
+}
+
+export async function getSalesStats(userId: string): Promise<{
+  totalSales: number;
+  totalValue: number;
+}> {
+  const result = await db.query(
+    `SELECT 
+       COUNT(*)::int AS total_sales,
+       COALESCE(SUM(sale_price), 0) AS total_value
+     FROM potential_sales 
+     WHERE user_id = $1`,
+    [userId],
+  );
+
+  const row = result.rows[0];
+  return {
+    totalSales: row.total_sales as number,
+    totalValue: Number.parseFloat(row.total_value as string),
+  };
 }

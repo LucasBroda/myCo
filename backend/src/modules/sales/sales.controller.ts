@@ -6,7 +6,7 @@ export async function getPotentialSales(req: Request, res: Response) {
   try {
     const userId = req.user!.id;
     const sales = await salesService.getPotentialSales(userId);
-    res.json(sales);
+    res.json({ data: sales });
   } catch (error) {
     console.error("Error fetching potential sales:", error);
     res.status(500).json({ error: "Failed to fetch potential sales" });
@@ -33,7 +33,7 @@ export async function addPotentialSale(req: Request, res: Response) {
       notes || null,
     );
 
-    res.status(201).json(sale);
+    res.status(201).json({ data: sale });
   } catch (error) {
     console.error("Error adding potential sale:", error);
     res.status(500).json({ error: "Failed to add potential sale" });
@@ -95,5 +95,16 @@ export async function deletePotentialSale(req: Request, res: Response) {
       return;
     }
     res.status(500).json({ error: "Failed to delete potential sale" });
+  }
+}
+
+export async function getSalesStats(req: Request, res: Response) {
+  try {
+    const userId = req.user!.id;
+    const stats = await salesService.getSalesStats(userId);
+    res.json(stats);
+  } catch (error) {
+    console.error("Error fetching sales stats:", error);
+    res.status(500).json({ error: "Failed to fetch sales stats" });
   }
 }

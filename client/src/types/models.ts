@@ -102,3 +102,8 @@ export interface CollectionStats {
 	estimatedValue: number
 	byMonth: MonthStat[]
 }
+
+export interface SalesStats {
+	totalSales: number
+	totalValue: number
+}

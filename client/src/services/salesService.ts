@@ -1,6 +1,7 @@
 import type {
 	PotentialSale,
 	CardCondition,
+	SalesStats,
 } from '@/types/models'
 import { http } from './http'
 
@@ -8,6 +9,11 @@ export const salesService = {
 	async getPotentialSales(): Promise<PotentialSale[]> {
 		const res = await http.get<{ data: PotentialSale[] }>('/sales')
 		return res.data
+	},
+
+	async getSalesStats(): Promise<SalesStats> {
+		const res = await http.get<SalesStats>('/sales/stats')
+		return res
 	},
 
 	async addPotentialSale(payload: {

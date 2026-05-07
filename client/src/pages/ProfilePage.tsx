@@ -1,4 +1,4 @@
-import type { CollectionStats, PlannedPurchase, AcquiredCard, PokemonCard } from '@/types/models'
+import type { CollectionStats, PlannedPurchase, AcquiredCard, PokemonCard, SalesStats } from '@/types/models'
 import { Card } from '@components/ui/Card'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
@@ -8,6 +8,7 @@ import { SectionTitle } from '@components/layout/SectionTitle'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
 import { cardsService } from '@services/cardsService'
+import { salesService } from '@services/salesService'
 import { PriceTrend } from '@components/pokemon/PriceTrend'
 import { usePlannedStore } from '@store/plannedStore'
 import { useToast } from '@hooks/useToast'
@@ -115,9 +116,10 @@ const PlannedValueIndicator = styled.span`
 interface CollectionValueCardProps {
 	readonly stats: CollectionStats
 	readonly planned: PlannedPurchase[]
+	readonly salesStats: SalesStats | null
 }
 
-function CollectionValueCard({ stats, planned }: CollectionValueCardProps) {
+function CollectionValueCard({ stats, planned, salesStats }: CollectionValueCardProps) {
 	// Calculer la valeur totale des achats planifiés
 	const plannedTotal = planned.reduce((sum, p) => {
 		return sum + (p.budget ? Number(p.budget) : 0)
@@ -155,6 +157,21 @@ function CollectionValueCard({ stats, planned }: CollectionValueCardProps) {
 					<StatLabel>Valeur estimée</StatLabel>
 				</StatItem>
 			</StatsRow>
+			{salesStats && salesStats.totalSales > 0 && (
+				<div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
+					<SectionTitle style={{ fontSize: '1rem', marginBottom: '1rem' }}>Ventes</SectionTitle>
+					<StatsRow>
+						<StatItem>
+							<StatValue style={{ fontSize: '1.5rem' }}>{salesStats.totalSales}</StatValue>
+							<StatLabel>Cartes vendues</StatLabel>
+						</StatItem>
+						<StatItem>
+							<StatValue style={{ fontSize: '1.5rem' }}>{formatEuros(salesStats.totalValue)}</StatValue>
+							<StatLabel>Valeur totale des ventes</StatLabel>
+						</StatItem>
+					</StatsRow>
+				</div>
+			)}
 		</Card>
 	)
 }
@@ -990,6 +1007,7 @@ function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 
 export default function ProfilePage() {
 	const [stats, setStats] = useState<CollectionStats | null>(null)
+	const [salesStats, setSalesStats] = useState<SalesStats | null>(null)
 	const [acquisitions, setAcquisitions] = useState<AcquiredCard[]>([])
 	const [planned, setPlanned] = useState<PlannedPurchase[]>([])
 	const [isLoading, setIsLoading] = useState(true)
@@ -1000,12 +1018,14 @@ export default function ProfilePage() {
 		setIsLoading(true)
 		setError(null)
 		try {
-			const [statsData, collectionData, plannedData] = await Promise.all([
+			const [statsData, collectionData, plannedData, salesStatsData] = await Promise.all([
 				collectionService.getStats(),
 				collectionService.getCollectionWithDetails(),
 				profileService.getPlanned(),
+				salesService.getSalesStats(),
 			])
 			setStats(statsData)
+			setSalesStats(salesStatsData)
 			setAcquisitions(
 				[...collectionData].sort(
 					(a, b) =>
@@ -1040,7 +1060,7 @@ export default function ProfilePage() {
 			<PageHeader title="Mon Profil" id="profile-title" />
 			<PageGrid>
 				<FullWidth>
-					<CollectionValueCard stats={stats} planned={planned} />
+					<CollectionValueCard stats={stats} planned={planned} salesStats={salesStats} />
 				</FullWidth>
 				<SpendingChart stats={stats} planned={planned} />
 				<PurchaseCalendar 

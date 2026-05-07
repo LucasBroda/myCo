@@ -7,6 +7,9 @@ const router = Router();
 // All routes require authentication
 router.use(authenticate);
 
+// GET /api/sales/stats - Get sales statistics
+router.get("/stats", salesController.getSalesStats);
+
 // GET /api/sales - Get all potential sales for the user
 router.get("/", salesController.getPotentialSales);
 
