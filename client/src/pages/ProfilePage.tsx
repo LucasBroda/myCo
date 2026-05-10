@@ -209,8 +209,8 @@ const TooltipValue = styled.span`
 `
 
 interface CustomTooltipProps {
-	active?: boolean
-	payload?: Array<{
+	readonly active?: boolean
+	readonly payload?: Array<{
 		value: number
 		dataKey: string
 		payload: {
@@ -220,9 +220,11 @@ interface CustomTooltipProps {
 			budgetPlanifie: number
 			plannedCount: number
 			realBudget: number
+			ventesPlannifiees: number
+			salesCount: number
+			realSales: number
 		}
 	}>
-	label?: string
 }
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
@@ -258,6 +260,20 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 					</TooltipItem>
 				</>
 			)}
+			{data.salesCount > 0 && (
+				<>
+					{data.realSales > 0 && (
+						<TooltipItem>
+							<span>Ventes planifiées :</span>
+							<TooltipValue style={{ color: '#3b82f6' }}>{formatEuros(data.realSales)}</TooltipValue>
+						</TooltipItem>
+					)}
+					<TooltipItem>
+						<span>Ventes planifiées :</span>
+						<TooltipValue style={{ color: '#3b82f6' }}>{data.salesCount}</TooltipValue>
+					</TooltipItem>
+				</>
+			)}
 		</TooltipContainer>
 	)
 }
@@ -265,9 +281,10 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 interface SpendingChartProps {
 	readonly stats: CollectionStats
 	readonly planned: PlannedPurchase[]
+	readonly plannedSales: PlannedSale[]
 }
 
-function SpendingChart({ stats, planned }: SpendingChartProps) {
+function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 	// Agréger les budgets planifiés par mois
 	const plannedByMonth = planned.reduce((acc, p) => {
 		const date = new Date(p.plannedDate)
@@ -284,11 +301,23 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 		return acc
 	}, {} as Record<string, { total: number; count: number }>)
 
+	// Agréger les ventes planifiées par mois
+	const salesByMonth = plannedSales.reduce((acc, s) => {
+		const date = new Date(s.saleDate)
+		const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+		if (!acc[monthKey]) {
+			acc[monthKey] = { total: 0, count: 0 }
+		}
+		acc[monthKey].total += Number(s.salePrice)
+		acc[monthKey].count += 1
+		return acc
+	}, {} as Record<string, { total: number; count: number }>)
 
-	// Créer une liste de tous les mois (réels + planifiés)
+	// Créer une liste de tous les mois (réels + planifiés + ventes)
 	const allMonths = new Set<string>()
 	stats.byMonth.forEach(m => allMonths.add(m.month))
 	Object.keys(plannedByMonth).forEach(m => allMonths.add(m))
+	Object.keys(salesByMonth).forEach(m => allMonths.add(m))
 
 	if (allMonths.size === 0) {
 		return (
@@ -302,16 +331,17 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 	// Formater les mois pour l'affichage (ex: "2026-05" -> "Mai 26")
 	const formatMonth = (monthKey: string) => {
 		const [year, month] = monthKey.split('-')
-		const date = new Date(parseInt(year), parseInt(month) - 1)
+		const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1)
 		return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
 	}
 
-	// Combiner les données réelles et planifiées
+	// Combiner les données réelles, planifiées et ventes
 	const data = Array.from(allMonths)
-		.sort()
+		.sort((a, b) => a.localeCompare(b))
 		.map(monthKey => {
 			const realData = stats.byMonth.find(m => m.month === monthKey)
 			const plannedData = plannedByMonth[monthKey]
+			const salesData = salesByMonth[monthKey]
 
 			// Si des achats sont planifiés mais sans budget, utiliser une valeur indicative minimale
 			const plannedValue = plannedData?.total || 0
@@ -321,6 +351,9 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 				? plannedCountValue * 1 
 				: plannedValue
 
+			const salesValue = salesData?.total || 0
+			const salesCountValue = salesData?.count || 0
+
 			return {
 				month: formatMonth(monthKey),
 				monthKey,
@@ -329,12 +362,15 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 				budgetPlanifie: displayValue,
 				plannedCount: plannedCountValue,
 				realBudget: plannedValue, // Budget réel pour le tooltip
+				ventesPlannifiees: salesValue,
+				salesCount: salesCountValue,
+				realSales: salesValue,
 			}
 		})
 
 	return (
 		<Card>
-			<SectionTitle>Dépenses mensuelles</SectionTitle>
+			<SectionTitle>Dépenses et ventes mensuelles</SectionTitle>
 			<ChartWrapper>
 				<ResponsiveContainer width="100%" height={260}>
 					<BarChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
@@ -346,6 +382,10 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 							<linearGradient id="barGradientPlanned" x1="0" y1="0" x2="0" y2="1">
 								<stop offset="0%" stopColor="#fbbf24" stopOpacity={0.7} />
 								<stop offset="100%" stopColor="#f59e0b" stopOpacity={0.8} />
+							</linearGradient>
+							<linearGradient id="barGradientSales" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
+								<stop offset="100%" stopColor="#2563eb" stopOpacity={0.9} />
 							</linearGradient>
 						</defs>
 						<CartesianGrid 
@@ -382,6 +422,13 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 							radius={[8, 8, 0, 0]}
 							maxBarSize={40}
 							name="Budget planifié"
+						/>
+						<Bar 
+							dataKey="ventesPlannifiees" 
+							fill="url(#barGradientSales)" 
+							radius={[8, 8, 0, 0]}
+							maxBarSize={40}
+							name="Ventes planifiées"
 						/>
 					</BarChart>
 				</ResponsiveContainer>
@@ -833,188 +880,6 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 	)
 }
 
-// ─── PlannedSalesCalendar ─────────────────────────────────────────────────────
-
-interface PlannedSalesCalendarProps {
-	readonly plannedSales: PlannedSale[]
-}
-
-function PlannedSalesCalendar({ plannedSales }: PlannedSalesCalendarProps) {
-	const [showCalendar, setShowCalendar] = useState(false)
-	const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
-	const plannedDates = plannedSales.map(s => new Date(s.saleDate))
-
-	// Charger les détails des cartes au montage
-	useEffect(() => {
-		async function loadCardDetails() {
-			const details: Record<string, PokemonCard> = {}
-			for (const sale of plannedSales) {
-				if (!details[sale.cardId]) {
-					try {
-						const card = await cardsService.getCard(sale.cardId)
-						details[sale.cardId] = card
-					} catch (err) {
-						console.error(`Failed to load card ${sale.cardId}`, err)
-					}
-				}
-			}
-			setCardDetails(details)
-		}
-		if (plannedSales.length > 0) {
-			loadCardDetails()
-		}
-	}, [plannedSales])
-
-	// Trouver les ventes planifiées pour la date sélectionnée
-	const selectedSales = selectedDate
-		? plannedSales.filter(s => {
-				const saleDate = new Date(s.saleDate)
-				return (
-					saleDate.getDate() === selectedDate.getDate() &&
-					saleDate.getMonth() === selectedDate.getMonth() &&
-					saleDate.getFullYear() === selectedDate.getFullYear()
-				)
-		  })
-		: []
-
-	function handleDayClick(date: Date) {
-		// Vérifier si cette date a des ventes planifiées
-		const hasPlannedSales = plannedSales.some(s => {
-			const saleDate = new Date(s.saleDate)
-			return (
-				saleDate.getDate() === date.getDate() &&
-				saleDate.getMonth() === date.getMonth() &&
-				saleDate.getFullYear() === date.getFullYear()
-			)
-		})
-		
-		// Si la date a des ventes planifiées, la sélectionner (ou la désélectionner si déjà sélectionnée)
-		if (hasPlannedSales) {
-			setSelectedDate(prev => {
-				if (prev?.getDate() === date.getDate() &&
-					prev?.getMonth() === date.getMonth() &&
-					prev?.getFullYear() === date.getFullYear()) {
-					return null // Désélectionner si même date
-				}
-				return date // Sélectionner la nouvelle date
-			})
-		}
-	}
-
-	return (
-		<Card>
-			<SectionTitle>Ventes planifiées ({plannedSales.length})</SectionTitle>
-			
-			{plannedSales.length > 0 && (
-				<CalendarToggle
-					type="button"
-					onClick={() => setShowCalendar(!showCalendar)}
-				>
-					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
-				</CalendarToggle>
-			)}
-
-			{plannedSales.length === 0 && (
-				<EmptyState message="Aucune vente planifiée." icon="💰" />
-			)}
-
-			{plannedSales.length > 0 && showCalendar && (
-				<>
-					<DayPickerOverride />
-					<LayoutGrid>
-						<CalendarCell>
-							<DayPicker
-								modifiers={{ planned: plannedDates }}
-								modifiersClassNames={{ planned: 'planned-date' }}
-								onDayClick={handleDayClick}
-								footer={
-									<p
-										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
-										aria-live="polite"
-									>
-										{plannedSales.length} vente{plannedSales.length > 1 ? 's' : ''} planifiée
-										{plannedSales.length > 1 ? 's' : ''}
-									</p>
-								}
-							/>
-						</CalendarCell>
-						{selectedSales.map((sale) => {
-							const card = cardDetails[sale.cardId]
-							if (!card) return null
-
-							return (
-								<CardCell key={sale.id}>
-									<CardPreviewItem>
-										<CardPreviewImage
-											src={card.images.small}
-											alt={card.name}
-											loading="lazy"
-										/>
-										<CardPreviewName>{sale.cardName}</CardPreviewName>
-										<CardPreviewDetail>
-											<span>Collection</span>
-											<span>{sale.setName}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>État</span>
-											<span>{sale.condition}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>Date prévue</span>
-											<span>
-												{new Date(sale.saleDate).toLocaleDateString('fr-FR', {
-													day: 'numeric',
-													month: 'long',
-													year: 'numeric',
-												})}
-											</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>Prix de vente</span>
-											<CardPreviewBudget>
-												{formatEuros(sale.salePrice)}
-											</CardPreviewBudget>
-										</CardPreviewDetail>
-										{sale.notes && (
-											<CardPreviewNotes>{sale.notes}</CardPreviewNotes>
-										)}
-									</CardPreviewItem>
-								</CardCell>
-							)
-						})}
-					</LayoutGrid>
-				</>
-			)}
-			{plannedSales.length > 0 && !showCalendar && (
-				<PlannedList>
-					{plannedSales.map(sale => (
-						<PlannedItem key={sale.id}>
-							<PlannedInfo>
-								<PlannedCardName>
-									{sale.cardName}
-								</PlannedCardName>
-								<PlannedMeta>{sale.setName}</PlannedMeta>
-								<PlannedMeta>
-									{new Date(sale.saleDate).toLocaleDateString('fr-FR', {
-										day: 'numeric',
-										month: 'long',
-										year: 'numeric',
-									})}
-								</PlannedMeta>
-								{sale.notes && <PlannedMeta>{sale.notes}</PlannedMeta>}
-							</PlannedInfo>
-							<PlannedActions>
-								<PlannedBudget>{formatEuros(sale.salePrice)}</PlannedBudget>
-							</PlannedActions>
-						</PlannedItem>
-					))}
-				</PlannedList>
-			)}
-		</Card>
-	)
-}
-
 // ─── RecentAcquisitionsList ───────────────────────────────────────────────────
 
 const SectionHeader = styled.div`
@@ -1248,18 +1113,15 @@ export default function ProfilePage() {
 				<FullWidth>
 					<CollectionValueCard stats={stats} planned={planned} salesStats={salesStats} />
 				</FullWidth>
-				<SpendingChart stats={stats} planned={planned} />
+				<FullWidth>
+					<SpendingChart stats={stats} planned={planned} plannedSales={plannedSales} />
+				</FullWidth>
 				<PurchaseCalendar 
 					planned={planned} 
 					onDelete={handleDeletePlanned}
 					onRefresh={loadData}
 				/>
-				<PlannedSalesCalendar 
-					plannedSales={plannedSales}
-				/>
-				<FullWidth>
-					<RecentAcquisitionsList cards={acquisitions} />
-				</FullWidth>
+				<RecentAcquisitionsList cards={acquisitions} />
 			</PageGrid>
 		</section>
 	)
