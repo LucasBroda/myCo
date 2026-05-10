@@ -460,6 +460,20 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 					</BarChart>
 				</ResponsiveContainer>
 			</ChartWrapper>
+			<ChartLegend>
+				<LegendItem>
+					<LegendLine $color="#10b981" />
+					<LegendLabel>Dépenses réelles</LegendLabel>
+				</LegendItem>
+				<LegendItem>
+					<LegendLine $color="#fbbf24" />
+					<LegendLabel>Budget planifié</LegendLabel>
+				</LegendItem>
+				<LegendItem>
+					<LegendLine $color="#3b82f6" />
+					<LegendLabel>Ventes planifiées</LegendLabel>
+				</LegendItem>
+			</ChartLegend>
 		</Card>
 	)
 }
