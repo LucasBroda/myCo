@@ -238,11 +238,11 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 				<>
 					<TooltipItem>
 						<span>Dépenses réelles :</span>
-						<TooltipValue>{formatEuros(data.depenses)}</TooltipValue>
+						<TooltipValue style={{ color: '#10b981' }}>{formatEuros(data.depenses)}</TooltipValue>
 					</TooltipItem>
 					<TooltipItem>
 						<span>Cartes achetées :</span>
-						<TooltipValue>{data.cardCount}</TooltipValue>
+						<TooltipValue style={{ color: '#10b981' }}>{data.cardCount}</TooltipValue>
 					</TooltipItem>
 				</>
 			)}
