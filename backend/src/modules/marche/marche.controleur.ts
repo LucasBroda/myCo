@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { compareCard, getDeals, searchMarket } from "./market.service";
+import { compareCard, getDeals, searchMarket } from "./marche.service";
 
 export async function searchHandler(
   req: Request,

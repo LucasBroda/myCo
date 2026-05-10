@@ -1,7 +1,7 @@
 import { cache } from "../../config/redis";
 import { searchEbayPrice } from "../../config/ebay";
 import { MarketPrice, PokemonCard } from "../../types/models";
-import { getCard, searchCards } from "../cards/cards.service";
+import { getCard, searchCards } from "../cartes/cartes.service";
 
 const TTL_MARKET = 1800; // 30 minutes
 

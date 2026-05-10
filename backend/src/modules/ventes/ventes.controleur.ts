@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import * as salesService from "./sales.service";
+import * as salesService from "./ventes.service";
 import type { CardCondition } from "../../types/models";
 
 export async function getPlannedSales(req: Request, res: Response) {

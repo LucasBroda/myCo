@@ -1,5 +1,5 @@
 import { focusRing } from '@/styles/mixins'
-import ThemeToggle from '@components/ui/ThemeToggle'
+import ThemeToggle from '@components/ui/BasculeurTheme'
 import { useAuth } from '@hooks/useAuth'
 import { Link, Outlet, useLocation } from 'react-router'
 import { useState } from 'react'

@@ -1,6 +1,6 @@
 import { focusRing } from '@/styles/mixins'
 import type { PokemonSet } from '@/types/models'
-import { ProgressBar } from '@components/ui/ProgressBar'
+import { ProgressBar } from '@components/ui/BarreProgression'
 import styled from 'styled-components'
 
 const Wrapper = styled.article`

@@ -1,4 +1,4 @@
-import { PriceTrend } from './PriceTrend'
+import { PriceTrend } from './TendancePrix'
 import styled from 'styled-components'
 
 const formatEuros = (value: number) =>

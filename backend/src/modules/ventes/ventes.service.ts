@@ -4,7 +4,7 @@ import {
   CardCondition,
   SalesStats,
 } from "../../types/models";
-import * as cardsService from "../cards/cards.service";
+import * as cardsService from "../cartes/cartes.service";
 
 export async function getPlannedSales(userId: string): Promise<PlannedSale[]> {
   const result = await db.query(

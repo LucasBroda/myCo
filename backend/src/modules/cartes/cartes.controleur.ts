@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getCard, getSet, getSets, searchCards } from "./cards.service";
+import { getCard, getSet, getSets, searchCards } from "./cartes.service";
 
 export async function getSetsHandler(
   _req: Request,

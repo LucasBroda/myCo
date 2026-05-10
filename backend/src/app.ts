@@ -5,12 +5,12 @@ import "express-async-errors";
 import helmet from "helmet";
 
 import { errorHandler } from "./middleware/errorHandler";
-import authRoutes from "./modules/auth/auth.routes";
-import cardsRoutes from "./modules/cards/cards.routes";
+import authRoutes from "./modules/authentification/authentification.routes";
+import cardsRoutes from "./modules/cartes/cartes.routes";
 import collectionRoutes from "./modules/collection/collection.routes";
-import marketRoutes from "./modules/market/market.routes";
-import profileRoutes from "./modules/profile/profile.routes";
-import salesRoutes from "./modules/sales/sales.routes";
+import marketRoutes from "./modules/marche/marche.routes";
+import profileRoutes from "./modules/profil/profil.routes";
+import salesRoutes from "./modules/ventes/ventes.routes";
 
 const app = express();
 

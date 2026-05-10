@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { addPlanned, deletePlanned, getPlanned } from "./profile.service";
+import { addPlanned, deletePlanned, getPlanned } from "./profil.service";
 
 export async function getPlannedHandler(
   req: Request,

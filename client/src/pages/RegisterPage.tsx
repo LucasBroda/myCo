@@ -1,6 +1,6 @@
 import { focusRing } from '@/styles/mixins'
 import { useToast } from '@hooks/useToast'
-import { authService } from '@services/authService'
+import { authService } from '@services/serviceAuthentification'
 import { useAuthStore } from '@store/authStore'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'

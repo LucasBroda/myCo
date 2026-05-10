@@ -5,7 +5,7 @@ import {
   getSetHandler,
   getSetsHandler,
   searchHandler,
-} from "./cards.controller";
+} from "./cartes.controleur";
 
 const router = Router();
 

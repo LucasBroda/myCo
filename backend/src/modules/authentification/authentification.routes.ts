@@ -5,7 +5,7 @@ import {
   loginHandler,
   logoutHandler,
   registerHandler,
-} from "./auth.controller";
+} from "./authentification.controleur";
 
 const router = Router();
 

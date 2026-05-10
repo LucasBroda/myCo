@@ -4,7 +4,7 @@ import {
   addPlannedHandler,
   deletePlannedHandler,
   getPlannedHandler,
-} from "./profile.controller";
+} from "./profil.controleur";
 
 const router = Router();
 

@@ -9,7 +9,7 @@ import {
   getStatsHandler,
   removeCardHandler,
   unfollowSetHandler,
-} from "./collection.controller";
+} from "./collection.controleur";
 
 const router = Router();
 

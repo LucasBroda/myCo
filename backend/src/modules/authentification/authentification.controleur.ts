@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { env } from "../../config/env";
-import { getMe, login, register } from "./auth.service";
+import { getMe, login, register } from "./authentification.service";
 
 const REFRESH_COOKIE = "refreshToken";
 const COOKIE_OPTIONS = {
