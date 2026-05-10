@@ -396,7 +396,7 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 			<SectionTitle>Dépenses et ventes mensuelles</SectionTitle>
 			<ChartWrapper>
 				<ResponsiveContainer width="100%" height={260}>
-					<BarChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+					<BarChart data={data} margin={{ top: 8, right: 12, bottom: 48, left: 0 }}>
 						<defs>
 							<linearGradient id="barGradientReal" x1="0" y1="0" x2="0" y2="1">
 								<stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
@@ -423,6 +423,10 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 							axisLine={false}
 							tickLine={false}
 							dy={8}
+							interval={0}
+							angle={-45}
+							textAnchor="end"
+							height={60}
 						/>
 						<YAxis
 							tick={{ fontSize: 13, fill: '#78716c', fontWeight: 500 }}
@@ -666,7 +670,7 @@ function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueC
 			<SectionTitle>Évolution de la valeur de la collection</SectionTitle>
 			<ChartWrapper>
 				<ResponsiveContainer width="100%" height={260}>
-					<AreaChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+					<AreaChart data={data} margin={{ top: 8, right: 12, bottom: 48, left: 0 }}>
 						<defs>
 							<linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
 								<stop offset="0%" stopColor="#14b8a6" stopOpacity={0.4} />
@@ -689,6 +693,10 @@ function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueC
 							axisLine={false}
 							tickLine={false}
 							dy={8}
+							interval={0}
+							angle={-45}
+							textAnchor="end"
+							height={60}
 						/>
 						<YAxis
 							tick={{ fontSize: 13, fill: '#78716c', fontWeight: 500 }}
@@ -902,7 +910,12 @@ const LayoutGrid = styled.div`
 	flex-wrap: wrap;
 	align-content: flex-start;
 	align-items: flex-start;
+	justify-content: center;
 	gap: ${({ theme }) => theme.spacing['10']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		justify-content: flex-start;
+	}
 `
 
 const CalendarCell = styled.div`
