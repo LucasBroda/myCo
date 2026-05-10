@@ -9,6 +9,7 @@ import RootLayout, { ProtectedRoute, PublicOnlyRoute } from '@layout/RootLayout'
 import AllCollectionsPage from '@pages/AllCollectionsPage'
 import MyCollectionsPage from '@pages/MyCollectionsPage'
 import MyCardsPage from '@pages/MyCardsPage'
+import MySalesPage from '@pages/MySalesPage'
 import LoginPage from '@pages/LoginPage'
 import MarketPage from '@pages/MarketPage'
 import NotFoundPage from '@pages/NotFoundPage'
@@ -44,6 +45,7 @@ const router = createBrowserRouter([
 							{ path: '/my-collections', element: <MyCollectionsPage /> },
 							{ path: '/all-collections', element: <AllCollectionsPage /> },
 							{ path: '/my-cards', element: <MyCardsPage /> },
+							{ path: '/my-sales', element: <MySalesPage /> },
 							{ path: '/collections', element: <Navigate to="/my-collections" replace /> },
 							{ path: '/collections/:setId', element: <SetDetailPage /> },
 							{ path: '/profile', element: <ProfilePage /> },

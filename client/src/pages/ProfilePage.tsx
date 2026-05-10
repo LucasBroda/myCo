@@ -1,4 +1,4 @@
-import type { CollectionStats, PlannedPurchase, AcquiredCard, PokemonCard } from '@/types/models'
+import type { CollectionStats, PlannedPurchase, AcquiredCard, PokemonCard, SalesStats, PlannedSale } from '@/types/models'
 import { Card } from '@components/ui/Card'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
@@ -8,6 +8,7 @@ import { SectionTitle } from '@components/layout/SectionTitle'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
 import { cardsService } from '@services/cardsService'
+import { salesService } from '@services/salesService'
 import { PriceTrend } from '@components/pokemon/PriceTrend'
 import { usePlannedStore } from '@store/plannedStore'
 import { useToast } from '@hooks/useToast'
@@ -115,9 +116,10 @@ const PlannedValueIndicator = styled.span`
 interface CollectionValueCardProps {
 	readonly stats: CollectionStats
 	readonly planned: PlannedPurchase[]
+	readonly salesStats: SalesStats | null
 }
 
-function CollectionValueCard({ stats, planned }: CollectionValueCardProps) {
+function CollectionValueCard({ stats, planned, salesStats }: CollectionValueCardProps) {
 	// Calculer la valeur totale des achats planifiés
 	const plannedTotal = planned.reduce((sum, p) => {
 		return sum + (p.budget ? Number(p.budget) : 0)
@@ -155,6 +157,21 @@ function CollectionValueCard({ stats, planned }: CollectionValueCardProps) {
 					<StatLabel>Valeur estimée</StatLabel>
 				</StatItem>
 			</StatsRow>
+			{salesStats && salesStats.totalSales > 0 && (
+				<div style={{ marginTop: '1.5rem', paddingTop: '1.5rem', borderTop: '1px solid var(--border)' }}>
+					<SectionTitle style={{ fontSize: '1rem', marginBottom: '1rem' }}>Ventes</SectionTitle>
+					<StatsRow>
+						<StatItem>
+							<StatValue style={{ fontSize: '1.5rem' }}>{salesStats.totalSales}</StatValue>
+							<StatLabel>Cartes vendues</StatLabel>
+						</StatItem>
+						<StatItem>
+							<StatValue style={{ fontSize: '1.5rem' }}>{formatEuros(salesStats.totalValue)}</StatValue>
+							<StatLabel>Valeur totale des ventes</StatLabel>
+						</StatItem>
+					</StatsRow>
+				</div>
+			)}
 		</Card>
 	)
 }
@@ -816,6 +833,188 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 	)
 }
 
+// ─── PlannedSalesCalendar ─────────────────────────────────────────────────────
+
+interface PlannedSalesCalendarProps {
+	readonly plannedSales: PlannedSale[]
+}
+
+function PlannedSalesCalendar({ plannedSales }: PlannedSalesCalendarProps) {
+	const [showCalendar, setShowCalendar] = useState(false)
+	const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
+	const plannedDates = plannedSales.map(s => new Date(s.saleDate))
+
+	// Charger les détails des cartes au montage
+	useEffect(() => {
+		async function loadCardDetails() {
+			const details: Record<string, PokemonCard> = {}
+			for (const sale of plannedSales) {
+				if (!details[sale.cardId]) {
+					try {
+						const card = await cardsService.getCard(sale.cardId)
+						details[sale.cardId] = card
+					} catch (err) {
+						console.error(`Failed to load card ${sale.cardId}`, err)
+					}
+				}
+			}
+			setCardDetails(details)
+		}
+		if (plannedSales.length > 0) {
+			loadCardDetails()
+		}
+	}, [plannedSales])
+
+	// Trouver les ventes planifiées pour la date sélectionnée
+	const selectedSales = selectedDate
+		? plannedSales.filter(s => {
+				const saleDate = new Date(s.saleDate)
+				return (
+					saleDate.getDate() === selectedDate.getDate() &&
+					saleDate.getMonth() === selectedDate.getMonth() &&
+					saleDate.getFullYear() === selectedDate.getFullYear()
+				)
+		  })
+		: []
+
+	function handleDayClick(date: Date) {
+		// Vérifier si cette date a des ventes planifiées
+		const hasPlannedSales = plannedSales.some(s => {
+			const saleDate = new Date(s.saleDate)
+			return (
+				saleDate.getDate() === date.getDate() &&
+				saleDate.getMonth() === date.getMonth() &&
+				saleDate.getFullYear() === date.getFullYear()
+			)
+		})
+		
+		// Si la date a des ventes planifiées, la sélectionner (ou la désélectionner si déjà sélectionnée)
+		if (hasPlannedSales) {
+			setSelectedDate(prev => {
+				if (prev?.getDate() === date.getDate() &&
+					prev?.getMonth() === date.getMonth() &&
+					prev?.getFullYear() === date.getFullYear()) {
+					return null // Désélectionner si même date
+				}
+				return date // Sélectionner la nouvelle date
+			})
+		}
+	}
+
+	return (
+		<Card>
+			<SectionTitle>Ventes planifiées ({plannedSales.length})</SectionTitle>
+			
+			{plannedSales.length > 0 && (
+				<CalendarToggle
+					type="button"
+					onClick={() => setShowCalendar(!showCalendar)}
+				>
+					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
+				</CalendarToggle>
+			)}
+
+			{plannedSales.length === 0 && (
+				<EmptyState message="Aucune vente planifiée." icon="💰" />
+			)}
+
+			{plannedSales.length > 0 && showCalendar && (
+				<>
+					<DayPickerOverride />
+					<LayoutGrid>
+						<CalendarCell>
+							<DayPicker
+								modifiers={{ planned: plannedDates }}
+								modifiersClassNames={{ planned: 'planned-date' }}
+								onDayClick={handleDayClick}
+								footer={
+									<p
+										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
+										aria-live="polite"
+									>
+										{plannedSales.length} vente{plannedSales.length > 1 ? 's' : ''} planifiée
+										{plannedSales.length > 1 ? 's' : ''}
+									</p>
+								}
+							/>
+						</CalendarCell>
+						{selectedSales.map((sale) => {
+							const card = cardDetails[sale.cardId]
+							if (!card) return null
+
+							return (
+								<CardCell key={sale.id}>
+									<CardPreviewItem>
+										<CardPreviewImage
+											src={card.images.small}
+											alt={card.name}
+											loading="lazy"
+										/>
+										<CardPreviewName>{sale.cardName}</CardPreviewName>
+										<CardPreviewDetail>
+											<span>Collection</span>
+											<span>{sale.setName}</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>
+											<span>État</span>
+											<span>{sale.condition}</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>
+											<span>Date prévue</span>
+											<span>
+												{new Date(sale.saleDate).toLocaleDateString('fr-FR', {
+													day: 'numeric',
+													month: 'long',
+													year: 'numeric',
+												})}
+											</span>
+										</CardPreviewDetail>
+										<CardPreviewDetail>
+											<span>Prix de vente</span>
+											<CardPreviewBudget>
+												{formatEuros(sale.salePrice)}
+											</CardPreviewBudget>
+										</CardPreviewDetail>
+										{sale.notes && (
+											<CardPreviewNotes>{sale.notes}</CardPreviewNotes>
+										)}
+									</CardPreviewItem>
+								</CardCell>
+							)
+						})}
+					</LayoutGrid>
+				</>
+			)}
+			{plannedSales.length > 0 && !showCalendar && (
+				<PlannedList>
+					{plannedSales.map(sale => (
+						<PlannedItem key={sale.id}>
+							<PlannedInfo>
+								<PlannedCardName>
+									{sale.cardName}
+								</PlannedCardName>
+								<PlannedMeta>{sale.setName}</PlannedMeta>
+								<PlannedMeta>
+									{new Date(sale.saleDate).toLocaleDateString('fr-FR', {
+										day: 'numeric',
+										month: 'long',
+										year: 'numeric',
+									})}
+								</PlannedMeta>
+								{sale.notes && <PlannedMeta>{sale.notes}</PlannedMeta>}
+							</PlannedInfo>
+							<PlannedActions>
+								<PlannedBudget>{formatEuros(sale.salePrice)}</PlannedBudget>
+							</PlannedActions>
+						</PlannedItem>
+					))}
+				</PlannedList>
+			)}
+		</Card>
+	)
+}
+
 // ─── RecentAcquisitionsList ───────────────────────────────────────────────────
 
 const SectionHeader = styled.div`
@@ -990,8 +1189,10 @@ function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 
 export default function ProfilePage() {
 	const [stats, setStats] = useState<CollectionStats | null>(null)
+	const [salesStats, setSalesStats] = useState<SalesStats | null>(null)
 	const [acquisitions, setAcquisitions] = useState<AcquiredCard[]>([])
 	const [planned, setPlanned] = useState<PlannedPurchase[]>([])
+	const [plannedSales, setPlannedSales] = useState<PlannedSale[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const { setPlanned: setPlannedStore, removePlanned } = usePlannedStore()
@@ -1000,12 +1201,15 @@ export default function ProfilePage() {
 		setIsLoading(true)
 		setError(null)
 		try {
-			const [statsData, collectionData, plannedData] = await Promise.all([
+			const [statsData, collectionData, plannedData, salesStatsData, allSalesData] = await Promise.all([
 				collectionService.getStats(),
 				collectionService.getCollectionWithDetails(),
 				profileService.getPlanned(),
+				salesService.getSalesStats(),
+				salesService.getPlannedSales(),
 			])
 			setStats(statsData)
+			setSalesStats(salesStatsData)
 			setAcquisitions(
 				[...collectionData].sort(
 					(a, b) =>
@@ -1015,6 +1219,8 @@ export default function ProfilePage() {
 			)
 			setPlanned(plannedData)
 			setPlannedStore(plannedData)
+			// Filtrer pour garder uniquement les ventes non complétées (planifiées)
+			setPlannedSales(allSalesData.filter(sale => !sale.completed))
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Erreur de chargement')
 		} finally {
@@ -1040,13 +1246,16 @@ export default function ProfilePage() {
 			<PageHeader title="Mon Profil" id="profile-title" />
 			<PageGrid>
 				<FullWidth>
-					<CollectionValueCard stats={stats} planned={planned} />
+					<CollectionValueCard stats={stats} planned={planned} salesStats={salesStats} />
 				</FullWidth>
 				<SpendingChart stats={stats} planned={planned} />
 				<PurchaseCalendar 
 					planned={planned} 
 					onDelete={handleDeletePlanned}
 					onRefresh={loadData}
+				/>
+				<PlannedSalesCalendar 
+					plannedSales={plannedSales}
 				/>
 				<FullWidth>
 					<RecentAcquisitionsList cards={acquisitions} />

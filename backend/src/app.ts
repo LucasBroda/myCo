@@ -10,6 +10,7 @@ import cardsRoutes from "./modules/cards/cards.routes";
 import collectionRoutes from "./modules/collection/collection.routes";
 import marketRoutes from "./modules/market/market.routes";
 import profileRoutes from "./modules/profile/profile.routes";
+import salesRoutes from "./modules/sales/sales.routes";
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/cards", cardsRoutes);
 app.use("/api/collection", collectionRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/market", marketRoutes);
+app.use("/api/sales", salesRoutes);
 
 app.use(errorHandler);
 
