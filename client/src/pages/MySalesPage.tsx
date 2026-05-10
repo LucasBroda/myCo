@@ -138,11 +138,6 @@ const CardSet = styled.span`
 	color: ${({ theme }) => theme.colors.textSecondary};
 `
 
-const ActionButtons = styled.div`
-	display: flex;
-	gap: ${({ theme }) => theme.spacing['2']};
-`
-
 const ModalOverlay = styled.div`
 	position: fixed;
 	inset: 0;
@@ -279,6 +274,7 @@ function normalizeString(str: string | undefined | null): string {
 export default function MySalesPage() {
 	const [cards, setCards] = useState<PokemonCard[]>([])
 	const [sales, setSales] = useState<PotentialSale[]>([])
+	const [soldCardsDetails, setSoldCardsDetails] = useState<Map<string, PokemonCard>>(new Map())
 	const [searchQuery, setSearchQuery] = useState('')
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
@@ -301,6 +297,25 @@ export default function MySalesPage() {
 			// Charger les ventes potentielles
 			const potentialSales = await salesService.getPotentialSales()
 			setSales(potentialSales)
+
+			// Charger les détails des cartes vendues
+			const soldCardsMap = new Map<string, PokemonCard>()
+			const uniqueSets = new Set(potentialSales.map(sale => sale.setId))
+			
+			for (const setId of uniqueSets) {
+				try {
+					const setData = await cardsService.getSet(setId)
+					// Ajouter toutes les cartes de ce set qui sont vendues
+					for (const card of setData.cards) {
+						if (potentialSales.some(sale => sale.cardId === card.id)) {
+							soldCardsMap.set(card.id, card)
+						}
+					}
+				} catch (err) {
+					console.error(`Error loading set ${setId}:`, err)
+				}
+			}
+			setSoldCardsDetails(soldCardsMap)
 
 			// Charger la collection
 			const collection = await collectionService.getCollection()
@@ -421,20 +436,6 @@ export default function MySalesPage() {
 		}
 	}
 
-	async function handleDeleteSale(saleId: string) {
-		if (!confirm('Êtes-vous sûr de vouloir supprimer cette vente potentielle ?')) {
-			return
-		}
-
-		try {
-			await salesService.deletePotentialSale(saleId)
-			await loadData()
-		} catch (err) {
-			console.error('Error deleting sale:', err)
-			alert('Erreur lors de la suppression de la vente')
-		}
-	}
-
 	function handleCloseModal() {
 		setShowAddModal(false)
 		setSelectedCard(null)
@@ -493,15 +494,15 @@ export default function MySalesPage() {
 								</Thead>
 								<Tbody>
 									{sales?.map(sale => {
-										const card = cards.find(c => c.id === sale.cardId)
+										const soldCard = soldCardsDetails.get(sale.cardId)
 										return (
 											<Tr key={sale.id}>
 												<Td>
 													<CardInfoCell>
-														{card && (
+														{soldCard && (
 															<CardMiniature 
-																src={card.images.small} 
-																alt={card.name}
+																src={soldCard.images.small} 
+																alt={soldCard.name}
 															/>
 														)}
 														<CardInfo>
@@ -515,22 +516,13 @@ export default function MySalesPage() {
 												<Td>{new Date(sale.saleDate).toLocaleDateString('fr-FR')}</Td>
 												<Td>{sale.notes || '-'}</Td>
 												<Td>
-													<ActionButtons>
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => handleEditSale(sale)}
-														>
-															Modifier
-														</Button>
-														<Button
-															variant="ghost"
-															size="sm"
-															onClick={() => handleDeleteSale(sale.id)}
-														>
-															Supprimer
-														</Button>
-													</ActionButtons>
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => handleEditSale(sale)}
+												>
+													Modifier
+												</Button>
 												</Td>
 											</Tr>
 										)
@@ -581,7 +573,7 @@ export default function MySalesPage() {
 							{editingSale ? (
 								<>
 									<ModalCardImage 
-										src={cards.find(c => c.id === editingSale.cardId)?.images.small || ''} 
+										src={soldCardsDetails.get(editingSale.cardId)?.images.small || ''} 
 										alt={editingSale.cardName}
 									/>
 									<ModalCardInfo>
