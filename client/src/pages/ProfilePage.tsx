@@ -1489,8 +1489,6 @@ export default function ProfilePage() {
 					/>
 				</GridItem>
 				<GridItem>
-			</GridItem>
-			<GridItem>
 				<RecentAcquisitionsList cards={acquisitions} />
 			</GridItem>
 		</PageGrid>
