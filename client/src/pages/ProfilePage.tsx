@@ -12,8 +12,8 @@ import { cardsService } from '@services/cardsService'
 import { salesService } from '@services/salesService'
 import { PriceTrend } from '@components/pokemon/PriceTrend'
 import { usePlannedStore } from '@store/plannedStore'
-import { useToast } from '@hooks/useToast'
 import { useEffect, useState } from 'react'
+import { useToast } from '@hooks/useToast'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
 import {
@@ -715,9 +715,14 @@ function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueC
 					fontSize: '0.75rem', 
 					color: 'var(--text-secondary)', 
 					textAlign: 'center',
-					fontStyle: 'italic'
+					fontStyle: 'italic',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					gap: '0.5rem'
 				}}>
-					📊 Les mois futurs incluent les achats et ventes planifiés
+					<InlineIcon $size={14}><ChartBarIcon size={14} color="var(--text-secondary)" /></InlineIcon>
+					Les mois futurs incluent les achats et ventes planifiés
 				</div>
 			)}
 		</Card>
@@ -1417,6 +1422,7 @@ export default function ProfilePage() {
 	const [error, setError] = useState<string | null>(null)
 	const { setPlanned: setPlannedStore, removePlanned } = usePlannedStore()
 
+
 	async function loadData() {
 		setIsLoading(true)
 		setError(null)
@@ -1482,9 +1488,9 @@ export default function ProfilePage() {
 					/>
 				</GridItem>
 				<GridItem>
-					<RecentAcquisitionsList cards={acquisitions} />
-				</GridItem>
-			</PageGrid>
-		</section>
+				<RecentAcquisitionsList cards={acquisitions} />
+			</GridItem>
+		</PageGrid>
+	</section>
 	)
 }
