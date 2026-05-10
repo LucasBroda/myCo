@@ -445,6 +445,38 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 
 // ─── CollectionValueChart ─────────────────────────────────────────────────────
 
+const ChartLegend = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: ${({ theme }) => theme.spacing['6']};
+	margin-top: ${({ theme }) => theme.spacing['4']};
+	padding-top: ${({ theme }) => theme.spacing['3']};
+	border-top: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const LegendItem = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['2']};
+`
+
+const LegendLine = styled.div<{ $color: string; $dashed?: boolean }>`
+	width: 24px;
+	height: 3px;
+	background-color: ${({ $color, $dashed }) => $dashed ? 'transparent' : $color};
+	border-radius: 2px;
+	${({ $dashed, $color }) => $dashed && `
+		border-bottom: 3px dashed ${$color};
+	`}
+`
+
+const LegendLabel = styled.span`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+`
+
 interface ValueTooltipProps {
 	readonly active?: boolean
 	readonly payload?: Array<{
@@ -585,6 +617,16 @@ function CollectionValueChart({ stats }: CollectionValueChartProps) {
 					</AreaChart>
 				</ResponsiveContainer>
 			</ChartWrapper>
+			<ChartLegend>
+				<LegendItem>
+					<LegendLine $color="#14b8a6" />
+					<LegendLabel>Valeur estimée de la collection</LegendLabel>
+				</LegendItem>
+				<LegendItem>
+					<LegendLine $color="#f97316" $dashed />
+					<LegendLabel>Total investi</LegendLabel>
+				</LegendItem>
+			</ChartLegend>
 		</Card>
 	)
 }
