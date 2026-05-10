@@ -941,6 +941,7 @@ const AcqItem = styled.li`
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: ${({ theme }) => theme.spacing['3']};
 	padding: ${({ theme }) => `${theme.spacing['3']} 0`};
 	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 
@@ -949,16 +950,37 @@ const AcqItem = styled.li`
 	}
 `
 
+const AcqInfoCell = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['3']};
+	flex: 1;
+	min-width: 0;
+`
+
+const AcqCardMiniature = styled.img`
+	width: 40px;
+	height: 56px;
+	object-fit: cover;
+	border-radius: ${({ theme }) => theme.radii.sm};
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	flex-shrink: 0;
+`
+
 const AcqInfo = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
+	min-width: 0;
 `
 
 const AcqCardId = styled.span`
 	font-size: ${({ theme }) => theme.font.size.sm};
 	font-weight: ${({ theme }) => theme.font.weight.medium};
 	color: ${({ theme }) => theme.colors.textPrimary};
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 `
 
 const AcqMeta = styled.span`
@@ -1000,8 +1022,30 @@ const PAGE_SIZE = 20
 function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 	const [page, setPage] = useState(1)
 	const [isCollapsed, setIsCollapsed] = useState(true)
+	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
 	const visible = cards.slice(0, page * PAGE_SIZE)
 	const remaining = cards.length - visible.length
+
+	// Charger les détails des cartes visibles
+	useEffect(() => {
+		const loadCardDetails = async () => {
+			const newDetails: Record<string, PokemonCard> = {}
+			for (const card of visible) {
+				if (!cardDetails[card.cardId]) {
+					try {
+						const details = await cardsService.getCard(card.cardId)
+						newDetails[card.cardId] = details
+					} catch {
+						// Ignorer les erreurs de chargement
+					}
+				}
+			}
+			if (Object.keys(newDetails).length > 0) {
+				setCardDetails(prev => ({ ...prev, ...newDetails }))
+			}
+		}
+		loadCardDetails()
+	}, [visible])
 
 	if (cards.length === 0) {
 		return (
@@ -1029,20 +1073,31 @@ function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 			</SectionHeader>
 			<AcqListWrapper $isCollapsed={isCollapsed} id="acquisitions-list">
 				<AcqList>
-					{visible.map(card => (
-						<AcqItem key={card.id}>
-							<AcqInfo>
-								<AcqCardId>{card.cardName}</AcqCardId>
-								<AcqMeta>
-									{card.setName} · {new Date(card.acquiredDate).toLocaleDateString('fr-FR')} ·{' '}
-									{card.condition}
-								</AcqMeta>
-							</AcqInfo>
-							<AcqPrice>
-								{card.pricePaid === null ? '—' : formatEuros(card.pricePaid)}
-							</AcqPrice>
-						</AcqItem>
-					))}
+					{visible.map(card => {
+						const details = cardDetails[card.cardId]
+						return (
+							<AcqItem key={card.id}>
+								<AcqInfoCell>
+									{details && (
+										<AcqCardMiniature 
+											src={details.images.small} 
+											alt={details.name}
+										/>
+									)}
+									<AcqInfo>
+										<AcqCardId>{card.cardName}</AcqCardId>
+										<AcqMeta>
+											{card.setName} · {new Date(card.acquiredDate).toLocaleDateString('fr-FR')} ·{' '}
+											{card.condition}
+										</AcqMeta>
+									</AcqInfo>
+								</AcqInfoCell>
+								<AcqPrice>
+									{card.pricePaid === null ? '—' : formatEuros(card.pricePaid)}
+								</AcqPrice>
+							</AcqItem>
+						)
+					})}
 				</AcqList>
 				{remaining > 0 && (
 					<LoadMoreBtn type="button" onClick={() => setPage(p => p + 1)}>
