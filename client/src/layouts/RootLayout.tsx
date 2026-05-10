@@ -30,7 +30,7 @@ export function ProtectedRoute() {
 	const isHydrated = useAuthStore(s => s.isHydrated)
 
 	if (!isHydrated) return null
-	if (!user) return <Navigate to="/login" replace />
+	if (!user) return <Navigate to="/connexion" replace />
 
 	return <Outlet />
 }
@@ -40,7 +40,7 @@ export function PublicOnlyRoute() {
 	const isHydrated = useAuthStore(s => s.isHydrated)
 
 	if (!isHydrated) return null
-	if (user) return <Navigate to="/collections" replace />
+	if (user) return <Navigate to="/mes-collections" replace />
 
 	return <Outlet />
 }

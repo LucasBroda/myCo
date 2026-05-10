@@ -9,21 +9,21 @@ import {
   getStatsHandler,
   removeCardHandler,
   unfollowSetHandler,
-} from "./collection.controller";
+} from "./collection.controleur";
 
 const router = Router();
 
 router.use(authenticate);
 
 router.get("/", getCollectionHandler);
-router.get("/with-details", getCollectionWithDetailsHandler);
+router.get("/avec-details", getCollectionWithDetailsHandler);
 router.post("/", addCardHandler);
 router.delete("/:id", removeCardHandler);
-router.get("/stats", getStatsHandler);
+router.get("/statistiques", getStatsHandler);
 
 // Followed sets routes
-router.get("/followed-sets", getFollowedSetsHandler);
-router.post("/followed-sets", followSetHandler);
-router.delete("/followed-sets/:setId", unfollowSetHandler);
+router.get("/collections-suivies", getFollowedSetsHandler);
+router.post("/collections-suivies", followSetHandler);
+router.delete("/collections-suivies/:setId", unfollowSetHandler);
 
 export default router;
