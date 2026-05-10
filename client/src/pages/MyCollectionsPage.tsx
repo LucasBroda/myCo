@@ -13,14 +13,27 @@ import { useNavigate } from 'react-router'
 import styled from 'styled-components'
 
 const SearchContainer = styled.div`
-	margin-bottom: ${({ theme }) => theme.spacing['6']};
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
 	max-width: 500px;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		margin-bottom: ${({ theme }) => theme.spacing['6']};
+	}
 `
 
 const Grid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-	gap: ${({ theme }) => theme.spacing['4']};
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+	gap: ${({ theme }) => theme.spacing['3']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+		gap: ${({ theme }) => theme.spacing['4']};
+	}
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	}
 `
 
 // Mapping français -> anglais pour les séries Pokémon
