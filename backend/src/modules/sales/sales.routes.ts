@@ -10,16 +10,19 @@ router.use(authenticate);
 // GET /api/sales/stats - Get sales statistics
 router.get("/stats", salesController.getSalesStats);
 
-// GET /api/sales - Get all potential sales for the user
-router.get("/", salesController.getPotentialSales);
+// GET /api/sales - Get all planned sales for the user
+router.get("/", salesController.getPlannedSales);
 
-// POST /api/sales - Add a new potential sale
-router.post("/", salesController.addPotentialSale);
+// POST /api/sales - Add a new planned sale
+router.post("/", salesController.addPlannedSale);
 
-// PATCH /api/sales/:id - Update a potential sale
-router.patch("/:id", salesController.updatePotentialSale);
+// PATCH /api/sales/:id - Update a planned sale
+router.patch("/:id", salesController.updatePlannedSale);
 
-// DELETE /api/sales/:id - Delete a potential sale
-router.delete("/:id", salesController.deletePotentialSale);
+// PATCH /api/sales/:id/complete - Mark a sale as completed
+router.patch("/:id/complete", salesController.markSaleAsCompleted);
+
+// DELETE /api/sales/:id - Delete a planned sale
+router.delete("/:id", salesController.deletePlannedSale);
 
 export default router;

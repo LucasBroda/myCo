@@ -75,7 +75,7 @@ export interface PlannedPurchase {
   createdAt: string;
 }
 
-export interface PotentialSale {
+export interface PlannedSale {
   id: string;
   userId: string;
   cardId: string;
@@ -86,7 +86,13 @@ export interface PotentialSale {
   saleDate: string;
   condition: CardCondition;
   notes: string | null;
+  completed: boolean;
   createdAt: string;
+}
+
+export interface SalesStats {
+  totalSales: number;
+  totalValue: number;
 }
 
 export interface MarketPrice {
@@ -110,9 +116,4 @@ export interface CollectionStats {
   totalSpent: number;
   estimatedValue: number;
   byMonth: MonthStat[];
-}
-
-export interface SalesStats {
-  totalSales: number;
-  totalValue: number;
 }
