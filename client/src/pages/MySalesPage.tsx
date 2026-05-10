@@ -484,6 +484,40 @@ export default function MySalesPage() {
 		setShowAddModal(true)
 	}
 
+	// Calculer les options de condition disponibles pour la carte sélectionnée
+	const availableConditions = useMemo(() => {
+		if (!selectedCard || editingSale) return []
+		const cardAcquisitions = acquiredMap[selectedCard.id] || []
+		// Récupérer les conditions uniques des cartes possédées
+		const conditions = Array.from(new Set(cardAcquisitions.map(acq => acq.condition)))
+		return conditions
+	}, [selectedCard, editingSale, acquiredMap])
+
+	const conditionOptions: SelectOption<CardCondition>[] = useMemo(() => {
+		const allConditions: SelectOption<CardCondition>[] = [
+			{ value: 'Mint', label: 'Mint' },
+			{ value: 'NM', label: 'Near Mint (NM)' },
+			{ value: 'LP', label: 'Lightly Played (LP)' },
+			{ value: 'MP', label: 'Moderately Played (MP)' },
+			{ value: 'HP', label: 'Heavily Played (HP)' },
+			{ value: 'Damaged', label: 'Damaged' },
+		]
+		
+		// En mode édition, montrer toutes les options
+		if (editingSale) return allConditions
+		
+		// Filtrer pour ne garder que les conditions disponibles
+		if (availableConditions.length === 0) return allConditions
+		return allConditions.filter(opt => availableConditions.includes(opt.value))
+	}, [availableConditions, editingSale])
+
+	// Vérifier si on a qu'un seul exemplaire (pour bloquer le select)
+	const hasOnlyOneCard = useMemo(() => {
+		if (!selectedCard || editingSale) return false
+		const cardAcquisitions = acquiredMap[selectedCard.id] || []
+		return cardAcquisitions.length === 1
+	}, [selectedCard, editingSale, acquiredMap])
+
 	async function handleSubmit() {
 		if (!salePrice || !saleDate) {
 			alert('Veuillez remplir tous les champs obligatoires')
@@ -721,20 +755,24 @@ export default function MySalesPage() {
 						</FormGroup>
 
 						<FormGroup>
-							<Select
-								options={[
-									{ value: 'Mint', label: 'Mint' },
-									{ value: 'NM', label: 'Near Mint (NM)' },
-									{ value: 'LP', label: 'Lightly Played (LP)' },
-									{ value: 'MP', label: 'Moderately Played (MP)' },
-									{ value: 'HP', label: 'Heavily Played (HP)' },
-									{ value: 'Damaged', label: 'Damaged' },
-								]}
-								value={condition}
-								onChange={setCondition}
-								label="Condition *"
-								id="condition-select"
-							/>
+							{hasOnlyOneCard ? (
+								<>
+									<Label>Condition *</Label>
+									<Input
+										value={conditionOptions[0]?.label || condition}
+										disabled
+										style={{ cursor: 'not-allowed', opacity: 0.7 }}
+									/>
+								</>
+							) : (
+								<Select
+									options={conditionOptions}
+									value={condition}
+									onChange={setCondition}
+									label="Condition *"
+									id="condition-select"
+								/>
+							)}
 						</FormGroup>
 
 						<FormGroup>
