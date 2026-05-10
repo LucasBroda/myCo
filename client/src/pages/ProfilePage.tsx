@@ -487,6 +487,7 @@ interface ValueTooltipProps {
 			valueCumulative: number
 			spentCumulative: number
 			gain: number
+			isProjected: boolean
 		}
 	}>
 }
@@ -498,6 +499,11 @@ function ValueTooltip({ active, payload }: ValueTooltipProps) {
 
 	return (
 		<TooltipContainer>
+			{data.isProjected && (
+				<TooltipItem style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #e7e5e4' }}>
+					<span style={{ fontWeight: 600, color: '#78716c' }}>📊 Projection</span>
+				</TooltipItem>
+			)}
 			<TooltipItem>
 				<span>Valeur de la collection :</span>
 				<TooltipValue style={{ color: '#14b8a6' }}>{formatEuros(data.valueCumulative)}</TooltipValue>
@@ -520,10 +526,12 @@ function ValueTooltip({ active, payload }: ValueTooltipProps) {
 
 interface CollectionValueChartProps {
 	readonly stats: CollectionStats
+	readonly planned: PlannedPurchase[]
+	readonly plannedSales: PlannedSale[]
 }
 
-function CollectionValueChart({ stats }: CollectionValueChartProps) {
-	if (stats.byMonth.length === 0) {
+function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueChartProps) {
+	if (stats.byMonth.length === 0 && planned.length === 0) {
 		return (
 			<Card>
 				<SectionTitle>Évolution de la valeur</SectionTitle>
@@ -532,9 +540,6 @@ function CollectionValueChart({ stats }: CollectionValueChartProps) {
 		)
 	}
 
-	// Calculer le ratio actuel entre valeur estimée et total dépensé
-	const valueRatio = stats.totalSpent > 0 ? stats.estimatedValue / stats.totalSpent : 1
-
 	// Formater les mois pour l'affichage
 	const formatMonthDisplay = (monthKey: string) => {
 		const [year, month] = monthKey.split('-')
@@ -542,23 +547,94 @@ function CollectionValueChart({ stats }: CollectionValueChartProps) {
 		return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
 	}
 
-	// Calculer les valeurs cumulatives
-	let cumulativeSpent = 0
-	const sortedMonths = [...stats.byMonth]
-	sortedMonths.sort((a, b) => a.month.localeCompare(b.month))
-	const data = sortedMonths.map(monthData => {
-		cumulativeSpent += monthData.totalSpent
-		const estimatedValue = cumulativeSpent * valueRatio
-		const gain = estimatedValue - cumulativeSpent
+	// Agréger les achats planifiés par mois
+	const plannedByMonth = planned.reduce((acc, p) => {
+		const date = new Date(p.plannedDate)
+		const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+		if (!acc[monthKey]) {
+			acc[monthKey] = 0
+		}
+		acc[monthKey] += p.budget ? Number(p.budget) : 0
+		return acc
+	}, {} as Record<string, number>)
 
-		return {
-			month: formatMonthDisplay(monthData.month),
-			monthKey: monthData.month,
-			valueCumulative: estimatedValue,
-			spentCumulative: cumulativeSpent,
-			gain: gain,
+	// Agréger les ventes planifiées par mois
+	const salesByMonth = plannedSales.reduce((acc, s) => {
+		const date = new Date(s.saleDate)
+		const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+		if (!acc[monthKey]) {
+			acc[monthKey] = 0
+		}
+		acc[monthKey] += Number(s.salePrice)
+		return acc
+	}, {} as Record<string, number>)
+
+	// Créer une liste de tous les mois (réels + planifiés)
+	const allMonths = new Set<string>()
+	stats.byMonth.forEach(m => allMonths.add(m.month))
+	Object.keys(plannedByMonth).forEach(m => allMonths.add(m))
+	Object.keys(salesByMonth).forEach(m => allMonths.add(m))
+
+	// Calculer les valeurs cumulatives
+	const sortedMonths = Array.from(allMonths).sort((a, b) => a.localeCompare(b))
+	
+	// Calculer la somme totale des dépenses mensuelles réelles
+	const sumOfMonthlySpent = stats.byMonth.reduce((sum, m) => sum + m.totalSpent, 0)
+	
+	// Calculer les ratios d'ajustement pour garantir la cohérence avec les stats globales
+	const adjustmentRatio = sumOfMonthlySpent > 0 ? stats.totalSpent / sumOfMonthlySpent : 1
+	const valueRatio = stats.totalSpent > 0 ? stats.estimatedValue / stats.totalSpent : 1
+	
+	// Déterminer le mois actuel
+	const now = new Date()
+	const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+	
+	// Générer les données en utilisant les valeurs exactes des stats
+	let cumulativeSpent = 0
+	let projectedSpent = stats.totalSpent
+	let projectedValue = stats.estimatedValue
+	
+	const data = sortedMonths.map((monthKey) => {
+		const realData = stats.byMonth.find(m => m.month === monthKey)
+		const plannedBudget = plannedByMonth[monthKey] || 0
+		const plannedSalesValue = salesByMonth[monthKey] || 0
+		const isPastOrCurrent = monthKey <= currentMonthKey
+		
+		if (isPastOrCurrent && realData) {
+			// Mois passé ou actuel avec données réelles
+			cumulativeSpent += realData.totalSpent
+			const adjustedCumulativeSpent = cumulativeSpent * adjustmentRatio
+			const estimatedValue = adjustedCumulativeSpent * valueRatio
+			
+			// Sauvegarder les valeurs pour la projection
+			projectedSpent = adjustedCumulativeSpent
+			projectedValue = estimatedValue
+			
+			return {
+				month: formatMonthDisplay(monthKey),
+				monthKey: monthKey,
+				valueCumulative: estimatedValue,
+				spentCumulative: adjustedCumulativeSpent,
+				gain: estimatedValue - adjustedCumulativeSpent,
+				isProjected: false,
+			}
+		} else {
+			// Mois futur avec données planifiées
+			projectedSpent += plannedBudget
+			projectedValue += plannedBudget - plannedSalesValue
+			
+			return {
+				month: formatMonthDisplay(monthKey),
+				monthKey: monthKey,
+				valueCumulative: projectedValue,
+				spentCumulative: projectedSpent,
+				gain: projectedValue - projectedSpent,
+				isProjected: true,
+			}
 		}
 	})
+
+	const hasProjections = data.some(d => d.isProjected)
 
 	return (
 		<Card>
@@ -627,6 +703,19 @@ function CollectionValueChart({ stats }: CollectionValueChartProps) {
 					<LegendLabel>Total investi</LegendLabel>
 				</LegendItem>
 			</ChartLegend>
+			{hasProjections && (
+				<div style={{ 
+					marginTop: '0.75rem', 
+					paddingTop: '0.75rem', 
+					borderTop: '1px solid var(--border)', 
+					fontSize: '0.75rem', 
+					color: 'var(--text-secondary)', 
+					textAlign: 'center',
+					fontStyle: 'italic'
+				}}>
+					📊 Les mois futurs incluent les achats et ventes planifiés
+				</div>
+			)}
 		</Card>
 	)
 }
@@ -1369,7 +1458,7 @@ export default function ProfilePage() {
 					<SpendingChart stats={stats} planned={planned} plannedSales={plannedSales} />
 				</FullWidth>
 				<FullWidth>
-					<CollectionValueChart stats={stats} />
+					<CollectionValueChart stats={stats} planned={planned} plannedSales={plannedSales} />
 				</FullWidth>
 				<GridItem>
 					<PurchaseCalendar 
