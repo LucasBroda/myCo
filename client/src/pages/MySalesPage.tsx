@@ -511,12 +511,22 @@ export default function MySalesPage() {
 		return allConditions.filter(opt => availableConditions.includes(opt.value))
 	}, [availableConditions, editingSale])
 
-	// Vérifier si on a qu'un seul exemplaire (pour bloquer le select)
-	const hasOnlyOneCard = useMemo(() => {
-		if (!selectedCard || editingSale) return false
+	// Vérifier si la condition doit être bloquée (un seul exemplaire OU mode édition)
+	const isConditionLocked = useMemo(() => {
+		// En mode édition, toujours bloquer (la carte est déjà sortie de la collection)
+		if (editingSale) return true
+
+		// En mode ajout, bloquer si on a qu'un seul exemplaire
+		if (!selectedCard) return false
 		const cardAcquisitions = acquiredMap[selectedCard.id] || []
 		return cardAcquisitions.length === 1
 	}, [selectedCard, editingSale, acquiredMap])
+
+	// Obtenir le label de la condition pour l'affichage en mode verrouillé
+	const lockedConditionLabel = useMemo(() => {
+		const conditionOption = conditionOptions.find(opt => opt.value === condition)
+		return conditionOption?.label || condition
+	}, [condition, conditionOptions])
 
 	async function handleSubmit() {
 		if (!salePrice || !saleDate) {
@@ -836,23 +846,29 @@ export default function MySalesPage() {
 							<Input
 								id="saleDate"
 								type="date"
+								min={new Date().toISOString().split('T')[0]}
 								value={saleDate}
 								onChange={(e) => setSaleDate(e.target.value)}
 							/>
 						</FormGroup>
 
 						<FormGroup>
-							{hasOnlyOneCard ? (
-								<>
-									<Label>Condition *</Label>
-									<Input
-										value={conditionOptions[0]?.label || condition}
-										disabled
-										style={{ cursor: 'not-allowed', opacity: 0.7 }}
-									/>
-								</>
-							) : (
-								<Select
+						{isConditionLocked ? (
+							<>
+								<Label>Condition *</Label>
+								<Input
+									value={lockedConditionLabel}
+									disabled
+									style={{ cursor: 'not-allowed', opacity: 0.7 }}
+								/>
+								{editingSale && (
+									<span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
+										La condition ne peut pas être modifiée pour une vente enregistrée
+									</span>
+								)}
+							</>
+						) : (
+							<Select
 									options={conditionOptions}
 									value={condition}
 									onChange={setCondition}
