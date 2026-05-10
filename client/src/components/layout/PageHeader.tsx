@@ -1,7 +1,11 @@
 import styled from 'styled-components'
 
 const Header = styled.header`
-	margin-bottom: ${({ theme }) => theme.spacing['6']};
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		margin-bottom: ${({ theme }) => theme.spacing['6']};
+	}
 `
 
 const TitleRow = styled.div`
@@ -13,17 +17,25 @@ const TitleRow = styled.div`
 `
 
 const Title = styled.h1`
-	font-size: ${({ theme }) => theme.font.size['2xl']};
+	font-size: ${({ theme }) => theme.font.size.xl};
 	font-weight: ${({ theme }) => theme.font.weight.bold};
 	color: ${({ theme }) => theme.colors.textPrimary};
 	line-height: 1.2;
 	margin: 0;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		font-size: ${({ theme }) => theme.font.size['2xl']};
+	}
 `
 
 const Subtitle = styled.p`
-	font-size: ${({ theme }) => theme.font.size.base};
+	font-size: ${({ theme }) => theme.font.size.sm};
 	color: ${({ theme }) => theme.colors.textSecondary};
 	margin: ${({ theme }) => `${theme.spacing['1']} 0 0`};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		font-size: ${({ theme }) => theme.font.size.base};
+	}
 `
 
 interface Props {

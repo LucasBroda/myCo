@@ -17,11 +17,12 @@ const Shell = styled.div`
 const Sidebar = styled.nav`
 	background-color: ${({ theme }) => theme.colors.surfaceElevated};
 	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-	padding: ${({ theme }) => theme.spacing['4']};
+	padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['4']};
 	display: flex;
 	align-items: center;
-	gap: ${({ theme }) => theme.spacing['4']};
+	gap: ${({ theme }) => theme.spacing['3']};
 	z-index: 10;
+	flex-wrap: wrap;
 
 	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
 		flex-direction: column;
@@ -34,6 +35,8 @@ const Sidebar = styled.nav`
 		position: sticky;
 		top: 0;
 		height: 100vh;
+		flex-wrap: nowrap;
+		gap: ${({ theme }) => theme.spacing['4']};
 	}
 `
 
@@ -58,11 +61,36 @@ const Brand = styled.div`
 const NavItems = styled.ul`
 	display: flex;
 	gap: ${({ theme }) => theme.spacing['2']};
-	flex: 1;
+	width: 100%;
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+
+	/* Scrollbar stylisée sur mobile */
+	scrollbar-width: thin;
+	scrollbar-color: ${({ theme }) => theme.colors.amber} transparent;
+	
+	&::-webkit-scrollbar {
+		height: 3px;
+	}
+	
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	
+	&::-webkit-scrollbar-thumb {
+		background: ${({ theme }) => theme.colors.amber};
+		border-radius: ${({ theme }) => theme.radii.full};
+	}
 
 	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
 		flex-direction: column;
 		gap: ${({ theme }) => theme.spacing['1']};
+		overflow-x: visible;
+		width: auto;
+		
+		&::-webkit-scrollbar {
+			display: none;
+		}
 	}
 `
 
@@ -72,7 +100,7 @@ const StyledLink = styled(Link)<{ $isActive: boolean }>`
 	gap: ${({ theme }) => theme.spacing['2']};
 	padding: ${({ theme }) => `${theme.spacing['2']} ${theme.spacing['3']}`};
 	border-radius: ${({ theme }) => theme.radii.md};
-	font-size: ${({ theme }) => theme.font.size.sm};
+	font-size: ${({ theme }) => theme.font.size.xs};
 	font-weight: ${({ theme }) => theme.font.weight.medium};
 	color: ${({ theme }) => theme.colors.textSecondary};
 	transition:
@@ -80,6 +108,10 @@ const StyledLink = styled(Link)<{ $isActive: boolean }>`
 		color ${({ theme }) => theme.transitions.fast};
 	white-space: nowrap;
 	text-decoration: none;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		font-size: ${({ theme }) => theme.font.size.sm};
+	}
 
 	&:hover {
 		background-color: ${({ theme }) => theme.colors.surface};
@@ -100,29 +132,33 @@ const StyledLink = styled(Link)<{ $isActive: boolean }>`
 `
 
 const LogoutButton = styled.button`
-	margin-top: auto;
-	display: flex;
-	align-items: center;
-	gap: ${({ theme }) => theme.spacing['2']};
-	padding: ${({ theme }) => `${theme.spacing['2']} ${theme.spacing['3']}`};
-	border-radius: ${({ theme }) => theme.radii.md};
-	border: none;
-	background: none;
-	font-size: ${({ theme }) => theme.font.size.sm};
-	font-weight: ${({ theme }) => theme.font.weight.medium};
-	color: ${({ theme }) => theme.colors.textSecondary};
-	cursor: pointer;
-	transition:
-		background-color ${({ theme }) => theme.transitions.fast},
-		color ${({ theme }) => theme.transitions.fast};
+	display: none;
 
-	&:hover {
-		background-color: ${({ theme }) => theme.colors.brickLight};
-		color: ${({ theme }) => theme.colors.brick};
-	}
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		margin-top: auto;
+		display: flex;
+		align-items: center;
+		gap: ${({ theme }) => theme.spacing['2']};
+		padding: ${({ theme }) => `${theme.spacing['2']} ${theme.spacing['3']}`};
+		border-radius: ${({ theme }) => theme.radii.md};
+		border: none;
+		background: none;
+		font-size: ${({ theme }) => theme.font.size.sm};
+		font-weight: ${({ theme }) => theme.font.weight.medium};
+		color: ${({ theme }) => theme.colors.textSecondary};
+		cursor: pointer;
+		transition:
+			background-color ${({ theme }) => theme.transitions.fast},
+			color ${({ theme }) => theme.transitions.fast};
 
-	&:focus-visible {
-		${focusRing}
+		&:hover {
+			background-color: ${({ theme }) => theme.colors.brickLight};
+			color: ${({ theme }) => theme.colors.brick};
+		}
+
+		&:focus-visible {
+			${focusRing}
+		}
 	}
 `
 

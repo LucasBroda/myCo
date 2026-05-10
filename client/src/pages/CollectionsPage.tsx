@@ -13,8 +13,16 @@ import styled from 'styled-components'
 
 const Grid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
 	gap: ${({ theme }) => theme.spacing['4']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+	}
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+	}
 `
 
 export default function CollectionsPage() {

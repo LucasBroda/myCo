@@ -55,17 +55,30 @@ const FollowButton = styled(Button)<{ $isFollowed: boolean }>`
 `
 
 const ProgressSection = styled.div`
-	margin-bottom: ${({ theme }) => theme.spacing['6']};
-	padding: ${({ theme }) => theme.spacing['4']};
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	padding: ${({ theme }) => theme.spacing['3']};
 	background-color: ${({ theme }) => theme.colors.surfaceElevated};
 	border: 1px solid ${({ theme }) => theme.colors.border};
 	border-radius: ${({ theme }) => theme.radii.lg};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		margin-bottom: ${({ theme }) => theme.spacing['6']};
+		padding: ${({ theme }) => theme.spacing['4']};
+	}
 `
 
 const CardGrid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 	gap: ${({ theme }) => theme.spacing['3']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	}
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	}
 `
 
 const BackLink = styled.button`

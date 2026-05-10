@@ -76,8 +76,8 @@ const ModalHeader = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: ${({ theme }) => theme.spacing['6']} ${({ theme }) => theme.spacing['6']} 
-	         ${({ theme }) => theme.spacing['5']};
+	padding: ${({ theme }) => theme.spacing['4']} ${({ theme }) => theme.spacing['4']} 
+	         ${({ theme }) => theme.spacing['3']};
 	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 	background: linear-gradient(
 		to bottom,
@@ -86,12 +86,17 @@ const ModalHeader = styled.div`
 	);
 	position: relative;
 
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		padding: ${({ theme }) => theme.spacing['6']} ${({ theme }) => theme.spacing['6']} 
+		         ${({ theme }) => theme.spacing['5']};
+	}
+
 	&::after {
 		content: '';
 		position: absolute;
 		bottom: -1px;
-		left: ${({ theme }) => theme.spacing['6']};
-		right: ${({ theme }) => theme.spacing['6']};
+		left: ${({ theme }) => theme.spacing['4']};
+		right: ${({ theme }) => theme.spacing['4']};
 		height: 2px;
 		background: linear-gradient(
 			to right,
@@ -100,16 +105,25 @@ const ModalHeader = styled.div`
 			transparent 100%
 		);
 		opacity: 0.3;
+
+		@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+			left: ${({ theme }) => theme.spacing['6']};
+			right: ${({ theme }) => theme.spacing['6']};
+		}
 	}
 `
 
 const ModalTitle = styled.h2`
-	font-size: ${({ theme }) => theme.font.size.xl};
+	font-size: ${({ theme }) => theme.font.size.lg};
 	font-weight: ${({ theme }) => theme.font.weight.bold};
 	color: ${({ theme }) => theme.colors.textPrimary};
 	margin: 0;
 	letter-spacing: -0.02em;
 	line-height: 1.3;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		font-size: ${({ theme }) => theme.font.size.xl};
+	}
 `
 
 const CloseButton = styled.button`
@@ -160,12 +174,17 @@ const CloseButton = styled.button`
 `
 
 export const ModalBody = styled.div`
-	padding: ${({ theme }) => theme.spacing['8']} ${({ theme }) => theme.spacing['6']};
+	padding: ${({ theme }) => theme.spacing['5']} ${({ theme }) => theme.spacing['4']};
 	display: flex;
 	flex-direction: column;
-	gap: ${({ theme }) => theme.spacing['5']};
+	gap: ${({ theme }) => theme.spacing['4']};
 	overflow-y: auto;
 	flex: 1;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		padding: ${({ theme }) => theme.spacing['8']} ${({ theme }) => theme.spacing['6']};
+		gap: ${({ theme }) => theme.spacing['5']};
+	}
 
 	/* Scrollbar personnalisée */
 	&::-webkit-scrollbar {
@@ -191,14 +210,19 @@ export const ModalFooter = styled.div`
 	display: flex;
 	justify-content: flex-end;
 	gap: ${({ theme }) => theme.spacing['3']};
-	padding: ${({ theme }) => theme.spacing['5']} ${({ theme }) => theme.spacing['6']} 
-	         ${({ theme }) => theme.spacing['6']};
+	padding: ${({ theme }) => theme.spacing['4']} ${({ theme }) => theme.spacing['4']} 
+	         ${({ theme }) => theme.spacing['4']};
 	border-top: 1px solid ${({ theme }) => theme.colors.border};
 	background: linear-gradient(
 		to top,
 		${({ theme }) => theme.colors.surfaceElevated} 0%,
 		${({ theme }) => theme.colors.surface} 100%
 	);
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		padding: ${({ theme }) => theme.spacing['5']} ${({ theme }) => theme.spacing['6']} 
+		         ${({ theme }) => theme.spacing['6']};
+	}
 
 	@media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
 		flex-direction: column-reverse;
