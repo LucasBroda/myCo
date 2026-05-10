@@ -5,6 +5,7 @@ import { ErrorState } from '@components/ui/ErrorState'
 import { Spinner } from '@components/ui/Spinner'
 import { PageHeader } from '@components/layout/PageHeader'
 import { SectionTitle } from '@components/layout/SectionTitle'
+import { ChartBarIcon, TrendingUpIcon, CalendarIcon, ListIcon, ActivityIcon, InlineIcon } from '@components/ui/Icons'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
 import { cardsService } from '@services/cardsService'
@@ -329,7 +330,7 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 		return (
 			<Card>
 				<SectionTitle>Dépenses mensuelles</SectionTitle>
-				<EmptyState message="Aucune dépense enregistrée." icon="📊" />
+				<EmptyState message="Aucune dépense enregistrée." icon={<ChartBarIcon size={40} />} />
 			</Card>
 		)
 	}
@@ -501,7 +502,10 @@ function ValueTooltip({ active, payload }: ValueTooltipProps) {
 		<TooltipContainer>
 			{data.isProjected && (
 				<TooltipItem style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #e7e5e4' }}>
-					<span style={{ fontWeight: 600, color: '#78716c' }}>📊 Projection</span>
+					<span style={{ fontWeight: 600, color: '#78716c', display: 'flex', alignItems: 'center', gap: '6px' }}>
+						<InlineIcon $size={16}><ActivityIcon size={16} color="#78716c" /></InlineIcon>
+						Projection
+					</span>
 				</TooltipItem>
 			)}
 			<TooltipItem>
@@ -535,7 +539,7 @@ function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueC
 		return (
 			<Card>
 				<SectionTitle>Évolution de la valeur</SectionTitle>
-				<EmptyState message="Aucune donnée disponible." icon="📈" />
+				<EmptyState message="Aucune donnée disponible." icon={<TrendingUpIcon size={40} />} />
 			</Card>
 		)
 	}
@@ -1049,12 +1053,22 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 					type="button"
 					onClick={() => setShowCalendar(!showCalendar)}
 				>
-					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
+					{showCalendar ? (
+						<>
+							<InlineIcon><ListIcon size={16} /></InlineIcon>
+							Afficher la liste
+						</>
+					) : (
+						<>
+							<InlineIcon><CalendarIcon size={16} /></InlineIcon>
+							Afficher le calendrier
+						</>
+					)}
 				</CalendarToggle>
 			)}
 
 			{planned.length === 0 && (
-				<EmptyState message="Aucun achat planifié." icon="📅" />
+				<EmptyState message="Aucun achat planifié." icon={<CalendarIcon size={40} />} />
 			)}
 
 			{planned.length > 0 && showCalendar && (

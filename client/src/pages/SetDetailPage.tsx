@@ -8,6 +8,7 @@ import { ProgressBar } from '@components/ui/ProgressBar'
 import { Spinner } from '@components/ui/Spinner'
 import { FilterBar, type FilterOption } from '@components/layout/FilterBar'
 import { PageHeader } from '@components/layout/PageHeader'
+import { CalendarIcon } from '@components/ui/Icons'
 import { CardThumbnail } from '@components/pokemon/CardThumbnail'
 import { ConditionSelect } from '@components/pokemon/ConditionSelect'
 import { collectionService } from '@services/collectionService'
@@ -243,10 +244,11 @@ const InfoMessage = styled.p`
 	border-left: 3px solid ${({ theme }) => theme.colors.amber};
 	margin: 0;
 
-	&::before {
-		content: '📅';
-		font-size: ${({ theme }) => theme.font.size.lg};
+	svg {
 		flex-shrink: 0;
+		stroke: currentColor;
+		width: 20px;
+		height: 20px;
 	}
 `
 
@@ -379,47 +381,49 @@ function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPla
 
 					{isFutureDate && (
 						<InfoMessage>
-							Date future détectée : cette carte sera ajoutée à vos achats planifiés
-						</InfoMessage>
-					)}
+						<CalendarIcon size={20} />
+						Date future détectée : cette carte sera ajoutée à vos achats planifiés
+					</InfoMessage>
+				)}
 
-					<Field 
-						label={isFutureDate ? "Date d'achat prévue" : "Date d'acquisition"} 
-						htmlFor="acquire-date"
-					>
-						<Input
-							ref={dateInputRef}
-							id="acquire-date"
-							type="date"
-							value={date}
-							onChange={e => setDate(e.target.value)}
-							required
-						/>
-					</Field>
+				<Field 
+					label={isFutureDate ? "Date d'achat prévue" : "Date d'acquisition"} 
+					htmlFor="acquire-date"
+				>
+					<Input
+						ref={dateInputRef}
+					id="acquire-date"
+					type="date"
+					value={date}
+					onChange={e => setDate(e.target.value)}
+					required
+				/>
+			</Field>
 
-					<Field
-						label={isFutureDate ? "Budget prévu (optionnel)" : "Prix payé (optionnel)"}
-						htmlFor="acquire-price"
-						hint="En euros"
-					>
-						<Input
-							id="acquire-price"
-							type="number"
-							min="0"
-							step="0.01"
-							value={price}
-							onChange={e => setPrice(e.target.value)}
-							placeholder="0.00"
-						/>
-					</Field>
+			<Field
+				label={isFutureDate ? "Budget prévu (optionnel)" : "Prix payé (optionnel)"}
+				htmlFor="acquire-price"
+				hint="En euros"
+			>
+				<Input
+					id="acquire-price"
+					type="number"
+					min="0"
+					step="0.01"
+					value={price}
+					onChange={e => setPrice(e.target.value)}
+					placeholder="0.00"
+				/>
+			</Field>
 
-					<Field label="État de la carte" htmlFor="acquire-condition">
-						<ConditionSelect
-							id="acquire-condition"
-							value={condition}
-							onChange={setCondition}
-						/>
-					</Field>
+			<Field label="État de la carte" htmlFor="acquire-condition">
+				<ConditionSelect
+					id="acquire-condition"
+					value={condition}
+					onChange={setCondition}
+				/>
+			</Field>
+
 
 					{isFutureDate && (
 						<Field 
