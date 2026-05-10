@@ -47,16 +47,21 @@ const SearchContainer = styled.div`
 
 const CardGrid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-	gap: ${({ theme }) => theme.spacing['3']};
+	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	gap: ${({ theme }) => theme.spacing['6']};
 	margin-top: ${({ theme }) => theme.spacing['4']};
+	padding: ${({ theme }) => theme.spacing['2']};
 
 	@media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
-		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+		gap: ${({ theme }) => theme.spacing['8']};
+		padding: ${({ theme }) => theme.spacing['4']};
 	}
 
 	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
-		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+		gap: ${({ theme }) => theme.spacing['10']};
+		padding: ${({ theme }) => theme.spacing['6']};
 	}
 `
 
@@ -84,7 +89,7 @@ const SaleCardImage = styled.img`
 `
 
 const SaleCardContent = styled.div`
-	padding: ${({ theme }) => theme.spacing['3']};
+	padding: ${({ theme }) => theme.spacing['4']};
 	flex: 1;
 	display: flex;
 	flex-direction: column;
@@ -148,10 +153,16 @@ const SaleCardPrice = styled.div`
 
 const SaleCardActions = styled.div`
 	display: flex;
+	flex-direction: column;
 	gap: ${({ theme }) => theme.spacing['2']};
-	padding: ${({ theme }) => theme.spacing['2']} ${({ theme }) => theme.spacing['3']};
+	padding: ${({ theme }) => theme.spacing['3']};
 	border-top: 1px solid ${({ theme }) => theme.colors.border};
 	background: ${({ theme }) => theme.colors.surfaceElevated};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		flex-direction: row;
+		padding: ${({ theme }) => theme.spacing['3']} ${({ theme }) => theme.spacing['4']};
+	}
 `
 
 const CardSelectionOverlay = styled.div`
