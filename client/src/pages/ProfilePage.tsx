@@ -69,6 +69,10 @@ const FullWidth = styled.div`
 	}
 `
 
+const GridItem = styled.div`
+	align-self: start;
+`
+
 // ─── CollectionValueCard ──────────────────────────────────────────────────────
 
 const StatsRow = styled.div`
@@ -1116,12 +1120,16 @@ export default function ProfilePage() {
 				<FullWidth>
 					<SpendingChart stats={stats} planned={planned} plannedSales={plannedSales} />
 				</FullWidth>
-				<PurchaseCalendar 
-					planned={planned} 
-					onDelete={handleDeletePlanned}
-					onRefresh={loadData}
-				/>
-				<RecentAcquisitionsList cards={acquisitions} />
+				<GridItem>
+					<PurchaseCalendar 
+						planned={planned} 
+						onDelete={handleDeletePlanned}
+						onRefresh={loadData}
+					/>
+				</GridItem>
+				<GridItem>
+					<RecentAcquisitionsList cards={acquisitions} />
+				</GridItem>
 			</PageGrid>
 		</section>
 	)
