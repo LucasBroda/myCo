@@ -1,5 +1,6 @@
 import { Button } from '@components/ui/Button'
 import styled from 'styled-components'
+import { AlertIcon } from './Icons'
 
 const Wrapper = styled.div`
 	display: flex;
@@ -11,9 +12,9 @@ const Wrapper = styled.div`
 	text-align: center;
 `
 
-const Icon = styled.span`
-	font-size: 40px;
-	display: block;
+const IconWrapper = styled.div`
+	color: ${({ theme }) => theme.colors.brick};
+	opacity: 0.8;
 `
 
 const Message = styled.p`
@@ -30,7 +31,9 @@ interface Props {
 export function ErrorState({ message, onRetry }: Props) {
 	return (
 		<Wrapper role="alert">
-			<Icon aria-hidden="true">⚠️</Icon>
+			<IconWrapper aria-hidden="true">
+				<AlertIcon size={40} />
+			</IconWrapper>
 			<Message>{message}</Message>
 			{onRetry && (
 				<Button variant="secondary" onClick={onRetry}>

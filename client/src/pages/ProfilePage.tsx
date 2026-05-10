@@ -5,6 +5,7 @@ import { ErrorState } from '@components/ui/ErrorState'
 import { Spinner } from '@components/ui/Spinner'
 import { PageHeader } from '@components/layout/PageHeader'
 import { SectionTitle } from '@components/layout/SectionTitle'
+import { ChartBarIcon, TrendingUpIcon, CalendarIcon, ListIcon, ActivityIcon, InlineIcon } from '@components/ui/Icons'
 import { collectionService } from '@services/collectionService'
 import { profileService } from '@services/profileService'
 import { cardsService } from '@services/cardsService'
@@ -16,6 +17,8 @@ import { useEffect, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
 import {
+	Area,
+	AreaChart,
 	Bar,
 	BarChart,
 	CartesianGrid,
@@ -67,6 +70,10 @@ const FullWidth = styled.div`
 	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
 		grid-column: 1 / -1;
 	}
+`
+
+const GridItem = styled.div`
+	align-self: start;
 `
 
 // ─── CollectionValueCard ──────────────────────────────────────────────────────
@@ -209,8 +216,8 @@ const TooltipValue = styled.span`
 `
 
 interface CustomTooltipProps {
-	active?: boolean
-	payload?: Array<{
+	readonly active?: boolean
+	readonly payload?: Array<{
 		value: number
 		dataKey: string
 		payload: {
@@ -220,9 +227,11 @@ interface CustomTooltipProps {
 			budgetPlanifie: number
 			plannedCount: number
 			realBudget: number
+			ventesPlannifiees: number
+			salesCount: number
+			realSales: number
 		}
 	}>
-	label?: string
 }
 
 function CustomTooltip({ active, payload }: CustomTooltipProps) {
@@ -236,11 +245,11 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 				<>
 					<TooltipItem>
 						<span>Dépenses réelles :</span>
-						<TooltipValue>{formatEuros(data.depenses)}</TooltipValue>
+						<TooltipValue style={{ color: '#10b981' }}>{formatEuros(data.depenses)}</TooltipValue>
 					</TooltipItem>
 					<TooltipItem>
 						<span>Cartes achetées :</span>
-						<TooltipValue>{data.cardCount}</TooltipValue>
+						<TooltipValue style={{ color: '#10b981' }}>{data.cardCount}</TooltipValue>
 					</TooltipItem>
 				</>
 			)}
@@ -258,6 +267,20 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 					</TooltipItem>
 				</>
 			)}
+			{data.salesCount > 0 && (
+				<>
+					{data.realSales > 0 && (
+						<TooltipItem>
+							<span>Ventes planifiées :</span>
+							<TooltipValue style={{ color: '#3b82f6' }}>{formatEuros(data.realSales)}</TooltipValue>
+						</TooltipItem>
+					)}
+					<TooltipItem>
+						<span>Ventes planifiées :</span>
+						<TooltipValue style={{ color: '#3b82f6' }}>{data.salesCount}</TooltipValue>
+					</TooltipItem>
+				</>
+			)}
 		</TooltipContainer>
 	)
 }
@@ -265,9 +288,10 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 interface SpendingChartProps {
 	readonly stats: CollectionStats
 	readonly planned: PlannedPurchase[]
+	readonly plannedSales: PlannedSale[]
 }
 
-function SpendingChart({ stats, planned }: SpendingChartProps) {
+function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 	// Agréger les budgets planifiés par mois
 	const plannedByMonth = planned.reduce((acc, p) => {
 		const date = new Date(p.plannedDate)
@@ -284,17 +308,29 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 		return acc
 	}, {} as Record<string, { total: number; count: number }>)
 
+	// Agréger les ventes planifiées par mois
+	const salesByMonth = plannedSales.reduce((acc, s) => {
+		const date = new Date(s.saleDate)
+		const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+		if (!acc[monthKey]) {
+			acc[monthKey] = { total: 0, count: 0 }
+		}
+		acc[monthKey].total += Number(s.salePrice)
+		acc[monthKey].count += 1
+		return acc
+	}, {} as Record<string, { total: number; count: number }>)
 
-	// Créer une liste de tous les mois (réels + planifiés)
+	// Créer une liste de tous les mois (réels + planifiés + ventes)
 	const allMonths = new Set<string>()
 	stats.byMonth.forEach(m => allMonths.add(m.month))
 	Object.keys(plannedByMonth).forEach(m => allMonths.add(m))
+	Object.keys(salesByMonth).forEach(m => allMonths.add(m))
 
 	if (allMonths.size === 0) {
 		return (
 			<Card>
 				<SectionTitle>Dépenses mensuelles</SectionTitle>
-				<EmptyState message="Aucune dépense enregistrée." icon="📊" />
+				<EmptyState message="Aucune dépense enregistrée." icon={<ChartBarIcon size={40} />} />
 			</Card>
 		)
 	}
@@ -302,16 +338,17 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 	// Formater les mois pour l'affichage (ex: "2026-05" -> "Mai 26")
 	const formatMonth = (monthKey: string) => {
 		const [year, month] = monthKey.split('-')
-		const date = new Date(parseInt(year), parseInt(month) - 1)
+		const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1)
 		return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
 	}
 
-	// Combiner les données réelles et planifiées
+	// Combiner les données réelles, planifiées et ventes
 	const data = Array.from(allMonths)
-		.sort()
+		.sort((a, b) => a.localeCompare(b))
 		.map(monthKey => {
 			const realData = stats.byMonth.find(m => m.month === monthKey)
 			const plannedData = plannedByMonth[monthKey]
+			const salesData = salesByMonth[monthKey]
 
 			// Si des achats sont planifiés mais sans budget, utiliser une valeur indicative minimale
 			const plannedValue = plannedData?.total || 0
@@ -321,6 +358,9 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 				? plannedCountValue * 1 
 				: plannedValue
 
+			const salesValue = salesData?.total || 0
+			const salesCountValue = salesData?.count || 0
+
 			return {
 				month: formatMonth(monthKey),
 				monthKey,
@@ -329,12 +369,15 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 				budgetPlanifie: displayValue,
 				plannedCount: plannedCountValue,
 				realBudget: plannedValue, // Budget réel pour le tooltip
+				ventesPlannifiees: salesValue,
+				salesCount: salesCountValue,
+				realSales: salesValue,
 			}
 		})
 
 	return (
 		<Card>
-			<SectionTitle>Dépenses mensuelles</SectionTitle>
+			<SectionTitle>Dépenses et ventes mensuelles</SectionTitle>
 			<ChartWrapper>
 				<ResponsiveContainer width="100%" height={260}>
 					<BarChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
@@ -346,6 +389,10 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 							<linearGradient id="barGradientPlanned" x1="0" y1="0" x2="0" y2="1">
 								<stop offset="0%" stopColor="#fbbf24" stopOpacity={0.7} />
 								<stop offset="100%" stopColor="#f59e0b" stopOpacity={0.8} />
+							</linearGradient>
+							<linearGradient id="barGradientSales" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
+								<stop offset="100%" stopColor="#2563eb" stopOpacity={0.9} />
 							</linearGradient>
 						</defs>
 						<CartesianGrid 
@@ -383,9 +430,296 @@ function SpendingChart({ stats, planned }: SpendingChartProps) {
 							maxBarSize={40}
 							name="Budget planifié"
 						/>
+						<Bar 
+							dataKey="ventesPlannifiees" 
+							fill="url(#barGradientSales)" 
+							radius={[8, 8, 0, 0]}
+							maxBarSize={40}
+							name="Ventes planifiées"
+						/>
 					</BarChart>
 				</ResponsiveContainer>
 			</ChartWrapper>
+		</Card>
+	)
+}
+
+// ─── CollectionValueChart ─────────────────────────────────────────────────────
+
+const ChartLegend = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: ${({ theme }) => theme.spacing['6']};
+	margin-top: ${({ theme }) => theme.spacing['4']};
+	padding-top: ${({ theme }) => theme.spacing['3']};
+	border-top: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const LegendItem = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['2']};
+`
+
+const LegendLine = styled.div<{ $color: string; $dashed?: boolean }>`
+	width: 24px;
+	height: 3px;
+	background-color: ${({ $color, $dashed }) => $dashed ? 'transparent' : $color};
+	border-radius: 2px;
+	${({ $dashed, $color }) => $dashed && `
+		border-bottom: 3px dashed ${$color};
+	`}
+`
+
+const LegendLabel = styled.span`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+`
+
+interface ValueTooltipProps {
+	readonly active?: boolean
+	readonly payload?: Array<{
+		value: number
+		dataKey: string
+		payload: {
+			month: string
+			valueCumulative: number
+			spentCumulative: number
+			gain: number
+			isProjected: boolean
+		}
+	}>
+}
+
+function ValueTooltip({ active, payload }: ValueTooltipProps) {
+	if (!active || !payload || payload.length === 0) return null
+
+	const data = payload[0].payload
+
+	return (
+		<TooltipContainer>
+			{data.isProjected && (
+				<TooltipItem style={{ marginBottom: '8px', paddingBottom: '8px', borderBottom: '1px solid #e7e5e4' }}>
+					<span style={{ fontWeight: 600, color: '#78716c', display: 'flex', alignItems: 'center', gap: '6px' }}>
+						<InlineIcon $size={16}><ActivityIcon size={16} color="#78716c" /></InlineIcon>
+						Projection
+					</span>
+				</TooltipItem>
+			)}
+			<TooltipItem>
+				<span>Valeur de la collection :</span>
+				<TooltipValue style={{ color: '#14b8a6' }}>{formatEuros(data.valueCumulative)}</TooltipValue>
+			</TooltipItem>
+			<TooltipItem>
+				<span>Total investi :</span>
+				<TooltipValue style={{ color: '#f97316' }}>{formatEuros(data.spentCumulative)}</TooltipValue>
+			</TooltipItem>
+			{data.gain !== 0 && (
+				<TooltipItem>
+					<span>{data.gain >= 0 ? 'Plus-value' : 'Moins-value'} :</span>
+					<TooltipValue style={{ color: data.gain >= 0 ? '#10b981' : '#ef4444' }}>
+						{data.gain >= 0 ? '+' : ''}{formatEuros(data.gain)}
+					</TooltipValue>
+				</TooltipItem>
+			)}
+		</TooltipContainer>
+	)
+}
+
+interface CollectionValueChartProps {
+	readonly stats: CollectionStats
+	readonly planned: PlannedPurchase[]
+	readonly plannedSales: PlannedSale[]
+}
+
+function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueChartProps) {
+	if (stats.byMonth.length === 0 && planned.length === 0) {
+		return (
+			<Card>
+				<SectionTitle>Évolution de la valeur</SectionTitle>
+				<EmptyState message="Aucune donnée disponible." icon={<TrendingUpIcon size={40} />} />
+			</Card>
+		)
+	}
+
+	// Formater les mois pour l'affichage
+	const formatMonthDisplay = (monthKey: string) => {
+		const [year, month] = monthKey.split('-')
+		const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1)
+		return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+	}
+
+	// Agréger les achats planifiés par mois
+	const plannedByMonth = planned.reduce((acc, p) => {
+		const date = new Date(p.plannedDate)
+		const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+		if (!acc[monthKey]) {
+			acc[monthKey] = 0
+		}
+		acc[monthKey] += p.budget ? Number(p.budget) : 0
+		return acc
+	}, {} as Record<string, number>)
+
+	// Agréger les ventes planifiées par mois
+	const salesByMonth = plannedSales.reduce((acc, s) => {
+		const date = new Date(s.saleDate)
+		const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+		if (!acc[monthKey]) {
+			acc[monthKey] = 0
+		}
+		acc[monthKey] += Number(s.salePrice)
+		return acc
+	}, {} as Record<string, number>)
+
+	// Créer une liste de tous les mois (réels + planifiés)
+	const allMonths = new Set<string>()
+	stats.byMonth.forEach(m => allMonths.add(m.month))
+	Object.keys(plannedByMonth).forEach(m => allMonths.add(m))
+	Object.keys(salesByMonth).forEach(m => allMonths.add(m))
+
+	// Calculer les valeurs cumulatives
+	const sortedMonths = Array.from(allMonths).sort((a, b) => a.localeCompare(b))
+	
+	// Calculer la somme totale des dépenses mensuelles réelles
+	const sumOfMonthlySpent = stats.byMonth.reduce((sum, m) => sum + m.totalSpent, 0)
+	
+	// Calculer les ratios d'ajustement pour garantir la cohérence avec les stats globales
+	const adjustmentRatio = sumOfMonthlySpent > 0 ? stats.totalSpent / sumOfMonthlySpent : 1
+	const valueRatio = stats.totalSpent > 0 ? stats.estimatedValue / stats.totalSpent : 1
+	
+	// Déterminer le mois actuel
+	const now = new Date()
+	const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+	
+	// Générer les données en utilisant les valeurs exactes des stats
+	let cumulativeSpent = 0
+	let projectedSpent = stats.totalSpent
+	let projectedValue = stats.estimatedValue
+	
+	const data = sortedMonths.map((monthKey) => {
+		const realData = stats.byMonth.find(m => m.month === monthKey)
+		const plannedBudget = plannedByMonth[monthKey] || 0
+		const plannedSalesValue = salesByMonth[monthKey] || 0
+		const isPastOrCurrent = monthKey <= currentMonthKey
+		
+		if (isPastOrCurrent && realData) {
+			// Mois passé ou actuel avec données réelles
+			cumulativeSpent += realData.totalSpent
+			const adjustedCumulativeSpent = cumulativeSpent * adjustmentRatio
+			const estimatedValue = adjustedCumulativeSpent * valueRatio
+			
+			// Sauvegarder les valeurs pour la projection
+			projectedSpent = adjustedCumulativeSpent
+			projectedValue = estimatedValue
+			
+			return {
+				month: formatMonthDisplay(monthKey),
+				monthKey: monthKey,
+				valueCumulative: estimatedValue,
+				spentCumulative: adjustedCumulativeSpent,
+				gain: estimatedValue - adjustedCumulativeSpent,
+				isProjected: false,
+			}
+		} else {
+			// Mois futur avec données planifiées
+			projectedSpent += plannedBudget
+			projectedValue += plannedBudget - plannedSalesValue
+			
+			return {
+				month: formatMonthDisplay(monthKey),
+				monthKey: monthKey,
+				valueCumulative: projectedValue,
+				spentCumulative: projectedSpent,
+				gain: projectedValue - projectedSpent,
+				isProjected: true,
+			}
+		}
+	})
+
+	const hasProjections = data.some(d => d.isProjected)
+
+	return (
+		<Card>
+			<SectionTitle>Évolution de la valeur de la collection</SectionTitle>
+			<ChartWrapper>
+				<ResponsiveContainer width="100%" height={260}>
+					<AreaChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+						<defs>
+							<linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#14b8a6" stopOpacity={0.4} />
+								<stop offset="100%" stopColor="#14b8a6" stopOpacity={0.05} />
+							</linearGradient>
+							<linearGradient id="spentGradient" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#f97316" stopOpacity={0.3} />
+								<stop offset="100%" stopColor="#f97316" stopOpacity={0.05} />
+							</linearGradient>
+						</defs>
+						<CartesianGrid 
+							strokeDasharray="3 3" 
+							stroke="#f5f5f4" 
+							vertical={false}
+							strokeOpacity={0.5}
+						/>
+						<XAxis
+							dataKey="month"
+							tick={{ fontSize: 13, fill: '#57534e', fontWeight: 500 }}
+							axisLine={false}
+							tickLine={false}
+							dy={8}
+						/>
+						<YAxis
+							tick={{ fontSize: 13, fill: '#78716c', fontWeight: 500 }}
+							axisLine={false}
+							tickLine={false}
+							tickFormatter={v => `${v}€`}
+							width={50}
+						/>
+						<Tooltip content={<ValueTooltip />} cursor={{ stroke: '#99f6e4', strokeWidth: 2 }} />
+						<Area 
+							type="monotone"
+							dataKey="valueCumulative" 
+							stroke="#14b8a6"
+							strokeWidth={3}
+							fill="url(#valueGradient)" 
+							name="Valeur estimée"
+						/>
+						<Area 
+							type="monotone"
+							dataKey="spentCumulative" 
+							stroke="#f97316"
+							strokeWidth={2}
+							strokeDasharray="5 5"
+							fill="url(#spentGradient)" 
+							name="Total investi"
+						/>
+					</AreaChart>
+				</ResponsiveContainer>
+			</ChartWrapper>
+			<ChartLegend>
+				<LegendItem>
+					<LegendLine $color="#14b8a6" />
+					<LegendLabel>Valeur estimée de la collection</LegendLabel>
+				</LegendItem>
+				<LegendItem>
+					<LegendLine $color="#f97316" $dashed />
+					<LegendLabel>Total investi</LegendLabel>
+				</LegendItem>
+			</ChartLegend>
+			{hasProjections && (
+				<div style={{ 
+					marginTop: '0.75rem', 
+					paddingTop: '0.75rem', 
+					borderTop: '1px solid var(--border)', 
+					fontSize: '0.75rem', 
+					color: 'var(--text-secondary)', 
+					textAlign: 'center',
+					fontStyle: 'italic'
+				}}>
+					📊 Les mois futurs incluent les achats et ventes planifiés
+				</div>
+			)}
 		</Card>
 	)
 }
@@ -581,15 +915,15 @@ const CardPreviewName = styled.h4`
 	color: ${({ theme }) => theme.colors.textPrimary};
 	text-align: center;
 	width: 100%;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	hyphens: auto;
 `
 
 const CardPreviewDetail = styled.div`
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
+	align-items: flex-start;
 	width: 100%;
 	gap: ${({ theme }) => theme.spacing['2']};
 	font-size: ${({ theme }) => theme.font.size.sm};
@@ -597,9 +931,12 @@ const CardPreviewDetail = styled.div`
 	
 	& > span:last-child {
 		text-align: right;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+	}
+	
+	& > span:first-child {
+		flex-shrink: 0;
 	}
 `
 
@@ -716,12 +1053,22 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 					type="button"
 					onClick={() => setShowCalendar(!showCalendar)}
 				>
-					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
+					{showCalendar ? (
+						<>
+							<InlineIcon><ListIcon size={16} /></InlineIcon>
+							Afficher la liste
+						</>
+					) : (
+						<>
+							<InlineIcon><CalendarIcon size={16} /></InlineIcon>
+							Afficher le calendrier
+						</>
+					)}
 				</CalendarToggle>
 			)}
 
 			{planned.length === 0 && (
-				<EmptyState message="Aucun achat planifié." icon="📅" />
+				<EmptyState message="Aucun achat planifié." icon={<CalendarIcon size={40} />} />
 			)}
 
 			{planned.length > 0 && showCalendar && (
@@ -833,188 +1180,6 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 	)
 }
 
-// ─── PlannedSalesCalendar ─────────────────────────────────────────────────────
-
-interface PlannedSalesCalendarProps {
-	readonly plannedSales: PlannedSale[]
-}
-
-function PlannedSalesCalendar({ plannedSales }: PlannedSalesCalendarProps) {
-	const [showCalendar, setShowCalendar] = useState(false)
-	const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
-	const plannedDates = plannedSales.map(s => new Date(s.saleDate))
-
-	// Charger les détails des cartes au montage
-	useEffect(() => {
-		async function loadCardDetails() {
-			const details: Record<string, PokemonCard> = {}
-			for (const sale of plannedSales) {
-				if (!details[sale.cardId]) {
-					try {
-						const card = await cardsService.getCard(sale.cardId)
-						details[sale.cardId] = card
-					} catch (err) {
-						console.error(`Failed to load card ${sale.cardId}`, err)
-					}
-				}
-			}
-			setCardDetails(details)
-		}
-		if (plannedSales.length > 0) {
-			loadCardDetails()
-		}
-	}, [plannedSales])
-
-	// Trouver les ventes planifiées pour la date sélectionnée
-	const selectedSales = selectedDate
-		? plannedSales.filter(s => {
-				const saleDate = new Date(s.saleDate)
-				return (
-					saleDate.getDate() === selectedDate.getDate() &&
-					saleDate.getMonth() === selectedDate.getMonth() &&
-					saleDate.getFullYear() === selectedDate.getFullYear()
-				)
-		  })
-		: []
-
-	function handleDayClick(date: Date) {
-		// Vérifier si cette date a des ventes planifiées
-		const hasPlannedSales = plannedSales.some(s => {
-			const saleDate = new Date(s.saleDate)
-			return (
-				saleDate.getDate() === date.getDate() &&
-				saleDate.getMonth() === date.getMonth() &&
-				saleDate.getFullYear() === date.getFullYear()
-			)
-		})
-		
-		// Si la date a des ventes planifiées, la sélectionner (ou la désélectionner si déjà sélectionnée)
-		if (hasPlannedSales) {
-			setSelectedDate(prev => {
-				if (prev?.getDate() === date.getDate() &&
-					prev?.getMonth() === date.getMonth() &&
-					prev?.getFullYear() === date.getFullYear()) {
-					return null // Désélectionner si même date
-				}
-				return date // Sélectionner la nouvelle date
-			})
-		}
-	}
-
-	return (
-		<Card>
-			<SectionTitle>Ventes planifiées ({plannedSales.length})</SectionTitle>
-			
-			{plannedSales.length > 0 && (
-				<CalendarToggle
-					type="button"
-					onClick={() => setShowCalendar(!showCalendar)}
-				>
-					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
-				</CalendarToggle>
-			)}
-
-			{plannedSales.length === 0 && (
-				<EmptyState message="Aucune vente planifiée." icon="💰" />
-			)}
-
-			{plannedSales.length > 0 && showCalendar && (
-				<>
-					<DayPickerOverride />
-					<LayoutGrid>
-						<CalendarCell>
-							<DayPicker
-								modifiers={{ planned: plannedDates }}
-								modifiersClassNames={{ planned: 'planned-date' }}
-								onDayClick={handleDayClick}
-								footer={
-									<p
-										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
-										aria-live="polite"
-									>
-										{plannedSales.length} vente{plannedSales.length > 1 ? 's' : ''} planifiée
-										{plannedSales.length > 1 ? 's' : ''}
-									</p>
-								}
-							/>
-						</CalendarCell>
-						{selectedSales.map((sale) => {
-							const card = cardDetails[sale.cardId]
-							if (!card) return null
-
-							return (
-								<CardCell key={sale.id}>
-									<CardPreviewItem>
-										<CardPreviewImage
-											src={card.images.small}
-											alt={card.name}
-											loading="lazy"
-										/>
-										<CardPreviewName>{sale.cardName}</CardPreviewName>
-										<CardPreviewDetail>
-											<span>Collection</span>
-											<span>{sale.setName}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>État</span>
-											<span>{sale.condition}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>Date prévue</span>
-											<span>
-												{new Date(sale.saleDate).toLocaleDateString('fr-FR', {
-													day: 'numeric',
-													month: 'long',
-													year: 'numeric',
-												})}
-											</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>Prix de vente</span>
-											<CardPreviewBudget>
-												{formatEuros(sale.salePrice)}
-											</CardPreviewBudget>
-										</CardPreviewDetail>
-										{sale.notes && (
-											<CardPreviewNotes>{sale.notes}</CardPreviewNotes>
-										)}
-									</CardPreviewItem>
-								</CardCell>
-							)
-						})}
-					</LayoutGrid>
-				</>
-			)}
-			{plannedSales.length > 0 && !showCalendar && (
-				<PlannedList>
-					{plannedSales.map(sale => (
-						<PlannedItem key={sale.id}>
-							<PlannedInfo>
-								<PlannedCardName>
-									{sale.cardName}
-								</PlannedCardName>
-								<PlannedMeta>{sale.setName}</PlannedMeta>
-								<PlannedMeta>
-									{new Date(sale.saleDate).toLocaleDateString('fr-FR', {
-										day: 'numeric',
-										month: 'long',
-										year: 'numeric',
-									})}
-								</PlannedMeta>
-								{sale.notes && <PlannedMeta>{sale.notes}</PlannedMeta>}
-							</PlannedInfo>
-							<PlannedActions>
-								<PlannedBudget>{formatEuros(sale.salePrice)}</PlannedBudget>
-							</PlannedActions>
-						</PlannedItem>
-					))}
-				</PlannedList>
-			)}
-		</Card>
-	)
-}
-
 // ─── RecentAcquisitionsList ───────────────────────────────────────────────────
 
 const SectionHeader = styled.div`
@@ -1072,6 +1237,7 @@ const AcqItem = styled.li`
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: ${({ theme }) => theme.spacing['3']};
 	padding: ${({ theme }) => `${theme.spacing['3']} 0`};
 	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
 
@@ -1080,16 +1246,37 @@ const AcqItem = styled.li`
 	}
 `
 
+const AcqInfoCell = styled.div`
+	display: flex;
+	align-items: center;
+	gap: ${({ theme }) => theme.spacing['3']};
+	flex: 1;
+	min-width: 0;
+`
+
+const AcqCardMiniature = styled.img`
+	width: 40px;
+	height: 56px;
+	object-fit: cover;
+	border-radius: ${({ theme }) => theme.radii.sm};
+	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+	flex-shrink: 0;
+`
+
 const AcqInfo = styled.div`
 	display: flex;
 	flex-direction: column;
 	gap: 2px;
+	min-width: 0;
 `
 
 const AcqCardId = styled.span`
 	font-size: ${({ theme }) => theme.font.size.sm};
 	font-weight: ${({ theme }) => theme.font.weight.medium};
 	color: ${({ theme }) => theme.colors.textPrimary};
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
 `
 
 const AcqMeta = styled.span`
@@ -1131,8 +1318,30 @@ const PAGE_SIZE = 20
 function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 	const [page, setPage] = useState(1)
 	const [isCollapsed, setIsCollapsed] = useState(true)
+	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
 	const visible = cards.slice(0, page * PAGE_SIZE)
 	const remaining = cards.length - visible.length
+
+	// Charger les détails des cartes visibles
+	useEffect(() => {
+		const loadCardDetails = async () => {
+			const newDetails: Record<string, PokemonCard> = {}
+			for (const card of visible) {
+				if (!cardDetails[card.cardId]) {
+					try {
+						const details = await cardsService.getCard(card.cardId)
+						newDetails[card.cardId] = details
+					} catch {
+						// Ignorer les erreurs de chargement
+					}
+				}
+			}
+			if (Object.keys(newDetails).length > 0) {
+				setCardDetails(prev => ({ ...prev, ...newDetails }))
+			}
+		}
+		loadCardDetails()
+	}, [visible])
 
 	if (cards.length === 0) {
 		return (
@@ -1160,20 +1369,31 @@ function RecentAcquisitionsList({ cards }: { readonly cards: AcquiredCard[] }) {
 			</SectionHeader>
 			<AcqListWrapper $isCollapsed={isCollapsed} id="acquisitions-list">
 				<AcqList>
-					{visible.map(card => (
-						<AcqItem key={card.id}>
-							<AcqInfo>
-								<AcqCardId>{card.cardName}</AcqCardId>
-								<AcqMeta>
-									{card.setName} · {new Date(card.acquiredDate).toLocaleDateString('fr-FR')} ·{' '}
-									{card.condition}
-								</AcqMeta>
-							</AcqInfo>
-							<AcqPrice>
-								{card.pricePaid === null ? '—' : formatEuros(card.pricePaid)}
-							</AcqPrice>
-						</AcqItem>
-					))}
+					{visible.map(card => {
+						const details = cardDetails[card.cardId]
+						return (
+							<AcqItem key={card.id}>
+								<AcqInfoCell>
+									{details && (
+										<AcqCardMiniature 
+											src={details.images.small} 
+											alt={details.name}
+										/>
+									)}
+									<AcqInfo>
+										<AcqCardId>{card.cardName}</AcqCardId>
+										<AcqMeta>
+											{card.setName} · {new Date(card.acquiredDate).toLocaleDateString('fr-FR')} ·{' '}
+											{card.condition}
+										</AcqMeta>
+									</AcqInfo>
+								</AcqInfoCell>
+								<AcqPrice>
+									{card.pricePaid === null ? '—' : formatEuros(card.pricePaid)}
+								</AcqPrice>
+							</AcqItem>
+						)
+					})}
 				</AcqList>
 				{remaining > 0 && (
 					<LoadMoreBtn type="button" onClick={() => setPage(p => p + 1)}>
@@ -1248,18 +1468,22 @@ export default function ProfilePage() {
 				<FullWidth>
 					<CollectionValueCard stats={stats} planned={planned} salesStats={salesStats} />
 				</FullWidth>
-				<SpendingChart stats={stats} planned={planned} />
-				<PurchaseCalendar 
-					planned={planned} 
-					onDelete={handleDeletePlanned}
-					onRefresh={loadData}
-				/>
-				<PlannedSalesCalendar 
-					plannedSales={plannedSales}
-				/>
 				<FullWidth>
-					<RecentAcquisitionsList cards={acquisitions} />
+					<SpendingChart stats={stats} planned={planned} plannedSales={plannedSales} />
 				</FullWidth>
+				<FullWidth>
+					<CollectionValueChart stats={stats} planned={planned} plannedSales={plannedSales} />
+				</FullWidth>
+				<GridItem>
+					<PurchaseCalendar 
+						planned={planned} 
+						onDelete={handleDeletePlanned}
+						onRefresh={loadData}
+					/>
+				</GridItem>
+				<GridItem>
+					<RecentAcquisitionsList cards={acquisitions} />
+				</GridItem>
 			</PageGrid>
 		</section>
 	)

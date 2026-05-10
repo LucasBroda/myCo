@@ -1,4 +1,6 @@
 import styled from 'styled-components'
+import type { ReactNode } from 'react'
+import { MailboxIcon } from './Icons'
 
 const Wrapper = styled.div`
 	display: flex;
@@ -11,9 +13,9 @@ const Wrapper = styled.div`
 	color: ${({ theme }) => theme.colors.textMuted};
 `
 
-const Icon = styled.span`
-	font-size: 40px;
-	display: block;
+const IconWrapper = styled.div`
+	color: ${({ theme }) => theme.colors.textMuted};
+	opacity: 0.6;
 `
 
 const Message = styled.p`
@@ -23,13 +25,15 @@ const Message = styled.p`
 
 interface Props {
 	message: string
-	icon?: string
+	icon?: ReactNode
 }
 
-export function EmptyState({ message, icon = '📭' }: Props) {
+export function EmptyState({ message, icon }: Props) {
 	return (
 		<Wrapper>
-			<Icon aria-hidden="true">{icon}</Icon>
+			<IconWrapper aria-hidden="true">
+				{icon || <MailboxIcon size={40} />}
+			</IconWrapper>
 			<Message>{message}</Message>
 		</Wrapper>
 	)
