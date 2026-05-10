@@ -12,7 +12,6 @@ import { cardsService } from '@services/cardsService'
 import { salesService } from '@services/salesService'
 import { PriceTrend } from '@components/pokemon/PriceTrend'
 import { usePlannedStore } from '@store/plannedStore'
-import { useToast } from '@hooks/useToast'
 import { useEffect, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
@@ -715,9 +714,14 @@ function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueC
 					fontSize: '0.75rem', 
 					color: 'var(--text-secondary)', 
 					textAlign: 'center',
-					fontStyle: 'italic'
+					fontStyle: 'italic',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					gap: '0.5rem'
 				}}>
-					📊 Les mois futurs incluent les achats et ventes planifiés
+					<InlineIcon $size={14}><ChartBarIcon size={14} color="var(--text-secondary)" /></InlineIcon>
+					Les mois futurs incluent les achats et ventes planifiés
 				</div>
 			)}
 		</Card>
@@ -798,52 +802,6 @@ const PlannedActions = styled.div`
 	align-items: center;
 	gap: ${({ theme }) => theme.spacing['3']};
 `
-
-const DeleteButton = styled.button`
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 28px;
-	height: 28px;
-	padding: 0;
-	background: none;
-	border: 1px solid transparent;
-	border-radius: ${({ theme }) => theme.radii.md};
-	color: ${({ theme }) => theme.colors.textSecondary};
-	cursor: pointer;
-	transition: all ${({ theme }) => theme.transitions.fast};
-	flex-shrink: 0;
-
-	svg {
-		width: 16px;
-		height: 16px;
-		stroke: currentColor;
-		fill: none;
-		stroke-width: 2;
-		stroke-linecap: round;
-		stroke-linejoin: round;
-	}
-
-	&:hover {
-		background-color: ${({ theme }) => theme.colors.brickLight};
-		border-color: ${({ theme }) => theme.colors.brickBorder};
-		color: ${({ theme }) => theme.colors.brick};
-	}
-
-	&:focus-visible {
-		outline: 2px solid ${({ theme }) => theme.colors.focus};
-		outline-offset: 2px;
-	}
-`
-
-function TrashIcon() {
-	return (
-		<svg viewBox="0 0 24 24" aria-hidden="true">
-			<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z" />
-			<path d="M10 11v6M14 11v6" />
-		</svg>
-	)
-}
 
 
 const CalendarToggle = styled.button`
@@ -959,227 +917,6 @@ const CardPreviewNotes = styled.p`
 	word-wrap: break-word;
 `
 
-interface PurchaseCalendarProps {
-	readonly planned: PlannedPurchase[]
-	readonly onDelete: (id: string) => Promise<void>
-	readonly onRefresh: () => void
-}
-
-function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProps) {
-	const [showCalendar, setShowCalendar] = useState(false)
-	const [deleting, setDeleting] = useState<string | null>(null)
-	const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
-	const { success, error: showError } = useToast()
-	const plannedDates = planned.map(p => new Date(p.plannedDate))
-
-	// Charger les détails des cartes au montage
-	useEffect(() => {
-		async function loadCardDetails() {
-			const details: Record<string, PokemonCard> = {}
-			for (const purchase of planned) {
-				if (!details[purchase.cardId]) {
-					try {
-						const card = await cardsService.getCard(purchase.cardId)
-						details[purchase.cardId] = card
-					} catch (err) {
-						console.error(`Failed to load card ${purchase.cardId}`, err)
-					}
-				}
-			}
-			setCardDetails(details)
-		}
-		if (planned.length > 0) {
-			loadCardDetails()
-		}
-	}, [planned])
-
-	// Trouver les achats planifiés pour la date sélectionnée
-	const selectedPurchases = selectedDate
-		? planned.filter(p => {
-				const purchaseDate = new Date(p.plannedDate)
-				return (
-					purchaseDate.getDate() === selectedDate.getDate() &&
-					purchaseDate.getMonth() === selectedDate.getMonth() &&
-					purchaseDate.getFullYear() === selectedDate.getFullYear()
-				)
-		  })
-		: []
-
-	function handleDayClick(date: Date) {
-		// Vérifier si cette date a des achats planifiés
-		const hasPlannedPurchases = planned.some(p => {
-			const purchaseDate = new Date(p.plannedDate)
-			return (
-				purchaseDate.getDate() === date.getDate() &&
-				purchaseDate.getMonth() === date.getMonth() &&
-				purchaseDate.getFullYear() === date.getFullYear()
-			)
-		})
-		
-		// Si la date a des achats planifiés, la sélectionner (ou la désélectionner si déjà sélectionnée)
-		if (hasPlannedPurchases) {
-			setSelectedDate(prev => {
-				if (prev?.getDate() === date.getDate() &&
-					prev?.getMonth() === date.getMonth() &&
-					prev?.getFullYear() === date.getFullYear()) {
-					return null // Désélectionner si même date
-				}
-				return date // Sélectionner la nouvelle date
-			})
-		}
-	}
-
-	async function handleDelete(id: string) {
-		if (!confirm('Supprimer cet achat planifié ?')) return
-		setDeleting(id)
-		try {
-			await onDelete(id)
-			success('Achat planifié supprimé')
-			onRefresh()
-		} catch (err) {
-			showError(err instanceof Error ? err.message : 'Erreur lors de la suppression')
-		} finally {
-			setDeleting(null)
-		}
-	}
-
-	return (
-		<Card>
-			<SectionTitle>Achats planifiés ({planned.length})</SectionTitle>
-			
-			{planned.length > 0 && (
-				<CalendarToggle
-					type="button"
-					onClick={() => setShowCalendar(!showCalendar)}
-				>
-					{showCalendar ? (
-						<>
-							<InlineIcon><ListIcon size={16} /></InlineIcon>
-							Afficher la liste
-						</>
-					) : (
-						<>
-							<InlineIcon><CalendarIcon size={16} /></InlineIcon>
-							Afficher le calendrier
-						</>
-					)}
-				</CalendarToggle>
-			)}
-
-			{planned.length === 0 && (
-				<EmptyState message="Aucun achat planifié." icon={<CalendarIcon size={40} />} />
-			)}
-
-			{planned.length > 0 && showCalendar && (
-				<>
-					<DayPickerOverride />
-					<LayoutGrid>
-						<CalendarCell>
-							<DayPicker
-								modifiers={{ planned: plannedDates }}
-								modifiersClassNames={{ planned: 'planned-date' }}
-								onDayClick={handleDayClick}
-								footer={
-									<p
-										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
-										aria-live="polite"
-									>
-										{planned.length} achat{planned.length > 1 ? 's' : ''} planifié
-										{planned.length > 1 ? 's' : ''}
-									</p>
-								}
-							/>
-						</CalendarCell>
-						{selectedPurchases.map((purchase) => {
-							const card = cardDetails[purchase.cardId]
-							if (!card) return null
-
-							return (
-								<CardCell key={purchase.id}>
-									<CardPreviewItem>
-										<CardPreviewImage
-											src={card.images.small}
-											alt={card.name}
-											loading="lazy"
-										/>
-										<CardPreviewName>{purchase.cardName}</CardPreviewName>
-										<CardPreviewDetail>
-											<span>Collection</span>
-											<span>{purchase.setName}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>État</span>
-											<span>{purchase.condition}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>Date prévue</span>
-											<span>
-												{new Date(purchase.plannedDate).toLocaleDateString('fr-FR', {
-													day: 'numeric',
-													month: 'long',
-													year: 'numeric',
-												})}
-											</span>
-										</CardPreviewDetail>
-										{purchase.budget !== null && (
-											<CardPreviewDetail>
-												<span>Budget prévu</span>
-												<CardPreviewBudget>
-													{formatEuros(purchase.budget)}
-												</CardPreviewBudget>
-											</CardPreviewDetail>
-										)}
-										{purchase.notes && (
-											<CardPreviewNotes>{purchase.notes}</CardPreviewNotes>
-										)}
-									</CardPreviewItem>
-								</CardCell>
-							)
-						})}
-					</LayoutGrid>
-				</>
-			)}
-			{planned.length > 0 && !showCalendar && (
-				<PlannedList>
-					{planned.map(item => (
-						<PlannedItem key={item.id}>
-							<PlannedInfo>
-								<PlannedCardName>
-									{item.cardName}
-								</PlannedCardName>
-								<PlannedMeta>{item.setName}</PlannedMeta>
-								<PlannedMeta>
-									{new Date(item.plannedDate).toLocaleDateString('fr-FR', {
-										day: 'numeric',
-										month: 'long',
-										year: 'numeric',
-									})}
-								</PlannedMeta>
-								{item.notes && <PlannedMeta>{item.notes}</PlannedMeta>}
-							</PlannedInfo>
-							<PlannedActions>
-								{item.budget !== null && (
-									<PlannedBudget>{formatEuros(item.budget)}</PlannedBudget>
-								)}
-								<DeleteButton
-									type="button"
-									onClick={() => handleDelete(item.id)}
-									disabled={deleting === item.id}
-									aria-label="Supprimer"
-									title="Supprimer cet achat planifié"
-								>
-									{deleting === item.id ? '⋯' : <TrashIcon />}
-								</DeleteButton>
-							</PlannedActions>
-						</PlannedItem>
-					))}
-				</PlannedList>
-			)}
-		</Card>
-	)
-}
-
 // ─── PlannedSalesCalendar ─────────────────────────────────────────────────────
 
 interface PlannedSalesCalendarProps {
@@ -1258,12 +995,22 @@ function PlannedSalesCalendar({ plannedSales }: PlannedSalesCalendarProps) {
 					type="button"
 					onClick={() => setShowCalendar(!showCalendar)}
 				>
-					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
+					{showCalendar ? (
+						<>
+							<InlineIcon><ListIcon size={16} /></InlineIcon>
+							Afficher la liste
+						</>
+					) : (
+						<>
+							<InlineIcon><CalendarIcon size={16} /></InlineIcon>
+							Afficher le calendrier
+						</>
+					)}
 				</CalendarToggle>
 			)}
 
 			{plannedSales.length === 0 && (
-				<EmptyState message="Aucune vente planifiée." icon="💰" />
+				<EmptyState message="Aucune vente planifiée." icon={<TrendingUpIcon size={40} />} />
 			)}
 
 			{plannedSales.length > 0 && showCalendar && (
@@ -1597,7 +1344,7 @@ export default function ProfilePage() {
 	const [plannedSales, setPlannedSales] = useState<PlannedSale[]>([])
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
-	const { setPlanned: setPlannedStore, removePlanned } = usePlannedStore()
+	const { setPlanned: setPlannedStore } = usePlannedStore()
 
 	async function loadData() {
 		setIsLoading(true)
@@ -1634,11 +1381,6 @@ export default function ProfilePage() {
 		loadData()
 	}, [])
 
-	async function handleDeletePlanned(id: string) {
-		await profileService.deletePlanned(id)
-		removePlanned(id)
-	}
-
 	if (isLoading) return <Spinner center label="Chargement du profil…" />
 	if (error) return <ErrorState message={error} onRetry={loadData} />
 	if (!stats) return null
@@ -1656,13 +1398,6 @@ export default function ProfilePage() {
 				<FullWidth>
 					<CollectionValueChart stats={stats} planned={planned} plannedSales={plannedSales} />
 				</FullWidth>
-				<GridItem>
-					<PurchaseCalendar 
-						planned={planned} 
-						onDelete={handleDeletePlanned}
-						onRefresh={loadData}
-					/>
-				</GridItem>
 				<GridItem>
 				<PlannedSalesCalendar plannedSales={plannedSales} />
 			</GridItem>
