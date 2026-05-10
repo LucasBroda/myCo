@@ -80,8 +80,16 @@ const GridItem = styled.div`
 
 const StatsRow = styled.div`
 	display: grid;
-	grid-template-columns: repeat(3, 1fr);
+	grid-template-columns: 1fr;
 	gap: ${({ theme }) => theme.spacing['4']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+		grid-template-columns: repeat(2, 1fr);
+	}
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		grid-template-columns: repeat(3, 1fr);
+	}
 `
 
 const StatItem = styled.div`
@@ -187,6 +195,14 @@ function CollectionValueCard({ stats, planned, salesStats }: CollectionValueCard
 
 const ChartWrapper = styled.div`
 	padding: ${({ theme }) => theme.spacing['2']} 0;
+	width: 100%;
+	overflow-x: auto;
+
+	/* Masquer la scrollbar sur mobile mais garder la fonctionnalité */
+	scrollbar-width: none;
+	&::-webkit-scrollbar {
+		display: none;
+	}
 `
 
 const TooltipContainer = styled.div`
@@ -380,7 +396,7 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 			<SectionTitle>Dépenses et ventes mensuelles</SectionTitle>
 			<ChartWrapper>
 				<ResponsiveContainer width="100%" height={260}>
-					<BarChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+					<BarChart data={data} margin={{ top: 8, right: 12, bottom: 48, left: 0 }}>
 						<defs>
 							<linearGradient id="barGradientReal" x1="0" y1="0" x2="0" y2="1">
 								<stop offset="0%" stopColor="#10b981" stopOpacity={0.9} />
@@ -407,6 +423,10 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 							axisLine={false}
 							tickLine={false}
 							dy={8}
+							interval={0}
+							angle={-45}
+							textAnchor="end"
+							height={60}
 						/>
 						<YAxis
 							tick={{ fontSize: 13, fill: '#78716c', fontWeight: 500 }}
@@ -440,6 +460,20 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 					</BarChart>
 				</ResponsiveContainer>
 			</ChartWrapper>
+			<ChartLegend>
+				<LegendItem>
+					<LegendLine $color="#10b981" />
+					<LegendLabel>Dépenses réelles</LegendLabel>
+				</LegendItem>
+				<LegendItem>
+					<LegendLine $color="#fbbf24" />
+					<LegendLabel>Budget planifié</LegendLabel>
+				</LegendItem>
+				<LegendItem>
+					<LegendLine $color="#3b82f6" />
+					<LegendLabel>Ventes planifiées</LegendLabel>
+				</LegendItem>
+			</ChartLegend>
 		</Card>
 	)
 }
@@ -450,10 +484,15 @@ const ChartLegend = styled.div`
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	gap: ${({ theme }) => theme.spacing['6']};
+	gap: ${({ theme }) => theme.spacing['4']};
 	margin-top: ${({ theme }) => theme.spacing['4']};
 	padding-top: ${({ theme }) => theme.spacing['3']};
 	border-top: 1px solid ${({ theme }) => theme.colors.border};
+	flex-wrap: wrap;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		gap: ${({ theme }) => theme.spacing['6']};
+	}
 `
 
 const LegendItem = styled.div`
@@ -645,7 +684,7 @@ function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueC
 			<SectionTitle>Évolution de la valeur de la collection</SectionTitle>
 			<ChartWrapper>
 				<ResponsiveContainer width="100%" height={260}>
-					<AreaChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+					<AreaChart data={data} margin={{ top: 8, right: 12, bottom: 48, left: 0 }}>
 						<defs>
 							<linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
 								<stop offset="0%" stopColor="#14b8a6" stopOpacity={0.4} />
@@ -668,6 +707,10 @@ function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueC
 							axisLine={false}
 							tickLine={false}
 							dy={8}
+							interval={0}
+							angle={-45}
+							textAnchor="end"
+							height={60}
 						/>
 						<YAxis
 							tick={{ fontSize: 13, fill: '#78716c', fontWeight: 500 }}
@@ -881,7 +924,12 @@ const LayoutGrid = styled.div`
 	flex-wrap: wrap;
 	align-content: flex-start;
 	align-items: flex-start;
+	justify-content: center;
 	gap: ${({ theme }) => theme.spacing['10']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		justify-content: flex-start;
+	}
 `
 
 const CalendarCell = styled.div`

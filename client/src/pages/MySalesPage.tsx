@@ -47,9 +47,111 @@ const SearchContainer = styled.div`
 
 const CardGrid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 	gap: ${({ theme }) => theme.spacing['3']};
 	margin-top: ${({ theme }) => theme.spacing['4']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	}
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	}
+`
+
+const SaleCard = styled.div`
+	background: ${({ theme }) => theme.colors.surface};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+	border-radius: ${({ theme }) => theme.radii.lg};
+	overflow: hidden;
+	transition: all 0.2s ease;
+	display: flex;
+	flex-direction: column;
+
+	&:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+		border-color: ${({ theme }) => theme.colors.amber};
+	}
+`
+
+const SaleCardImage = styled.img`
+	width: 100%;
+	aspect-ratio: 5 / 7;
+	object-fit: cover;
+	background: ${({ theme }) => theme.colors.surfaceElevated};
+`
+
+const SaleCardContent = styled.div`
+	padding: ${({ theme }) => theme.spacing['3']};
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['2']};
+`
+
+const SaleCardTitle = styled.h4`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.textPrimary};
+	margin: 0;
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+`
+
+const SaleCardSet = styled.span`
+	font-size: ${({ theme }) => theme.font.size.xs};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	display: block;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+`
+
+const SaleCardInfo = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['1']};
+	padding-top: ${({ theme }) => theme.spacing['2']};
+	border-top: 1px solid ${({ theme }) => theme.colors.border};
+	margin-top: auto;
+`
+
+const SaleCardInfoRow = styled.div`
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: ${({ theme }) => theme.font.size.xs};
+`
+
+const SaleCardLabel = styled.span`
+	color: ${({ theme }) => theme.colors.textSecondary};
+`
+
+const SaleCardValue = styled.span`
+	color: ${({ theme }) => theme.colors.textPrimary};
+	font-weight: ${({ theme }) => theme.font.weight.medium};
+`
+
+const SaleCardPrice = styled.div`
+	font-size: ${({ theme }) => theme.font.size.lg};
+	font-weight: ${({ theme }) => theme.font.weight.bold};
+	color: ${({ theme }) => theme.colors.amber};
+	text-align: center;
+	padding: ${({ theme }) => theme.spacing['2']} 0;
+`
+
+const SaleCardActions = styled.div`
+	display: flex;
+	gap: ${({ theme }) => theme.spacing['2']};
+	padding: ${({ theme }) => theme.spacing['2']} ${({ theme }) => theme.spacing['3']};
+	border-top: 1px solid ${({ theme }) => theme.colors.border};
+	background: ${({ theme }) => theme.colors.surfaceElevated};
 `
 
 const CardSelectionOverlay = styled.div`
@@ -60,83 +162,6 @@ const CardSelectionOverlay = styled.div`
 	&:hover {
 		transform: scale(1.05);
 	}
-`
-
-const SalesTable = styled.div`
-	overflow-x: auto;
-	margin-top: ${({ theme }) => theme.spacing['4']};
-`
-
-const Table = styled.table`
-	width: 100%;
-	border-collapse: collapse;
-	background: ${({ theme }) => theme.colors.surface};
-	border-radius: ${({ theme }) => theme.radii.lg};
-	overflow: hidden;
-`
-
-const Thead = styled.thead`
-	background: ${({ theme }) => theme.colors.surfaceElevated};
-`
-
-const Th = styled.th`
-	padding: ${({ theme }) => theme.spacing['3']};
-	text-align: left;
-	font-size: ${({ theme }) => theme.font.size.sm};
-	font-weight: ${({ theme }) => theme.font.weight.semibold};
-	color: ${({ theme }) => theme.colors.textSecondary};
-	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-`
-
-const Tbody = styled.tbody``
-
-const Tr = styled.tr`
-	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
-	transition: background 0.2s ease;
-
-	&:hover {
-		background: ${({ theme }) => theme.colors.surfaceElevated};
-	}
-
-	&:last-child {
-		border-bottom: none;
-	}
-`
-
-const Td = styled.td`
-	padding: ${({ theme }) => theme.spacing['3']};
-	font-size: ${({ theme }) => theme.font.size.sm};
-	color: ${({ theme }) => theme.colors.textPrimary};
-`
-
-const CardInfoCell = styled.div`
-	display: flex;
-	align-items: center;
-	gap: ${({ theme }) => theme.spacing['3']};
-`
-
-const CardMiniature = styled.img`
-	width: 40px;
-	height: 56px;
-	object-fit: cover;
-	border-radius: ${({ theme }) => theme.radii.sm};
-	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-`
-
-const CardInfo = styled.div`
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-`
-
-const CardName = styled.span`
-	font-weight: ${({ theme }) => theme.font.weight.medium};
-	color: ${({ theme }) => theme.colors.textPrimary};
-`
-
-const CardSet = styled.span`
-	font-size: ${({ theme }) => theme.font.size.xs};
-	color: ${({ theme }) => theme.colors.textSecondary};
 `
 
 const ModalOverlay = styled.div`
@@ -153,25 +178,43 @@ const ModalOverlay = styled.div`
 const Modal = styled.div`
 	background: ${({ theme }) => theme.colors.surface};
 	border-radius: ${({ theme }) => theme.radii.xl};
-	padding: ${({ theme }) => theme.spacing['6']};
+	padding: ${({ theme }) => theme.spacing['4']};
 	max-width: 500px;
 	width: 100%;
 	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+	max-height: 90vh;
+	overflow-y: auto;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		padding: ${({ theme }) => theme.spacing['6']};
+	}
 `
 
 const ModalHeader = styled.div`
 	display: flex;
 	align-items: center;
-	gap: ${({ theme }) => theme.spacing['4']};
-	margin-bottom: ${({ theme }) => theme.spacing['6']};
+	gap: ${({ theme }) => theme.spacing['3']};
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	flex-wrap: wrap;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+		gap: ${({ theme }) => theme.spacing['4']};
+		margin-bottom: ${({ theme }) => theme.spacing['6']};
+		flex-wrap: nowrap;
+	}
 `
 
 const ModalCardImage = styled.img`
-	width: 80px;
-	height: 112px;
+	width: 60px;
+	height: 84px;
 	object-fit: cover;
 	border-radius: ${({ theme }) => theme.radii.md};
 	box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+		width: 80px;
+		height: 112px;
+	}
 `
 
 const ModalCardInfo = styled.div`
@@ -628,56 +671,58 @@ export default function MySalesPage() {
 					{completedSales.length === 0 ? (
 						<EmptyState message="Aucune vente réalisée." />
 					) : (
-						<SalesTable>
-							<Table>
-								<Thead>
-									<tr>
-										<Th>Carte</Th>
-										<Th>Condition</Th>
-										<Th>Prix de vente</Th>
-										<Th>Date</Th>
-										<Th>Notes</Th>
-										<Th>Actions</Th>
-									</tr>
-								</Thead>
-								<Tbody>
-									{completedSales.map(sale => {
-										const soldCard = soldCardsDetails.get(sale.cardId)
-										return (
-											<Tr key={sale.id}>
-												<Td>
-													<CardInfoCell>
-														{soldCard && (
-															<CardMiniature 
-																src={soldCard.images.small} 
-																alt={soldCard.name}
-															/>
-														)}
-														<CardInfo>
-															<CardName>{sale.cardName}</CardName>
-															<CardSet>{sale.setName}</CardSet>
-														</CardInfo>
-													</CardInfoCell>
-												</Td>
-												<Td>{sale.condition}</Td>
-												<Td>{sale.salePrice.toFixed(2)} €</Td>
-												<Td>{new Date(sale.saleDate).toLocaleDateString('fr-FR')}</Td>
-												<Td>{sale.notes || '-'}</Td>
-												<Td>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => handleEditSale(sale)}
-													>
-														Modifier
-													</Button>
-												</Td>
-											</Tr>
-										)
-									})}
-								</Tbody>
-							</Table>
-						</SalesTable>
+						<CardGrid>
+							{completedSales.map(sale => {
+								const soldCard = soldCardsDetails.get(sale.cardId)
+								return (
+									<SaleCard key={sale.id}>
+										{soldCard && (
+											<SaleCardImage 
+												src={soldCard.images.small} 
+												alt={soldCard.name}
+											/>
+										)}
+										<SaleCardContent>
+											<SaleCardTitle>{sale.cardName}</SaleCardTitle>
+											<SaleCardSet>{sale.setName}</SaleCardSet>
+											<SaleCardPrice>{sale.salePrice.toFixed(2)} €</SaleCardPrice>
+											<SaleCardInfo>
+												<SaleCardInfoRow>
+													<SaleCardLabel>Condition</SaleCardLabel>
+													<SaleCardValue>{sale.condition}</SaleCardValue>
+												</SaleCardInfoRow>
+												<SaleCardInfoRow>
+													<SaleCardLabel>Date</SaleCardLabel>
+													<SaleCardValue>{new Date(sale.saleDate).toLocaleDateString('fr-FR')}</SaleCardValue>
+												</SaleCardInfoRow>
+												{sale.notes && (
+													<SaleCardInfoRow>
+														<SaleCardLabel>Notes</SaleCardLabel>
+														<SaleCardValue style={{ 
+															overflow: 'hidden', 
+															textOverflow: 'ellipsis',
+															whiteSpace: 'nowrap'
+														}}>
+															{sale.notes}
+														</SaleCardValue>
+													</SaleCardInfoRow>
+												)}
+											</SaleCardInfo>
+										</SaleCardContent>
+										<SaleCardActions>
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => handleEditSale(sale)}
+												style={{ flex: 1 }}
+											>
+												Modifier
+											</Button>
+										</SaleCardActions>
+									</SaleCard>
+								)
+							})}
+						</CardGrid>
 					)}
 				</SectionCard>
 
@@ -688,113 +733,111 @@ export default function MySalesPage() {
 					{plannedSales.length === 0 ? (
 						<EmptyState message="Aucune vente planifiée. Sélectionnez une carte ci-dessous pour commencer." />
 					) : (
-						<SalesTable>
-							<Table>
-								<Thead>
-									<tr>
-										<Th>Carte</Th>
-										<Th>Condition</Th>
-										<Th>Prix de vente</Th>
-										<Th>Date prévue</Th>
-										<Th>Notes</Th>
-										<Th>Actions</Th>
-									</tr>
-								</Thead>
-								<Tbody>
-									{plannedSales.map(sale => {
-										const soldCard = soldCardsDetails.get(sale.cardId)
-										return (
-											<Tr key={sale.id}>
-												<Td>
-													<CardInfoCell>
-														{soldCard && (
-															<CardMiniature 
-																src={soldCard.images.small} 
-																alt={soldCard.name}
-															/>
-														)}
-														<CardInfo>
-															<CardName>{sale.cardName}</CardName>
-															<CardSet>{sale.setName}</CardSet>
-														</CardInfo>
-													</CardInfoCell>
-												</Td>
-												<Td>{sale.condition}</Td>
-												<Td>{sale.salePrice.toFixed(2)} €</Td>
-												<Td>{new Date(sale.saleDate).toLocaleDateString('fr-FR')}</Td>
-												<Td>{sale.notes || '-'}</Td>
-												<Td>
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => handleEditSale(sale)}
-														style={{ marginRight: '0.5rem' }}
-													>
-														Modifier
-													</Button>
-													<Button
-														variant="primary"
-														size="sm"
-														onClick={() => handleMarkAsCompleted(sale.id)}
-													>
-														✓ Réalisée
-													</Button>
-												</Td>
-											</Tr>
-										)
-									})}
-								</Tbody>
-							</Table>
-						</SalesTable>
-					)}
-				</SectionCard>
-
-				{/* Sélection des cartes */}
-				<SectionCard>
-					<SectionTitle>Ajouter une vente</SectionTitle>
-					<p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-						Sélectionnez une carte de votre collection pour l'ajouter aux ventes planifiées
-					</p>
-					
-					<SearchContainer>
-						<Input
-							placeholder="Rechercher une carte…"
-							value={searchQuery}
-							onChange={(e) => setSearchQuery(e.target.value)}
-							inputSize="md"
-						/>
-					</SearchContainer>
-
-					<Select
-						options={setOptions}
-						value={setFilter}
-						onChange={setSetFilter}
-						label="Collection"
-						id="set-filter-cards"
-					/>
-
-					<FilterBar
-						options={rarityOptions}
-						value={rarityFilter}
-						onChange={setRarityFilter}
-						label="Filtrer par rareté"
-					/>
-
-					{filteredCards.length === 0 ? (
-						<EmptyState message="Aucune carte trouvée. Ajoutez des cartes à votre collection d'abord." />
-					) : (
 						<CardGrid>
-							{filteredCards.map(card => (
-								<CardSelectionOverlay
-									key={card.id}
-									onClick={() => handleCardSelect(card)}
-								>
-									<CardThumbnail card={card} />
-								</CardSelectionOverlay>
-							))}
+							{plannedSales.map(sale => {
+								const soldCard = soldCardsDetails.get(sale.cardId)
+								return (
+									<SaleCard key={sale.id}>
+										{soldCard && (
+											<SaleCardImage 
+												src={soldCard.images.small} 
+												alt={soldCard.name}
+											/>
+										)}
+										<SaleCardContent>
+											<SaleCardTitle>{sale.cardName}</SaleCardTitle>
+											<SaleCardSet>{sale.setName}</SaleCardSet>
+											<SaleCardPrice>{sale.salePrice.toFixed(2)} €</SaleCardPrice>
+											<SaleCardInfo>
+												<SaleCardInfoRow>
+													<SaleCardLabel>Condition</SaleCardLabel>
+													<SaleCardValue>{sale.condition}</SaleCardValue>
+												</SaleCardInfoRow>
+												<SaleCardInfoRow>
+													<SaleCardLabel>Date prévue</SaleCardLabel>
+													<SaleCardValue>{new Date(sale.saleDate).toLocaleDateString('fr-FR')}</SaleCardValue>
+												</SaleCardInfoRow>
+												{sale.notes && (
+													<SaleCardInfoRow>
+														<SaleCardLabel>Notes</SaleCardLabel>
+														<SaleCardValue style={{ 
+															overflow: 'hidden', 
+															textOverflow: 'ellipsis',
+															whiteSpace: 'nowrap'
+														}}>
+															{sale.notes}
+														</SaleCardValue>
+													</SaleCardInfoRow>
+												)}
+											</SaleCardInfo>
+										</SaleCardContent>
+										<SaleCardActions>
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => handleEditSale(sale)}
+												style={{ flex: 1 }}
+											>
+												Modifier
+											</Button>
+											<Button
+												variant="primary"
+												size="sm"
+												onClick={() => handleMarkAsCompleted(sale.id)}
+												style={{ flex: 1 }}
+											>
+												✓ Réalisée
+											</Button>
+										</SaleCardActions>
+									</SaleCard>
+								)
+							})}
 						</CardGrid>
 					)}
 				</SectionCard>
+
+				{/* Sélection des cartes pour ajouter une vente */}
+				<SectionTitle style={{ marginTop: '3rem' }}>Ajouter une vente</SectionTitle>
+				
+				<SearchContainer>
+					<Input
+						type="text"
+						placeholder="Rechercher une carte (ex: Pikachu, 025, feu, brillant)..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						inputSize="md"
+					/>
+				</SearchContainer>
+
+				<Select
+					options={setOptions}
+					value={setFilter}
+					onChange={setSetFilter}
+					label="Collection"
+					id="set-filter-cards"
+				/>
+
+				<FilterBar
+					options={rarityOptions}
+					value={rarityFilter}
+					onChange={setRarityFilter}
+					label="Filtrer par rareté"
+				/>
+
+				{filteredCards.length === 0 ? (
+					<EmptyState message="Aucune carte trouvée dans votre collection." />
+				) : (
+					<CardGrid>
+						{filteredCards.map(card => (
+							<CardSelectionOverlay
+								key={card.id}
+								onClick={() => handleCardSelect(card)}
+							>
+								<CardThumbnail card={card} />
+							</CardSelectionOverlay>
+						))}
+					</CardGrid>
+				)}
 			</section>
 
 			{/* Modal d'ajout/modification */}

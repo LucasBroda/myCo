@@ -24,19 +24,33 @@ const SearchContainer = styled.div`
 
 const CardGrid = styled.div`
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 	gap: ${({ theme }) => theme.spacing['3']};
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.sm}) {
+		grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+	}
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+	}
 `
 
 const StatsContainer = styled.div`
 	display: flex;
-	gap: ${({ theme }) => theme.spacing['4']};
-	margin-bottom: ${({ theme }) => theme.spacing['6']};
-	padding: ${({ theme }) => theme.spacing['4']};
+	gap: ${({ theme }) => theme.spacing['3']};
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	padding: ${({ theme }) => theme.spacing['3']};
 	background-color: ${({ theme }) => theme.colors.surfaceElevated};
 	border: 1px solid ${({ theme }) => theme.colors.border};
 	border-radius: ${({ theme }) => theme.radii.lg};
 	flex-wrap: wrap;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		gap: ${({ theme }) => theme.spacing['4']};
+		margin-bottom: ${({ theme }) => theme.spacing['6']};
+		padding: ${({ theme }) => theme.spacing['4']};
+	}
 `
 
 const StatItem = styled.div`
@@ -57,12 +71,17 @@ const StatValue = styled.span`
 `
 
 const ChartContainer = styled.div`
-	margin-bottom: ${({ theme }) => theme.spacing['6']};
-	padding: ${({ theme }) => theme.spacing['6']};
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	padding: ${({ theme }) => theme.spacing['4']};
 	background: linear-gradient(135deg, ${({ theme }) => theme.colors.surface} 0%, ${({ theme }) => theme.colors.surfaceElevated} 100%);
 	border: 1px solid ${({ theme }) => theme.colors.border};
 	border-radius: ${({ theme }) => theme.radii.xl};
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		margin-bottom: ${({ theme }) => theme.spacing['6']};
+		padding: ${({ theme }) => theme.spacing['6']};
+	}
 `
 
 const ChartHeader = styled.div`
@@ -103,11 +122,19 @@ const ChartContent = styled.div<{ $isExpanded: boolean }>`
 `
 
 const ChartWrapper = styled.div`
-	height: 400px;
+	height: 300px;
 	width: 100%;
 	display: flex;
 	align-items: center;
 	justify-content: center;
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.md}) {
+		height: 350px;
+	}
+
+	@media (min-width: ${({ theme }) => theme.breakpoints.lg}) {
+		height: 400px;
+	}
 `
 
 const LegendContainer = styled.div`
