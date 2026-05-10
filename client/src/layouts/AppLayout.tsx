@@ -289,12 +289,12 @@ const Main = styled.main`
 `
 
 const navItems = [
-	{ to: '/my-collections', label: 'Mes collections' },
-	{ to: '/all-collections', label: 'Toutes les collections' },
-	{ to: '/my-cards', label: 'Mes cartes' },
-	{ to: '/my-sales', label: 'Mes ventes' },
-	{ to: '/profile', label: 'Profil' },
-	{ to: '/market', label: 'Marché' },
+	{ to: '/mes-collections', label: 'Mes collections' },
+	{ to: '/toutes-collections', label: 'Toutes les collections' },
+	{ to: '/mes-cartes', label: 'Mes cartes' },
+	{ to: '/mes-ventes', label: 'Mes ventes' },
+	{ to: '/profil', label: 'Profil' },
+	{ to: '/marche', label: 'Marché' },
 ]
 
 export default function AppLayout() {

@@ -3,7 +3,7 @@ import { http } from './http'
 
 export const cardsService = {
 	async getSets(): Promise<PokemonSet[]> {
-		const res = await http.get<{ data: PokemonSet[] }>('/cards/sets')
+		const res = await http.get<{ data: PokemonSet[] }>('/cartes/collections')
 		return res.data
 	},
 
@@ -11,12 +11,12 @@ export const cardsService = {
 		setId: string
 	): Promise<{ set: PokemonSet; cards: PokemonCard[] }> {
 		return http.get<{ set: PokemonSet; cards: PokemonCard[] }>(
-			`/cards/sets/${setId}`
+			`/cartes/collections/${setId}`
 		)
 	},
 
 	async getCard(cardId: string): Promise<PokemonCard> {
-		const res = await http.get<{ data: PokemonCard }>(`/cards/${cardId}`)
+		const res = await http.get<{ data: PokemonCard }>(`/cartes/${cardId}`)
 		return res.data
 	},
 
@@ -24,7 +24,7 @@ export const cardsService = {
 		const params = new URLSearchParams({ q: query })
 		if (setId) params.set('set', setId)
 		const res = await http.get<{ data: PokemonCard[] }>(
-			`/cards/search?${params}`
+			`/cartes/recherche?${params}`
 		)
 		return res.data
 	},

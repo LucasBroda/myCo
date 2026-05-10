@@ -12,18 +12,18 @@ interface LoginResponse {
 
 export const authService = {
 	async login(email: string, password: string): Promise<LoginResponse> {
-		return http.post<LoginResponse>('/auth/login', { email, password })
+		return http.post<LoginResponse>('/authentification/connexion', { email, password })
 	},
 
 	async register(email: string, password: string): Promise<LoginResponse> {
-		return http.post<LoginResponse>('/auth/register', { email, password })
+		return http.post<LoginResponse>('/authentification/inscription', { email, password })
 	},
 
 	async getMe(): Promise<{ user: User }> {
-		return http.get<{ user: User }>('/auth/me')
+		return http.get<{ user: User }>('/authentification/moi')
 	},
 
 	async logout(): Promise<void> {
-		await http.post<void>('/auth/logout', {})
+		await http.post<void>('/authentification/deconnexion', {})
 	},
 }

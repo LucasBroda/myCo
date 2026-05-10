@@ -10,8 +10,8 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get("/search", searchHandler);
-router.get("/deals", getDealsHandler);
-router.get("/compare/:cardId", compareHandler);
+router.get("/recherche", searchHandler);
+router.get("/offres", getDealsHandler);
+router.get("/comparer/:cardId", compareHandler);
 
 export default router;

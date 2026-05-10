@@ -11,9 +11,9 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get("/sets", getSetsHandler);
-router.get("/sets/:setId", getSetHandler);
-router.get("/search", searchHandler);
+router.get("/collections", getSetsHandler);
+router.get("/collections/:setId", getSetHandler);
+router.get("/recherche", searchHandler);
 router.get("/:cardId", getCardHandler);
 
 export default router;

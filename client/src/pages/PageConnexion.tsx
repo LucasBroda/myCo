@@ -114,7 +114,7 @@ export default function LoginPage() {
 		try {
 			await login(email, password)
 			success('Connexion réussie')
-			navigate('/collections')
+			navigate('/mes-collections')
 		} catch (err) {
 			setError(err instanceof Error ? err.message : 'Erreur de connexion')
 		} finally {
@@ -164,7 +164,7 @@ export default function LoginPage() {
 			</SubmitButton>
 
 			<Footer>
-				Pas encore de compte ? <Link to="/register">Créer un compte</Link>
+				Pas encore de compte ? <Link to="/inscription">Créer un compte</Link>
 			</Footer>
 		</Form>
 	)

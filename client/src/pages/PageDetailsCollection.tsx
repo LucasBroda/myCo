@@ -617,7 +617,7 @@ export default function SetDetailPage() {
 
 	return (
 		<section aria-labelledby="set-detail-title">
-			<BackLink type="button" onClick={() => navigate('/collections')}>
+			<BackLink type="button" onClick={() => navigate('/mes-collections')}>
 				← Collections
 			</BackLink>
 

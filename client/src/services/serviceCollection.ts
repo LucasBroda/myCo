@@ -13,7 +13,7 @@ export const collectionService = {
 
 	async getCollectionWithDetails(): Promise<AcquiredCard[]> {
 		const res = await http.get<{ data: AcquiredCard[] }>(
-			'/collection/with-details'
+			'/collection/avec-details'
 		)
 		return res.data
 	},
@@ -34,20 +34,20 @@ export const collectionService = {
 	},
 
 	async getStats(): Promise<CollectionStats> {
-		const res = await http.get<{ data: CollectionStats }>('/collection/stats')
+		const res = await http.get<{ data: CollectionStats }>('/collection/statistiques')
 		return res.data
 	},
 
 	async getFollowedSets(): Promise<string[]> {
-		const res = await http.get<{ data: string[] }>('/collection/followed-sets')
+		const res = await http.get<{ data: string[] }>('/collection/collections-suivies')
 		return res.data
 	},
 
 	async followSet(setId: string): Promise<void> {
-		await http.post('/collection/followed-sets', { setId })
+		await http.post('/collection/collections-suivies', { setId })
 	},
 
 	async unfollowSet(setId: string): Promise<void> {
-		await http.delete(`/collection/followed-sets/${setId}`)
+		await http.delete(`/collection/collections-suivies/${setId}`)
 	},
 }

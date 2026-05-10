@@ -14,19 +14,19 @@ export const marketService = {
 		const params = new URLSearchParams({ q: query })
 		if (setId) params.set('set', setId)
 		const res = await http.get<{ data: MarketCard[] }>(
-			`/market/search?${params}`
+			`/marche/recherche?${params}`
 		)
 		return res.data
 	},
 
 	async getDeals(): Promise<DealCard[]> {
-		const res = await http.get<{ data: DealCard[] }>('/market/deals')
+		const res = await http.get<{ data: DealCard[] }>('/marche/offres')
 		return res.data
 	},
 
 	async compare(cardId: string): Promise<MarketPrice> {
 		const res = await http.get<{ data: MarketPrice }>(
-			`/market/compare/${cardId}`
+			`/marche/comparer/${cardId}`
 		)
 		return res.data
 	},

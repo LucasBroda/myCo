@@ -24,16 +24,16 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/api/health", (_req, res) => {
+app.get("/api/sante", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/cards", cardsRoutes);
+app.use("/api/authentification", authRoutes);
+app.use("/api/cartes", cardsRoutes);
 app.use("/api/collection", collectionRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/market", marketRoutes);
-app.use("/api/sales", salesRoutes);
+app.use("/api/profil", profileRoutes);
+app.use("/api/marche", marketRoutes);
+app.use("/api/ventes", salesRoutes);
 
 app.use(errorHandler);
 

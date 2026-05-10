@@ -7,22 +7,22 @@ const router = Router();
 // All routes require authentication
 router.use(authenticate);
 
-// GET /api/sales/stats - Get sales statistics
-router.get("/stats", salesController.getSalesStats);
+// GET /api/ventes/statistiques - Get sales statistics
+router.get("/statistiques", salesController.getSalesStats);
 
-// GET /api/sales - Get all planned sales for the user
+// GET /api/ventes - Get all planned sales for the user
 router.get("/", salesController.getPlannedSales);
 
-// POST /api/sales - Add a new planned sale
+// POST /api/ventes - Add a new planned sale
 router.post("/", salesController.addPlannedSale);
 
-// PATCH /api/sales/:id - Update a planned sale
+// PATCH /api/ventes/:id - Update a planned sale
 router.patch("/:id", salesController.updatePlannedSale);
 
-// PATCH /api/sales/:id/complete - Mark a sale as completed
-router.patch("/:id/complete", salesController.markSaleAsCompleted);
+// PATCH /api/ventes/:id/completer - Mark a sale as completed
+router.patch("/:id/completer", salesController.markSaleAsCompleted);
 
-// DELETE /api/sales/:id - Delete a planned sale
+// DELETE /api/ventes/:id - Delete a planned sale
 router.delete("/:id", salesController.deletePlannedSale);
 
 export default router;

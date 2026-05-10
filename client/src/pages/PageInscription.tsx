@@ -115,7 +115,7 @@ export default function RegisterPage() {
 			const { user, accessToken } = await authService.register(email, password)
 			setAuth(user, accessToken)
 			success('Compte créé avec succès')
-			navigate('/collections')
+			navigate('/mes-collections')
 		} catch (err) {
 			setError(
 				err instanceof Error ? err.message : "Erreur lors de l'inscription"
@@ -165,7 +165,7 @@ export default function RegisterPage() {
 			</SubmitButton>
 
 			<Footer>
-				Déjà un compte ? <Link to="/login">Se connecter</Link>
+				Déjà un compte ? <Link to="/connexion">Se connecter</Link>
 			</Footer>
 		</Form>
 	)

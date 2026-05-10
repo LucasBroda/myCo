@@ -10,8 +10,8 @@ const router = Router();
 
 router.use(authenticate);
 
-router.get("/planned", getPlannedHandler);
-router.post("/planned", addPlannedHandler);
-router.delete("/planned/:id", deletePlannedHandler);
+router.get("/planifies", getPlannedHandler);
+router.post("/planifies", addPlannedHandler);
+router.delete("/planifies/:id", deletePlannedHandler);
 
 export default router;

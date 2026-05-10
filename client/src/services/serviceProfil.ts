@@ -3,7 +3,7 @@ import { http } from './http'
 
 export const profileService = {
 	async getPlanned(): Promise<PlannedPurchase[]> {
-		const res = await http.get<{ data: PlannedPurchase[] }>('/profile/planned')
+		const res = await http.get<{ data: PlannedPurchase[] }>('/profil/planifies')
 		return res.data
 	},
 
@@ -18,13 +18,13 @@ export const profileService = {
 		notes: string | null
 	}): Promise<PlannedPurchase> {
 		const res = await http.post<{ data: PlannedPurchase }>(
-			'/profile/planned',
+			'/profil/planifies',
 			payload
 		)
 		return res.data
 	},
 
 	async deletePlanned(id: string): Promise<void> {
-		await http.delete(`/profile/planned/${id}`)
+		await http.delete(`/profil/planifies/${id}`)
 	},
 }
