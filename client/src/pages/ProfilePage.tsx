@@ -632,15 +632,15 @@ const CardPreviewName = styled.h4`
 	color: ${({ theme }) => theme.colors.textPrimary};
 	text-align: center;
 	width: 100%;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	white-space: nowrap;
+	word-wrap: break-word;
+	overflow-wrap: break-word;
+	hyphens: auto;
 `
 
 const CardPreviewDetail = styled.div`
 	display: flex;
 	justify-content: space-between;
-	align-items: center;
+	align-items: flex-start;
 	width: 100%;
 	gap: ${({ theme }) => theme.spacing['2']};
 	font-size: ${({ theme }) => theme.font.size.sm};
@@ -648,9 +648,12 @@ const CardPreviewDetail = styled.div`
 	
 	& > span:last-child {
 		text-align: right;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+	}
+	
+	& > span:first-child {
+		flex-shrink: 0;
 	}
 `
 
