@@ -33,6 +33,16 @@ export async function getCollection(userId: string): Promise<AcquiredCard[]> {
 export async function getCollectionWithDetails(
   userId: string,
 ): Promise<AcquiredCard[]> {
+  // Process expired planned purchases before fetching collection
+  // This ensures any planned purchases with dates that have arrived are added to collection
+  try {
+    const { processExpiredPlannedPurchases } = await import("../profile/profile.service");
+    await processExpiredPlannedPurchases(userId);
+  } catch (error) {
+    console.error("Failed to process expired planned purchases:", error);
+    // Continue even if this fails
+  }
+  
   const acquiredCards = await getCollection(userId);
 
   // Fetch card details in parallel (with reasonable batching to avoid overwhelming the API)
@@ -157,6 +167,15 @@ export async function getFollowedSets(userId: string): Promise<string[]> {
 }
 
 export async function getStats(userId: string): Promise<CollectionStats> {
+  // Process expired planned purchases to ensure stats are up-to-date
+  try {
+    const { processExpiredPlannedPurchases } = await import("../profile/profile.service");
+    await processExpiredPlannedPurchases(userId);
+  } catch (error) {
+    console.error("Failed to process expired planned purchases:", error);
+    // Continue even if this fails
+  }
+  
   const totalsResult = await db.query(
     `SELECT
        COUNT(*)::int              AS total_cards,
