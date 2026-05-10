@@ -6,6 +6,7 @@ import { Input } from '@components/ui/Input'
 import { Spinner } from '@components/ui/Spinner'
 import { PageHeader } from '@components/layout/PageHeader'
 import { SectionTitle } from '@components/layout/SectionTitle'
+import { SearchIcon } from '@components/ui/Icons'
 import { PriceTag } from '@components/pokemon/PriceTag'
 import { marketService } from '@services/marketService'
 import { useDebounce } from '@hooks/useDebounce'
@@ -114,9 +115,16 @@ const WelcomeCard = styled(Card)`
 	padding: ${({ theme }) => theme.spacing['8']};
 `
 
-const WelcomeIcon = styled.div`
-	font-size: 64px;
+const WelcomeIconWrapper = styled.div`
+	display: flex;
+	justify-content: center;
 	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	
+	svg {
+		width: 64px;
+		height: 64px;
+		stroke: ${({ theme }) => theme.colors.textMuted};
+	}
 `
 
 const WelcomeTitle = styled.h2`
@@ -135,7 +143,9 @@ const WelcomeText = styled.p`
 function WelcomeMessage() {
 	return (
 		<WelcomeCard>
-			<WelcomeIcon>🔍</WelcomeIcon>
+			<WelcomeIconWrapper>
+				<SearchIcon size={64} />
+			</WelcomeIconWrapper>
 			<WelcomeTitle>Comparez les prix des cartes Pokémon</WelcomeTitle>
 			<WelcomeText>
 				Recherchez une carte pour comparer les prix entre CardMarket et eBay.
@@ -197,7 +207,7 @@ function SearchResults({
 	readonly onSelect: (card: MarketCard) => void
 }) {
 	if (results.length === 0) {
-		return <EmptyState message="Aucun résultat pour cette recherche." icon="🔍" />
+		return <EmptyState message="Aucun résultat pour cette recherche." icon={<SearchIcon size={40} />} />
 	}
 
 	return (

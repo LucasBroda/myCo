@@ -157,9 +157,11 @@ export default function AppLayout() {
 			<Sidebar aria-label="Navigation principale">
 				<BrandContainer>
 					<Brand>myCo</Brand>
-					<ThemeToggle />
 				</BrandContainer>
 				<NavItems>
+					<li>
+						<ThemeToggle />
+					</li>
 					{navItems.map(item => (
 						<li key={item.to}>
 							<StyledLink

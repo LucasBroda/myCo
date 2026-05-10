@@ -12,8 +12,8 @@ import { cardsService } from '@services/cardsService'
 import { salesService } from '@services/salesService'
 import { PriceTrend } from '@components/pokemon/PriceTrend'
 import { usePlannedStore } from '@store/plannedStore'
-import { useToast } from '@hooks/useToast'
 import { useEffect, useState } from 'react'
+import { useToast } from '@hooks/useToast'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
 import {
@@ -715,9 +715,14 @@ function CollectionValueChart({ stats, planned, plannedSales }: CollectionValueC
 					fontSize: '0.75rem', 
 					color: 'var(--text-secondary)', 
 					textAlign: 'center',
-					fontStyle: 'italic'
+					fontStyle: 'italic',
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					gap: '0.5rem'
 				}}>
-					📊 Les mois futurs incluent les achats et ventes planifiés
+					<InlineIcon $size={14}><ChartBarIcon size={14} color="var(--text-secondary)" /></InlineIcon>
+					Les mois futurs incluent les achats et ventes planifiés
 				</div>
 			)}
 		</Card>
@@ -1180,187 +1185,6 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 	)
 }
 
-// ─── PlannedSalesCalendar ─────────────────────────────────────────────────────
-
-interface PlannedSalesCalendarProps {
-	readonly plannedSales: PlannedSale[]
-}
-
-function PlannedSalesCalendar({ plannedSales }: PlannedSalesCalendarProps) {
-	const [showCalendar, setShowCalendar] = useState(false)
-	const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
-	const plannedDates = plannedSales.map(s => new Date(s.saleDate))
-
-	// Charger les détails des cartes au montage
-	useEffect(() => {
-		async function loadCardDetails() {
-			const details: Record<string, PokemonCard> = {}
-			for (const sale of plannedSales) {
-				if (!details[sale.cardId]) {
-					try {
-						const card = await cardsService.getCard(sale.cardId)
-						details[sale.cardId] = card
-					} catch (err) {
-						console.error(`Failed to load card ${sale.cardId}`, err)
-					}
-				}
-			}
-			setCardDetails(details)
-		}
-		if (plannedSales.length > 0) {
-			loadCardDetails()
-		}
-	}, [plannedSales])
-
-	// Trouver les ventes planifiées pour la date sélectionnée
-	const selectedSales = selectedDate
-		? plannedSales.filter(s => {
-				const saleDate = new Date(s.saleDate)
-				return (
-					saleDate.getDate() === selectedDate.getDate() &&
-					saleDate.getMonth() === selectedDate.getMonth() &&
-					saleDate.getFullYear() === selectedDate.getFullYear()
-				)
-		  })
-		: []
-
-	function handleDayClick(date: Date) {
-		// Vérifier si cette date a des ventes planifiées
-		const hasPlannedSales = plannedSales.some(s => {
-			const saleDate = new Date(s.saleDate)
-			return (
-				saleDate.getDate() === date.getDate() &&
-				saleDate.getMonth() === date.getMonth() &&
-				saleDate.getFullYear() === date.getFullYear()
-			)
-		})
-		
-		// Si la date a des ventes planifiées, la sélectionner (ou la désélectionner si déjà sélectionnée)
-		if (hasPlannedSales) {
-			setSelectedDate(prev => {
-				if (prev?.getDate() === date.getDate() &&
-					prev?.getMonth() === date.getMonth() &&
-					prev?.getFullYear() === date.getFullYear()) {
-					return null // Désélectionner si même date
-				}
-				return date // Sélectionner la nouvelle date
-			})
-		}
-	}
-
-	return (
-		<Card>
-			<SectionTitle>Ventes planifiées ({plannedSales.length})</SectionTitle>
-			
-			{plannedSales.length > 0 && (
-				<CalendarToggle
-					type="button"
-					onClick={() => setShowCalendar(!showCalendar)}
-				>
-					{showCalendar ? '📋 Afficher la liste' : '📅 Afficher le calendrier'}
-				</CalendarToggle>
-			)}
-
-			{plannedSales.length === 0 && (
-				<EmptyState message="Aucune vente planifiée." icon="💰" />
-			)}
-
-			{plannedSales.length > 0 && showCalendar && (
-				<>
-					<DayPickerOverride />
-					<LayoutGrid>
-						<CalendarCell>
-							<DayPicker
-								modifiers={{ planned: plannedDates }}
-								modifiersClassNames={{ planned: 'planned-date' }}
-								onDayClick={handleDayClick}
-								footer={
-									<p
-										style={{ margin: 0, fontSize: '13px', color: '#78716c' }}
-										aria-live="polite"
-									>
-										{plannedSales.length} vente{plannedSales.length > 1 ? 's' : ''} planifiée
-										{plannedSales.length > 1 ? 's' : ''}
-									</p>
-								}
-							/>
-						</CalendarCell>
-						{selectedSales.map((sale) => {
-							const card = cardDetails[sale.cardId]
-							if (!card) return null
-
-							return (
-								<CardCell key={sale.id}>
-									<CardPreviewItem>
-										<CardPreviewImage
-											src={card.images.small}
-											alt={card.name}
-											loading="lazy"
-										/>
-										<CardPreviewName>{sale.cardName}</CardPreviewName>
-										<CardPreviewDetail>
-											<span>Collection</span>
-											<span>{sale.setName}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>État</span>
-											<span>{sale.condition}</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>Date prévue</span>
-											<span>
-												{new Date(sale.saleDate).toLocaleDateString('fr-FR', {
-													day: 'numeric',
-													month: 'long',
-													year: 'numeric',
-												})}
-											</span>
-										</CardPreviewDetail>
-										<CardPreviewDetail>
-											<span>Prix de vente</span>
-											<CardPreviewBudget>
-												{formatEuros(sale.salePrice)}
-											</CardPreviewBudget>
-										</CardPreviewDetail>
-										{sale.notes && (
-											<CardPreviewNotes>{sale.notes}</CardPreviewNotes>
-										)}
-									</CardPreviewItem>
-								</CardCell>
-							)
-						})}
-					</LayoutGrid>
-				</>
-			)}
-			{plannedSales.length > 0 && !showCalendar && (
-				<PlannedList>
-					{plannedSales.map(sale => (
-						<PlannedItem key={sale.id}>
-							<PlannedInfo>
-								<PlannedCardName>
-									{sale.cardName}
-								</PlannedCardName>
-								<PlannedMeta>{sale.setName}</PlannedMeta>
-								<PlannedMeta>
-									{new Date(sale.saleDate).toLocaleDateString('fr-FR', {
-										day: 'numeric',
-										month: 'long',
-										year: 'numeric',
-									})}
-								</PlannedMeta>
-								{sale.notes && <PlannedMeta>{sale.notes}</PlannedMeta>}
-							</PlannedInfo>
-							<PlannedActions>
-								<PlannedBudget>{formatEuros(sale.salePrice)}</PlannedBudget>
-							</PlannedActions>
-						</PlannedItem>
-					))}
-				</PlannedList>
-			)}
-		</Card>
-	)
-}
 
 // ─── RecentAcquisitionsList ───────────────────────────────────────────────────
 
@@ -1599,6 +1423,7 @@ export default function ProfilePage() {
 	const [error, setError] = useState<string | null>(null)
 	const { setPlanned: setPlannedStore, removePlanned } = usePlannedStore()
 
+
 	async function loadData() {
 		setIsLoading(true)
 		setError(null)
@@ -1664,9 +1489,9 @@ export default function ProfilePage() {
 					/>
 				</GridItem>
 				<GridItem>
-					<RecentAcquisitionsList cards={acquisitions} />
-				</GridItem>
-			</PageGrid>
-		</section>
+				<RecentAcquisitionsList cards={acquisitions} />
+			</GridItem>
+		</PageGrid>
+	</section>
 	)
 }

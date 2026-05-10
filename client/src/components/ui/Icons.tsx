@@ -106,6 +106,17 @@ export function ActivityIcon({ size, color = 'currentColor', className }: IconPr
 	)
 }
 
+export function SearchIcon({ size, color = 'currentColor', className }: IconProps) {
+	return (
+<IconWrapper $size={size} className={className}>
+			<svg viewBox="0 0 24 24" fill="none" stroke={color} strokeLinecap="round" strokeLinejoin="round">
+				<circle cx="11" cy="11" r="8" />
+				<path d="m21 21-4.35-4.35" />
+			</svg>
+		</IconWrapper>
+	)
+}
+
 export const InlineIcon = styled.span<{ $size?: number }>`
 	display: inline-flex;
 	align-items: center;

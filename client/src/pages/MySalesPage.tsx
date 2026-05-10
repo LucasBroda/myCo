@@ -585,8 +585,6 @@ export default function MySalesPage() {
 	const plannedSales = useMemo(() => sales.filter(s => !s.completed), [sales])
 
 	async function handleMarkAsCompleted(saleId: string) {
-		if (!confirm('Marquer cette vente comme réalisée ?')) return
-		
 		try {
 			await salesService.markSaleAsCompleted(saleId)
 			await loadData()
