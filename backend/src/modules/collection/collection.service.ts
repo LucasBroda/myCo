@@ -4,7 +4,7 @@ import {
   CardCondition,
   CollectionStats,
 } from "../../types/models";
-import * as cardsService from "../cards/cards.service";
+import * as cardsService from "../cartes/cartes.service";
 
 export async function getCollection(userId: string): Promise<AcquiredCard[]> {
   const result = await db.query(
@@ -36,7 +36,7 @@ export async function getCollectionWithDetails(
   // Process expired planned purchases before fetching collection
   // This ensures any planned purchases with dates that have arrived are added to collection
   try {
-    const { processExpiredPlannedPurchases } = await import("../profile/profile.service");
+    const { processExpiredPlannedPurchases } = await import("../profil/profil.service");
     await processExpiredPlannedPurchases(userId);
   } catch (error) {
     console.error("Failed to process expired planned purchases:", error);
@@ -169,7 +169,7 @@ export async function getFollowedSets(userId: string): Promise<string[]> {
 export async function getStats(userId: string): Promise<CollectionStats> {
   // Process expired planned purchases to ensure stats are up-to-date
   try {
-    const { processExpiredPlannedPurchases } = await import("../profile/profile.service");
+    const { processExpiredPlannedPurchases } = await import("../profil/profil.service");
     await processExpiredPlannedPurchases(userId);
   } catch (error) {
     console.error("Failed to process expired planned purchases:", error);

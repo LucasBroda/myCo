@@ -5,12 +5,12 @@ import "express-async-errors";
 import helmet from "helmet";
 
 import { errorHandler } from "./middleware/errorHandler";
-import authRoutes from "./modules/auth/auth.routes";
-import cardsRoutes from "./modules/cards/cards.routes";
+import authRoutes from "./modules/authentification/authentification.routes";
+import cardsRoutes from "./modules/cartes/cartes.routes";
 import collectionRoutes from "./modules/collection/collection.routes";
-import marketRoutes from "./modules/market/market.routes";
-import profileRoutes from "./modules/profile/profile.routes";
-import salesRoutes from "./modules/sales/sales.routes";
+import marketRoutes from "./modules/marche/marche.routes";
+import profileRoutes from "./modules/profil/profil.routes";
+import salesRoutes from "./modules/ventes/ventes.routes";
 
 const app = express();
 
@@ -24,16 +24,16 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/api/health", (_req, res) => {
+app.get("/api/sante", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/cards", cardsRoutes);
+app.use("/api/authentification", authRoutes);
+app.use("/api/cartes", cardsRoutes);
 app.use("/api/collection", collectionRoutes);
-app.use("/api/profile", profileRoutes);
-app.use("/api/market", marketRoutes);
-app.use("/api/sales", salesRoutes);
+app.use("/api/profil", profileRoutes);
+app.use("/api/marche", marketRoutes);
+app.use("/api/ventes", salesRoutes);
 
 app.use(errorHandler);
 

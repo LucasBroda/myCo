@@ -6,22 +6,22 @@ import AppLayout from '@layout/AppLayout'
 import AuthLayout from '@layout/AuthLayout'
 import RootLayout, { ProtectedRoute, PublicOnlyRoute } from '@layout/RootLayout'
 
-import AllCollectionsPage from '@pages/AllCollectionsPage'
-import MyCollectionsPage from '@pages/MyCollectionsPage'
-import MyCardsPage from '@pages/MyCardsPage'
-import MySalesPage from '@pages/MySalesPage'
-import LoginPage from '@pages/LoginPage'
-import MarketPage from '@pages/MarketPage'
-import NotFoundPage from '@pages/NotFoundPage'
-import ProfilePage from '@pages/ProfilePage'
-import RegisterPage from '@pages/RegisterPage'
-import SetDetailPage from '@pages/SetDetailPage'
+import AllCollectionsPage from '@pages/PageToutesCollections'
+import MyCollectionsPage from '@pages/PageMesCollections'
+import MyCardsPage from '@pages/PageMesCartes'
+import MySalesPage from '@pages/PageMesVentes'
+import LoginPage from '@pages/PageConnexion'
+import MarketPage from '@pages/PageMarche'
+import NotFoundPage from '@pages/PageNonTrouvee'
+import ProfilePage from '@pages/PageProfil'
+import RegisterPage from '@pages/PageInscription'
+import SetDetailPage from '@pages/PageDetailsCollection'
 
 const router = createBrowserRouter([
 	{
 		element: <RootLayout />,
 		children: [
-			{ index: true, element: <Navigate to="/my-collections" replace /> },
+			{ index: true, element: <Navigate to="/mes-collections" replace /> },
 
 			{
 				element: <PublicOnlyRoute />,
@@ -29,8 +29,8 @@ const router = createBrowserRouter([
 					{
 						element: <AuthLayout />,
 						children: [
-							{ path: '/login', element: <LoginPage /> },
-							{ path: '/register', element: <RegisterPage /> },
+							{ path: '/connexion', element: <LoginPage /> },
+							{ path: '/inscription', element: <RegisterPage /> },
 						],
 					},
 				],
@@ -42,14 +42,14 @@ const router = createBrowserRouter([
 					{
 						element: <AppLayout />,
 						children: [
-							{ path: '/my-collections', element: <MyCollectionsPage /> },
-							{ path: '/all-collections', element: <AllCollectionsPage /> },
-							{ path: '/my-cards', element: <MyCardsPage /> },
-							{ path: '/my-sales', element: <MySalesPage /> },
-							{ path: '/collections', element: <Navigate to="/my-collections" replace /> },
+							{ path: '/mes-collections', element: <MyCollectionsPage /> },
+							{ path: '/toutes-collections', element: <AllCollectionsPage /> },
+							{ path: '/mes-cartes', element: <MyCardsPage /> },
+							{ path: '/mes-ventes', element: <MySalesPage /> },
+							{ path: '/collections', element: <Navigate to="/mes-collections" replace /> },
 							{ path: '/collections/:setId', element: <SetDetailPage /> },
-							{ path: '/profile', element: <ProfilePage /> },
-							{ path: '/market', element: <MarketPage /> },
+							{ path: '/profil', element: <ProfilePage /> },
+							{ path: '/marche', element: <MarketPage /> },
 						],
 					},
 				],

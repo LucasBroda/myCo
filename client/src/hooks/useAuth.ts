@@ -1,4 +1,4 @@
-import { authService } from '@services/authService'
+import { authService } from '@services/serviceAuthentification'
 import { useAuthStore } from '@store/authStore'
 import { useCallback } from 'react'
 
