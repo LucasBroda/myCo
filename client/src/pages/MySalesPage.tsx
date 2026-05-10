@@ -4,9 +4,10 @@ import { ErrorState } from '@components/ui/ErrorState'
 import { Spinner } from '@components/ui/Spinner'
 import { Input } from '@components/ui/Input'
 import { Button } from '@components/ui/Button'
+import { Select, type SelectOption } from '@components/ui/Select'
+import { FilterBar, type FilterOption } from '@components/layout/FilterBar'
 import { PageHeader } from '@components/layout/PageHeader'
 import { CardThumbnail } from '@components/pokemon/CardThumbnail'
-import { ConditionSelect } from '@components/pokemon/ConditionSelect'
 import { collectionService } from '@services/collectionService'
 import { cardsService } from '@services/cardsService'
 import { salesService } from '@services/salesService'
@@ -268,7 +269,35 @@ function normalizeString(str: string | undefined | null): string {
 		.replaceAll(/[\u0300-\u036f]/g, '')
 		.trim()
 }
-
+// Rarity order from most common to rarest
+const rarityOrder: Record<string, number> = {
+	'Common': 1,
+	'Uncommon': 2,
+	'Rare': 3,
+	'Rare Holo': 4,
+	'Double Rare': 5,
+	'Rare Holo EX': 6,
+	'Rare Holo GX': 7,
+	'Rare Holo V': 8,
+	'Rare Holo VMAX': 9,
+	'Rare Holo VSTAR': 10,
+	'Rare Ultra': 11,
+	'Illustration Rare': 12,
+	'Rare ACE': 13,
+	'Rare BREAK': 14,
+	'Amazing Rare': 15,
+	'Radiant Rare': 16,
+	'Rare Shining': 17,
+	'Rare Shiny': 18,
+	'Rare Shiny GX': 19,
+	'Ultra Rare': 20,
+	'Special Illustration Rare': 21,
+	'Hyper Rare': 22,
+	'Rare Secret': 23,
+	'Rare Rainbow': 24,
+	'LEGEND': 25,
+	'Promo': 26,
+}
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function MySalesPage() {
@@ -276,6 +305,8 @@ export default function MySalesPage() {
 	const [sales, setSales] = useState<PotentialSale[]>([])
 	const [soldCardsDetails, setSoldCardsDetails] = useState<Map<string, PokemonCard>>(new Map())
 	const [searchQuery, setSearchQuery] = useState('')
+	const [rarityFilter, setRarityFilter] = useState<string>('all')
+	const [setFilter, setSetFilter] = useState<string>('all')
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 	const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null)
@@ -365,15 +396,70 @@ export default function MySalesPage() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [])
 
-	const filteredCards = useMemo(() => {
-		if (!searchQuery) return cards
-		const normalizedQuery = normalizeString(searchQuery)
-		return cards.filter(card => {
-			const normalizedName = normalizeString(card.name)
-			const normalizedSet = normalizeString(card.set.name)
-			return normalizedName.includes(normalizedQuery) || normalizedSet.includes(normalizedQuery)
+	// Extract unique rarities from cards and sort by rarity order
+	const availableRarities = useMemo(() => {
+		return Array.from(new Set(cards.map(c => c.rarity))).sort((a, b) => {
+			const orderA = rarityOrder[a] ?? 999
+			const orderB = rarityOrder[b] ?? 999
+			if (orderA !== orderB) return orderA - orderB
+			return a.localeCompare(b)
 		})
-	}, [cards, searchQuery])
+	}, [cards])
+
+	const rarityOptions: FilterOption<string>[] = useMemo(() => {
+		return [
+			{ value: 'all', label: 'Toutes les raretés' },
+			...availableRarities.map(rarity => ({ 
+				value: rarity, 
+				label: rarity || 'Autres'
+			})),
+		]
+	}, [availableRarities])
+
+	// Extract unique sets from cards and sort alphabetically
+	const availableSets = useMemo(() => {
+		const setIds = Array.from(new Set(cards.map(c => c.set.id)))
+		return setIds
+			.map(setId => {
+				const card = cards.find(c => c.set.id === setId)
+				return {
+					id: setId,
+					name: card?.set.name || setId,
+				}
+			})
+			.sort((a, b) => a.name.localeCompare(b.name))
+	}, [cards])
+
+	const setOptions: SelectOption<string>[] = useMemo(() => {
+		return [
+			{ value: 'all', label: 'Toutes les collections' },
+			...availableSets.map(set => ({ value: set.id, label: set.name })),
+		]
+	}, [availableSets])
+
+
+	// Apply filters to cards
+	const filteredCards = useMemo(() => {
+		return cards.filter(card => {
+			// Filter by search query
+			if (searchQuery) {
+				const normalizedQuery = normalizeString(searchQuery)
+				const normalizedName = normalizeString(card.name)
+				const normalizedSet = normalizeString(card.set.name)
+				if (!normalizedName.includes(normalizedQuery) && !normalizedSet.includes(normalizedQuery)) {
+					return false
+				}
+			}
+			
+			// Filter by rarity
+			if (rarityFilter !== 'all' && card.rarity !== rarityFilter) return false
+			
+			// Filter by set
+			if (setFilter !== 'all' && card.set.id !== setFilter) return false
+			
+			return true
+		})
+	}, [cards, searchQuery, rarityFilter, setFilter])
 
 	function handleCardSelect(card: PokemonCard) {
 		setSelectedCard(card)
@@ -446,7 +532,7 @@ export default function MySalesPage() {
 		setNotes('')
 	}
 
-	// Calculer les statistiques
+	// Calculer les statistiques (sur toutes les ventes)
 	const totalSales = sales?.length ?? 0
 	const totalValue = sales?.reduce((sum, sale) => sum + sale.salePrice, 0) ?? 0
 
@@ -545,8 +631,24 @@ export default function MySalesPage() {
 							placeholder="Rechercher une carte…"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
+							inputSize="md"
 						/>
 					</SearchContainer>
+
+					<Select
+						options={setOptions}
+						value={setFilter}
+						onChange={setSetFilter}
+						label="Collection"
+						id="set-filter-cards"
+					/>
+
+					<FilterBar
+						options={rarityOptions}
+						value={rarityFilter}
+						onChange={setRarityFilter}
+						label="Filtrer par rareté"
+					/>
 
 					{filteredCards.length === 0 ? (
 						<EmptyState message="Aucune carte trouvée. Ajoutez des cartes à votre collection d'abord." />
@@ -619,24 +721,31 @@ export default function MySalesPage() {
 						</FormGroup>
 
 						<FormGroup>
-							<Label htmlFor="condition">Condition *</Label>
-							<ConditionSelect
-							id="condition"
-							value={condition}
-							onChange={(value) => setCondition(value as CardCondition)}
-						/>
-					</FormGroup>
+							<Select
+								options={[
+									{ value: 'Mint', label: 'Mint' },
+									{ value: 'NM', label: 'Near Mint (NM)' },
+									{ value: 'LP', label: 'Lightly Played (LP)' },
+									{ value: 'MP', label: 'Moderately Played (MP)' },
+									{ value: 'HP', label: 'Heavily Played (HP)' },
+									{ value: 'Damaged', label: 'Damaged' },
+								]}
+								value={condition}
+								onChange={setCondition}
+								label="Condition *"
+								id="condition-select"
+							/>
+						</FormGroup>
 
-					<FormGroup>
-						<Label htmlFor="notes">Notes</Label>
-						<TextArea
-							id="notes"
-							value={notes}
-							onChange={(e) => setNotes(e.target.value)}
-							placeholder="Ajoutez des notes sur cette vente..."
-						/>
-					</FormGroup>
-
+						<FormGroup>
+							<Label htmlFor="notes">Notes</Label>
+							<TextArea
+								id="notes"
+								value={notes}
+								onChange={(e) => setNotes(e.target.value)}
+								placeholder="Ajoutez des notes sur cette vente..."
+							/>
+						</FormGroup>
 						<ModalActions>
 							<Button variant="ghost" onClick={handleCloseModal}>
 								Annuler
