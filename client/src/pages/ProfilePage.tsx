@@ -1664,9 +1664,12 @@ export default function ProfilePage() {
 					/>
 				</GridItem>
 				<GridItem>
-					<RecentAcquisitionsList cards={acquisitions} />
-				</GridItem>
-			</PageGrid>
-		</section>
+				<PlannedSalesCalendar plannedSales={plannedSales} />
+			</GridItem>
+			<GridItem>
+				<RecentAcquisitionsList cards={acquisitions} />
+			</GridItem>
+		</PageGrid>
+	</section>
 	)
 }
