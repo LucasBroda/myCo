@@ -478,7 +478,8 @@ export default function MySalesPage() {
 	function handleEditSale(sale: PlannedSale) {
 		setEditingSale(sale)
 		setSalePrice(sale.salePrice.toString())
-		setSaleDate(sale.saleDate)
+		// Extraire seulement la partie date (YYYY-MM-DD) pour l'input type="date"
+		setSaleDate(sale.saleDate.split('T')[0])
 		setCondition(sale.condition)
 		setNotes(sale.notes || '')
 		setShowAddModal(true)
@@ -842,17 +843,26 @@ export default function MySalesPage() {
 						</FormGroup>
 
 						<FormGroup>
-							<Label htmlFor="saleDate">Date de vente prévue *</Label>
-							<Input
-								id="saleDate"
-								type="date"
-								min={new Date().toISOString().split('T')[0]}
-								value={saleDate}
-								onChange={(e) => setSaleDate(e.target.value)}
-							/>
-						</FormGroup>
+						<Label htmlFor="saleDate">
+							{editingSale?.completed ? 'Date de vente réalisée *' : 'Date de vente prévue *'}
+						</Label>
+						<Input
+							id="saleDate"
+							type="date"
+							min={editingSale ? undefined : new Date().toISOString().split('T')[0]}
+							value={saleDate}
+							onChange={(e) => setSaleDate(e.target.value)}
+							disabled={editingSale?.completed}
+							style={editingSale?.completed ? { cursor: 'not-allowed', opacity: 0.7 } : undefined}
+						/>
+						{editingSale?.completed && (
+							<span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '0.25rem', display: 'block' }}>
+								La date ne peut pas être modifiée pour une vente réalisée
+							</span>
+						)}
+				</FormGroup>
 
-						<FormGroup>
+				<FormGroup>
 						{isConditionLocked ? (
 							<>
 								<Label>Condition *</Label>
