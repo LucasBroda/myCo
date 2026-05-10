@@ -16,6 +16,8 @@ import { useEffect, useState } from 'react'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
 import {
+	Area,
+	AreaChart,
 	Bar,
 	BarChart,
 	CartesianGrid,
@@ -435,6 +437,152 @@ function SpendingChart({ stats, planned, plannedSales }: SpendingChartProps) {
 							name="Ventes planifiées"
 						/>
 					</BarChart>
+				</ResponsiveContainer>
+			</ChartWrapper>
+		</Card>
+	)
+}
+
+// ─── CollectionValueChart ─────────────────────────────────────────────────────
+
+interface ValueTooltipProps {
+	readonly active?: boolean
+	readonly payload?: Array<{
+		value: number
+		dataKey: string
+		payload: {
+			month: string
+			valueCumulative: number
+			spentCumulative: number
+			gain: number
+		}
+	}>
+}
+
+function ValueTooltip({ active, payload }: ValueTooltipProps) {
+	if (!active || !payload || payload.length === 0) return null
+
+	const data = payload[0].payload
+
+	return (
+		<TooltipContainer>
+			<TooltipItem>
+				<span>Valeur de la collection :</span>
+				<TooltipValue style={{ color: '#14b8a6' }}>{formatEuros(data.valueCumulative)}</TooltipValue>
+			</TooltipItem>
+			<TooltipItem>
+				<span>Total investi :</span>
+				<TooltipValue style={{ color: '#f97316' }}>{formatEuros(data.spentCumulative)}</TooltipValue>
+			</TooltipItem>
+			{data.gain !== 0 && (
+				<TooltipItem>
+					<span>{data.gain >= 0 ? 'Plus-value' : 'Moins-value'} :</span>
+					<TooltipValue style={{ color: data.gain >= 0 ? '#10b981' : '#ef4444' }}>
+						{data.gain >= 0 ? '+' : ''}{formatEuros(data.gain)}
+					</TooltipValue>
+				</TooltipItem>
+			)}
+		</TooltipContainer>
+	)
+}
+
+interface CollectionValueChartProps {
+	readonly stats: CollectionStats
+}
+
+function CollectionValueChart({ stats }: CollectionValueChartProps) {
+	if (stats.byMonth.length === 0) {
+		return (
+			<Card>
+				<SectionTitle>Évolution de la valeur</SectionTitle>
+				<EmptyState message="Aucune donnée disponible." icon="📈" />
+			</Card>
+		)
+	}
+
+	// Calculer le ratio actuel entre valeur estimée et total dépensé
+	const valueRatio = stats.totalSpent > 0 ? stats.estimatedValue / stats.totalSpent : 1
+
+	// Formater les mois pour l'affichage
+	const formatMonthDisplay = (monthKey: string) => {
+		const [year, month] = monthKey.split('-')
+		const date = new Date(Number.parseInt(year, 10), Number.parseInt(month, 10) - 1)
+		return date.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+	}
+
+	// Calculer les valeurs cumulatives
+	let cumulativeSpent = 0
+	const sortedMonths = [...stats.byMonth]
+	sortedMonths.sort((a, b) => a.month.localeCompare(b.month))
+	const data = sortedMonths.map(monthData => {
+		cumulativeSpent += monthData.totalSpent
+		const estimatedValue = cumulativeSpent * valueRatio
+		const gain = estimatedValue - cumulativeSpent
+
+		return {
+			month: formatMonthDisplay(monthData.month),
+			monthKey: monthData.month,
+			valueCumulative: estimatedValue,
+			spentCumulative: cumulativeSpent,
+			gain: gain,
+		}
+	})
+
+	return (
+		<Card>
+			<SectionTitle>Évolution de la valeur de la collection</SectionTitle>
+			<ChartWrapper>
+				<ResponsiveContainer width="100%" height={260}>
+					<AreaChart data={data} margin={{ top: 8, right: 12, bottom: 8, left: 0 }}>
+						<defs>
+							<linearGradient id="valueGradient" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#14b8a6" stopOpacity={0.4} />
+								<stop offset="100%" stopColor="#14b8a6" stopOpacity={0.05} />
+							</linearGradient>
+							<linearGradient id="spentGradient" x1="0" y1="0" x2="0" y2="1">
+								<stop offset="0%" stopColor="#f97316" stopOpacity={0.3} />
+								<stop offset="100%" stopColor="#f97316" stopOpacity={0.05} />
+							</linearGradient>
+						</defs>
+						<CartesianGrid 
+							strokeDasharray="3 3" 
+							stroke="#f5f5f4" 
+							vertical={false}
+							strokeOpacity={0.5}
+						/>
+						<XAxis
+							dataKey="month"
+							tick={{ fontSize: 13, fill: '#57534e', fontWeight: 500 }}
+							axisLine={false}
+							tickLine={false}
+							dy={8}
+						/>
+						<YAxis
+							tick={{ fontSize: 13, fill: '#78716c', fontWeight: 500 }}
+							axisLine={false}
+							tickLine={false}
+							tickFormatter={v => `${v}€`}
+							width={50}
+						/>
+						<Tooltip content={<ValueTooltip />} cursor={{ stroke: '#99f6e4', strokeWidth: 2 }} />
+						<Area 
+							type="monotone"
+							dataKey="valueCumulative" 
+							stroke="#14b8a6"
+							strokeWidth={3}
+							fill="url(#valueGradient)" 
+							name="Valeur estimée"
+						/>
+						<Area 
+							type="monotone"
+							dataKey="spentCumulative" 
+							stroke="#f97316"
+							strokeWidth={2}
+							strokeDasharray="5 5"
+							fill="url(#spentGradient)" 
+							name="Total investi"
+						/>
+					</AreaChart>
 				</ResponsiveContainer>
 			</ChartWrapper>
 		</Card>
@@ -1177,6 +1325,9 @@ export default function ProfilePage() {
 				</FullWidth>
 				<FullWidth>
 					<SpendingChart stats={stats} planned={planned} plannedSales={plannedSales} />
+				</FullWidth>
+				<FullWidth>
+					<CollectionValueChart stats={stats} />
 				</FullWidth>
 				<GridItem>
 					<PurchaseCalendar 
