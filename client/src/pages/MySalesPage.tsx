@@ -1,4 +1,4 @@
-import type { PokemonCard, PotentialSale, CardCondition } from '@/types/models'
+import type { PokemonCard, PlannedSale, CardCondition } from '@/types/models'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
 import { Spinner } from '@components/ui/Spinner'
@@ -302,7 +302,7 @@ const rarityOrder: Record<string, number> = {
 
 export default function MySalesPage() {
 	const [cards, setCards] = useState<PokemonCard[]>([])
-	const [sales, setSales] = useState<PotentialSale[]>([])
+	const [sales, setSales] = useState<PlannedSale[]>([])
 	const [soldCardsDetails, setSoldCardsDetails] = useState<Map<string, PokemonCard>>(new Map())
 	const [searchQuery, setSearchQuery] = useState('')
 	const [rarityFilter, setRarityFilter] = useState<string>('all')
@@ -311,7 +311,7 @@ export default function MySalesPage() {
 	const [error, setError] = useState<string | null>(null)
 	const [selectedCard, setSelectedCard] = useState<PokemonCard | null>(null)
 	const [showAddModal, setShowAddModal] = useState(false)
-	const [editingSale, setEditingSale] = useState<PotentialSale | null>(null)
+	const [editingSale, setEditingSale] = useState<PlannedSale | null>(null)
 	
 	// Form state
 	const [salePrice, setSalePrice] = useState<string>('')
@@ -325,20 +325,20 @@ export default function MySalesPage() {
 		setIsLoading(true)
 		setError(null)
 		try {
-			// Charger les ventes potentielles
-			const potentialSales = await salesService.getPotentialSales()
-			setSales(potentialSales)
+			// Charger les ventes planifiées
+			const plannedSales = await salesService.getPlannedSales()
+			setSales(plannedSales)
 
 			// Charger les détails des cartes vendues
 			const soldCardsMap = new Map<string, PokemonCard>()
-			const uniqueSets = new Set(potentialSales.map(sale => sale.setId))
+			const uniqueSets = new Set(plannedSales.map(sale => sale.setId))
 			
 			for (const setId of uniqueSets) {
 				try {
 					const setData = await cardsService.getSet(setId)
 					// Ajouter toutes les cartes de ce set qui sont vendues
 					for (const card of setData.cards) {
-						if (potentialSales.some(sale => sale.cardId === card.id)) {
+						if (plannedSales.some(sale => sale.cardId === card.id)) {
 							soldCardsMap.set(card.id, card)
 						}
 					}
@@ -475,7 +475,7 @@ export default function MySalesPage() {
 		setNotes('')
 	}
 
-	function handleEditSale(sale: PotentialSale) {
+	function handleEditSale(sale: PlannedSale) {
 		setEditingSale(sale)
 		setSalePrice(sale.salePrice.toString())
 		setSaleDate(sale.saleDate)
@@ -527,7 +527,7 @@ export default function MySalesPage() {
 		try {
 			if (editingSale) {
 				// Mise à jour
-				await salesService.updatePotentialSale(editingSale.id, {
+				await salesService.updatePlannedSale(editingSale.id, {
 					salePrice: Number.parseFloat(salePrice),
 					saleDate,
 					condition,
@@ -535,7 +535,7 @@ export default function MySalesPage() {
 				})
 			} else if (selectedCard) {
 				// Ajout
-				await salesService.addPotentialSale({
+				await salesService.addPlannedSale({
 					cardId: selectedCard.id,
 					setId: selectedCard.set.id,
 					salePrice: Number.parseFloat(salePrice),
@@ -568,7 +568,22 @@ export default function MySalesPage() {
 
 	// Calculer les statistiques (sur toutes les ventes)
 	const totalSales = sales?.length ?? 0
-	const totalValue = sales?.reduce((sum, sale) => sum + sale.salePrice, 0) ?? 0
+
+	// Séparer ventes complétées et planifiées
+	const completedSales = useMemo(() => sales.filter(s => s.completed), [sales])
+	const plannedSales = useMemo(() => sales.filter(s => !s.completed), [sales])
+
+	async function handleMarkAsCompleted(saleId: string) {
+		if (!confirm('Marquer cette vente comme réalisée ?')) return
+		
+		try {
+			await salesService.markSaleAsCompleted(saleId)
+			await loadData()
+		} catch (err) {
+			console.error('Error marking sale as completed:', err)
+			alert('Erreur lors de la mise à jour de la vente')
+		}
+	}
 
 	if (isLoading) return <Spinner center label="Chargement…" />
 	if (error) return <ErrorState message={error} onRetry={loadData} />
@@ -577,28 +592,32 @@ export default function MySalesPage() {
 		<PageContainer>
 			<section aria-labelledby="sales-title">
 				<PageHeader
-					title="Mes ventes potentielles"
+					title="Mes ventes planifiées"
 					id="sales-title"
 					subtitle="Gérez vos ventes de cartes"
 				/>
 
 				<StatsContainer>
 					<StatItem>
-						<StatLabel>Ventes enregistrées</StatLabel>
+						<StatLabel>Ventes totales enregistrées</StatLabel>
 						<StatValue>{totalSales}</StatValue>
 					</StatItem>
 					<StatItem>
-						<StatLabel>Valeur totale estimée</StatLabel>
-						<StatValue>{totalValue.toFixed(2)} €</StatValue>
+						<StatLabel>Ventes réalisées</StatLabel>
+						<StatValue>{completedSales.length}</StatValue>
+					</StatItem>
+					<StatItem>
+						<StatLabel>Ventes planifiées</StatLabel>
+						<StatValue>{plannedSales.length}</StatValue>
 					</StatItem>
 				</StatsContainer>
 
-				{/* Liste des ventes potentielles */}
+				{/* Section des ventes réalisées */}
 				<SectionCard>
-					<SectionTitle>Ventes enregistrées</SectionTitle>
+					<SectionTitle>Ventes réalisées ({completedSales.length})</SectionTitle>
 					
-					{(sales?.length ?? 0) === 0 ? (
-						<EmptyState message="Aucune vente enregistrée. Sélectionnez une carte ci-dessous pour commencer." />
+					{completedSales.length === 0 ? (
+						<EmptyState message="Aucune vente réalisée." />
 					) : (
 						<SalesTable>
 							<Table>
@@ -607,13 +626,13 @@ export default function MySalesPage() {
 										<Th>Carte</Th>
 										<Th>Condition</Th>
 										<Th>Prix de vente</Th>
-										<Th>Date prévue</Th>
+										<Th>Date</Th>
 										<Th>Notes</Th>
 										<Th>Actions</Th>
 									</tr>
 								</Thead>
 								<Tbody>
-									{sales?.map(sale => {
+									{completedSales.map(sale => {
 										const soldCard = soldCardsDetails.get(sale.cardId)
 										return (
 											<Tr key={sale.id}>
@@ -636,13 +655,81 @@ export default function MySalesPage() {
 												<Td>{new Date(sale.saleDate).toLocaleDateString('fr-FR')}</Td>
 												<Td>{sale.notes || '-'}</Td>
 												<Td>
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => handleEditSale(sale)}
-												>
-													Modifier
-												</Button>
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => handleEditSale(sale)}
+													>
+														Modifier
+													</Button>
+												</Td>
+											</Tr>
+										)
+									})}
+								</Tbody>
+							</Table>
+						</SalesTable>
+					)}
+				</SectionCard>
+
+				{/* Section des ventes planifiées */}
+				<SectionCard>
+					<SectionTitle>Ventes planifiées ({plannedSales.length})</SectionTitle>
+					
+					{plannedSales.length === 0 ? (
+						<EmptyState message="Aucune vente planifiée. Sélectionnez une carte ci-dessous pour commencer." />
+					) : (
+						<SalesTable>
+							<Table>
+								<Thead>
+									<tr>
+										<Th>Carte</Th>
+										<Th>Condition</Th>
+										<Th>Prix de vente</Th>
+										<Th>Date prévue</Th>
+										<Th>Notes</Th>
+										<Th>Actions</Th>
+									</tr>
+								</Thead>
+								<Tbody>
+									{plannedSales.map(sale => {
+										const soldCard = soldCardsDetails.get(sale.cardId)
+										return (
+											<Tr key={sale.id}>
+												<Td>
+													<CardInfoCell>
+														{soldCard && (
+															<CardMiniature 
+																src={soldCard.images.small} 
+																alt={soldCard.name}
+															/>
+														)}
+														<CardInfo>
+															<CardName>{sale.cardName}</CardName>
+															<CardSet>{sale.setName}</CardSet>
+														</CardInfo>
+													</CardInfoCell>
+												</Td>
+												<Td>{sale.condition}</Td>
+												<Td>{sale.salePrice.toFixed(2)} €</Td>
+												<Td>{new Date(sale.saleDate).toLocaleDateString('fr-FR')}</Td>
+												<Td>{sale.notes || '-'}</Td>
+												<Td>
+													<Button
+														variant="ghost"
+														size="sm"
+														onClick={() => handleEditSale(sale)}
+														style={{ marginRight: '0.5rem' }}
+													>
+														Modifier
+													</Button>
+													<Button
+														variant="primary"
+														size="sm"
+														onClick={() => handleMarkAsCompleted(sale.id)}
+													>
+														✓ Réalisée
+													</Button>
 												</Td>
 											</Tr>
 										)
@@ -657,7 +744,7 @@ export default function MySalesPage() {
 				<SectionCard>
 					<SectionTitle>Ajouter une vente</SectionTitle>
 					<p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-						Sélectionnez une carte de votre collection pour l'ajouter aux ventes potentielles
+						Sélectionnez une carte de votre collection pour l'ajouter aux ventes planifiées
 					</p>
 					
 					<SearchContainer>
