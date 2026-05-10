@@ -4,6 +4,7 @@ import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'
 import { Input } from '@components/ui/Input'
 import { Spinner } from '@components/ui/Spinner'
+import { Modal } from '@components/ui/Modal'
 import { PageHeader } from '@components/layout/PageHeader'
 import { SectionTitle } from '@components/layout/SectionTitle'
 import { SearchIcon } from '@components/ui/Icons'
@@ -290,23 +291,30 @@ const PriceSource = styled.span`
 const BuyLink = styled.a`
 	display: inline-flex;
 	align-items: center;
-	padding: ${({ theme }) => `${theme.spacing['1']} ${theme.spacing['3']}`};
+	padding: ${({ theme }) => `${theme.spacing['2']} ${theme.spacing['4']}`};
 	border: 1px solid ${({ theme }) => theme.colors.border};
 	border-radius: ${({ theme }) => theme.radii.md};
-	font-size: ${({ theme }) => theme.font.size.xs};
+	font-size: ${({ theme }) => theme.font.size.sm};
 	color: ${({ theme }) => theme.colors.textSecondary};
-	font-weight: ${({ theme }) => theme.font.weight.medium};
-	transition: background-color ${({ theme }) => theme.transitions.fast};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	transition: all ${({ theme }) => theme.transitions.fast};
+	text-decoration: none;
 
 	&:hover {
-		background-color: ${({ theme }) => theme.colors.surface};
-		color: ${({ theme }) => theme.colors.textPrimary};
+		background-color: ${({ theme }) => theme.colors.amberLight};
+		border-color: ${({ theme }) => theme.colors.amber};
+		color: ${({ theme }) => theme.colors.amber};
+		transform: translateY(-1px);
 	}
 
 	&:focus-visible {
 		outline: 2px solid ${({ theme }) => theme.colors.focus};
 		outline-offset: 2px;
 		border-radius: ${({ theme }) => theme.radii.md};
+	}
+
+	&:active {
+		transform: translateY(0);
 	}
 `
 
@@ -405,6 +413,180 @@ function PriceComparisonPanel({
 	)
 }
 
+// ─── PriceComparisonModal ─────────────────────────────────────────────────────
+
+const ModalPanelImg = styled.img`
+	width: 100%;
+	max-width: 200px;
+	height: auto;
+	object-fit: cover;
+	border-radius: ${({ theme }) => theme.radii.lg};
+	margin: 0 auto;
+	margin-top: ${({ theme }) => theme.spacing['4']};
+	margin-bottom: ${({ theme }) => theme.spacing['4']};
+	display: block;
+	box-shadow: ${({ theme }) => theme.shadows.lg};
+`
+
+const ModalPanelName = styled.h3`
+	font-size: ${({ theme }) => theme.font.size.xl};
+	font-weight: ${({ theme }) => theme.font.weight.bold};
+	color: ${({ theme }) => theme.colors.textPrimary};
+	margin: 0 0 ${({ theme }) => theme.spacing['2']};
+	text-align: center;
+`
+
+const ModalPanelMeta = styled.p`
+	font-size: ${({ theme }) => theme.font.size.sm};
+	color: ${({ theme }) => theme.colors.textSecondary};
+	margin: 0 0 ${({ theme }) => theme.spacing['4']};
+	text-align: center;
+`
+
+const ModalPricesContainer = styled.div`
+	display: flex;
+	flex-direction: column;
+	gap: ${({ theme }) => theme.spacing['3']};
+	padding: ${({ theme }) => theme.spacing['3']};
+	background-color: ${({ theme }) => theme.colors.surface};
+	border-radius: ${({ theme }) => theme.radii.lg};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+`
+
+const ModalPriceRow = styled.div`
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: ${({ theme }) => theme.spacing['3']};
+	padding: ${({ theme }) => theme.spacing['3']};
+	background-color: ${({ theme }) => theme.colors.bg};
+	border-radius: ${({ theme }) => theme.radii.md};
+	border: 1px solid ${({ theme }) => theme.colors.border};
+
+	&:hover {
+		border-color: ${({ theme }) => theme.colors.borderStrong};
+	}
+`
+
+const ModalPriceSource = styled.span`
+	font-size: ${({ theme }) => theme.font.size.base};
+	font-weight: ${({ theme }) => theme.font.weight.semibold};
+	color: ${({ theme }) => theme.colors.textPrimary};
+`
+
+const ModalPriceInfo = styled.div`
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: ${({ theme }) => theme.spacing['2']};
+`
+
+function PriceComparisonModal({
+	card,
+	isOpen,
+	onClose,
+}: {
+	readonly card: MarketCard | null
+	readonly isOpen: boolean
+	readonly onClose: () => void
+}) {
+	const [price, setPrice] = useState<MarketPrice | null>(null)
+	const [loading, setLoading] = useState(false)
+	const [error, setError] = useState<string | null>(null)
+
+	useEffect(() => {
+		if (!card || !isOpen) {
+			setPrice(null)
+			return
+		}
+		void (async () => {
+			setLoading(true)
+			setError(null)
+			try {
+				const priceData = await marketService.compare(card.id)
+				setPrice(priceData)
+			} catch (err) {
+				setError(err instanceof Error ? err.message : 'Erreur de chargement')
+			} finally {
+				setLoading(false)
+			}
+		})()
+	}, [card?.id, isOpen])
+
+	if (!card || !isOpen) return null
+
+	return (
+		<Modal
+			isOpen={isOpen}
+			onClose={onClose}
+			title="Liens d'achat 🛒"
+		>
+			<ModalPanelImg
+				src={card.images.small}
+				alt={`${card.name} — ${card.number} ${card.set.name}`}
+			/>
+			<ModalPanelName>{card.name}</ModalPanelName>
+			<ModalPanelMeta>{`${card.set.name} · #${card.number}`}</ModalPanelMeta>
+
+			{loading && (
+				<div style={{ padding: '16px 0' }}>
+					<Spinner center size="sm" label="Chargement des prix…" />
+				</div>
+			)}
+			{error && (
+				<p style={{ 
+					fontSize: '14px', 
+					color: '#b91c1c', 
+					margin: 0, 
+					textAlign: 'center',
+					padding: '12px',
+					backgroundColor: '#fee2e2',
+					borderRadius: '8px'
+				}}>
+					{error}
+				</p>
+			)}
+
+			{price && !loading && (
+				<ModalPricesContainer>
+					<ModalPriceRow>
+						<ModalPriceSource>CardMarket</ModalPriceSource>
+						<ModalPriceInfo>
+							<PriceTag price={price.cardMarketPrice} />
+							{price.cardMarketUrl && (
+								<BuyLink
+									href={price.cardMarketUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`Voir ${card.name} sur CardMarket`}
+								>
+									Voir l'offre →
+								</BuyLink>
+							)}
+						</ModalPriceInfo>
+					</ModalPriceRow>
+					<ModalPriceRow>
+						<ModalPriceSource>eBay</ModalPriceSource>
+						<ModalPriceInfo>
+							<PriceTag price={price.ebayPrice} />
+							{price.ebayUrl && (
+								<BuyLink
+									href={price.ebayUrl}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={`Voir ${card.name} sur eBay`}
+								>
+									Voir l'offre →
+								</BuyLink>
+							)}
+						</ModalPriceInfo>
+					</ModalPriceRow>
+				</ModalPricesContainer>
+			)}
+		</Modal>
+	)
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MarketPage() {
@@ -413,6 +595,7 @@ export default function MarketPage() {
 	const [selectedCard, setSelectedCard] = useState<MarketCard | null>(null)
 	const [isSearching, setIsSearching] = useState(false)
 	const [searchError, setSearchError] = useState<string | null>(null)
+	const [isModalOpen, setIsModalOpen] = useState(false)
 
 	// Trigger search when debounced query changes
 	const handleSearch = useCallback((q: string) => {
@@ -433,6 +616,18 @@ export default function MarketPage() {
 			.finally(() => setIsSearching(false))
 	}, [])
 
+	const handleSelectCard = useCallback((card: MarketCard) => {
+		setSelectedCard(card)
+		// Sur mobile (< 1024px), ouvrir la modale
+		if (window.innerWidth < 1024) {
+			setIsModalOpen(true)
+		}
+	}, [])
+
+	const handleCloseModal = useCallback(() => {
+		setIsModalOpen(false)
+	}, [])
+
 	const showSearch = !!query.trim()
 
 	return (
@@ -447,7 +642,7 @@ export default function MarketPage() {
 							{isSearching && <Spinner center label="Recherche en cours…" />}
 							{!isSearching && searchError && <ErrorState message={searchError} />}
 							{!isSearching && !searchError && (
-								<SearchResults results={searchResults} onSelect={setSelectedCard} />
+								<SearchResults results={searchResults} onSelect={handleSelectCard} />
 							)}
 						</>
 					) : (
@@ -460,6 +655,12 @@ export default function MarketPage() {
 					<PriceComparisonPanel card={selectedCard} />
 				</RightPane>
 			</PageLayout>
+
+			<PriceComparisonModal
+				card={selectedCard}
+				isOpen={isModalOpen}
+				onClose={handleCloseModal}
+			/>
 		</section>
 	)
 }
