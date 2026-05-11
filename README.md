@@ -2,6 +2,9 @@
 
 Application fullstack de gestion de collection de cartes Pokémon TCG.
 
+## Lien vers le site hébergé sur Netlify (front), Render (back), Supabase (bdd)
+Lien du site : https://mycopokemon.netlify.app/
+
 ## 🏗️ Structure du projet
 
 ```
