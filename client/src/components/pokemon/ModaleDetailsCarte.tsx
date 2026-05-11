@@ -1,5 +1,5 @@
 import type { PokemonCard, AcquiredCard, CardCondition } from '@/types/models'
-import { Modal, ModalBody } from '@components/ui/Modale'
+import { Modale, ModalBody } from '@components/ui/Modale'
 import { PriceTrend } from '@components/pokemon/TendancePrix'
 import { Badge } from '@components/ui/Badge'
 import styled from 'styled-components'
@@ -159,7 +159,7 @@ interface Props {
 }
 
 // Helper to check if a value is a valid number
-function isValidNumber(value: unknown): value is number {
+function estNombreValide(value: unknown): value is number {
 	return typeof value === 'number' && !Number.isNaN(value) && Number.isFinite(value)
 }
 
@@ -175,25 +175,25 @@ const CONDITION_MULTIPLIERS: Record<CardCondition, number> = {
 }
 
 // Estime le prix d'une carte en fonction de sa condition
-function estimatePriceByCondition(basePrice: number, condition: CardCondition): number {
-	if (!isValidNumber(basePrice)) return 0
+function estimerPrixParCondition(basePrice: number, condition: CardCondition): number {
+	if (!estNombreValide(basePrice)) return 0
 	const multiplier = CONDITION_MULTIPLIERS[condition] ?? 1.0
 	return basePrice * multiplier
 }
 
 function formatEuros(value: number | null) {
-	if (!isValidNumber(value)) return '—'
+	if (!estNombreValide(value)) return '—'
 	return new Intl.NumberFormat('fr-FR', {
 		style: 'currency',
 		currency: 'EUR',
 	}).format(value)
 }
 
-function calculateAveragePrice(acquisitions: AcquiredCard[]): number | null {
+function calculerPrixMoyen(acquisitions: AcquiredCard[]): number | null {
 	// Filter out null, undefined, NaN, and any invalid values
 	const prices = acquisitions
 		.map(a => a.pricePaid)
-		.filter(isValidNumber)
+		.filter(estNombreValide)
 	
 	if (prices.length === 0) return null
 	
@@ -201,91 +201,91 @@ function calculateAveragePrice(acquisitions: AcquiredCard[]): number | null {
 	const average = sum / prices.length
 	
 	// Double-check the result is valid
-	return isValidNumber(average) ? average : null
+	return estNombreValide(average) ? average : null
 }
 
-function calculateTotalPaid(acquisitions: AcquiredCard[]): number | null {
+function calculerTotalPaye(acquisitions: AcquiredCard[]): number | null {
 	// Filter out null, undefined, NaN, and any invalid values
 	const prices = acquisitions
 		.map(a => a.pricePaid)
-		.filter(isValidNumber)
+		.filter(estNombreValide)
 	
 	if (prices.length === 0) return null
 	
 	const total = prices.reduce((acc, p) => acc + p, 0)
 	
 	// Double-check the result is valid
-	return isValidNumber(total) ? total : null
+	return estNombreValide(total) ? total : null
 }
 
 // Calcule la valeur actuelle totale en tenant compte de l'état de chaque carte
-function calculateTotalCurrentValueByCondition(
+function calculerValeurActuelleTotaleParCondition(
 	basePriceNM: number,
 	acquisitions: AcquiredCard[]
 ): number | null {
-	if (!isValidNumber(basePriceNM) || acquisitions.length === 0) return null
+	if (!estNombreValide(basePriceNM) || acquisitions.length === 0) return null
 	
 	const total = acquisitions.reduce((sum, acq) => {
-		const estimatedPrice = estimatePriceByCondition(basePriceNM, acq.condition)
+		const estimatedPrice = estimerPrixParCondition(basePriceNM, acq.condition)
 		return sum + estimatedPrice
 	}, 0)
 	
-	return isValidNumber(total) ? total : null
+	return estNombreValide(total) ? total : null
 }
 
 // Calcule le prix moyen actuel pondéré par condition
-function calculateAverageCurrentPrice(
+function calculerPrixActuelMoyen(
 	basePriceNM: number,
 	acquisitions: AcquiredCard[]
 ): number | null {
-	if (!isValidNumber(basePriceNM) || acquisitions.length === 0) return null
+	if (!estNombreValide(basePriceNM) || acquisitions.length === 0) return null
 	
-	const total = calculateTotalCurrentValueByCondition(basePriceNM, acquisitions)
-	if (!isValidNumber(total)) return null
+	const total = calculerValeurActuelleTotaleParCondition(basePriceNM, acquisitions)
+	if (!estNombreValide(total)) return null
 	
 	const average = total / acquisitions.length
-	return isValidNumber(average) ? average : null
+	return estNombreValide(average) ? average : null
 }
 
-function calculateTotalGainLoss(currentValue: number | null, totalPaid: number | null): number | null {
-	if (!isValidNumber(currentValue) || !isValidNumber(totalPaid)) return null
+function calculerGainPerteTotale(currentValue: number | null, totalPaid: number | null): number | null {
+	if (!estNombreValide(currentValue) || !estNombreValide(totalPaid)) return null
 	
 	const gainLoss = currentValue - totalPaid
-	return isValidNumber(gainLoss) ? gainLoss : null
+	return estNombreValide(gainLoss) ? gainLoss : null
 }
 
-function calculatePercentChange(current: number, average: number | null): number | null {
-	if (!isValidNumber(current) || !isValidNumber(average) || average === 0) return null
+function calculerChangementPourcentage(current: number, average: number | null): number | null {
+	if (!estNombreValide(current) || !estNombreValide(average) || average === 0) return null
 	
 	const percentChange = ((current - average) / average) * 100
-	return isValidNumber(percentChange) ? percentChange : null
+	return estNombreValide(percentChange) ? percentChange : null
 }
 
-export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
+export function ModaleDetailsCarte({ card, acquisitions, onClose }: Props) {
 	// Ensure we have a valid current price (trendPrice is for NM condition)
 	const rawCurrentPriceNM = card.cardmarket?.prices?.trendPrice
-	const basePriceNM = isValidNumber(rawCurrentPriceNM) ? rawCurrentPriceNM : null
+	const basePriceNM = estNombreValide(rawCurrentPriceNM) ? rawCurrentPriceNM : null
 	
 	// Calculate all price metrics
-	const totalPaid = calculateTotalPaid(acquisitions)
-	const averagePricePaid = calculateAveragePrice(acquisitions)
+	const totalPaid = calculerTotalPaye(acquisitions)
+	const averagePricePaid = calculerPrixMoyen(acquisitions)
 	const numberOfCopies = acquisitions.length
 	
 	// Calculer la valeur actuelle totale en tenant compte de l'état de chaque carte
 	const totalCurrentValue = basePriceNM !== null
-		? calculateTotalCurrentValueByCondition(basePriceNM, acquisitions)
+		? calculerValeurActuelleTotaleParCondition(basePriceNM, acquisitions)
 		: null
 	
 	// Calculer le prix moyen actuel (pondéré par condition)
 	const averageCurrentPrice = basePriceNM !== null
-		? calculateAverageCurrentPrice(basePriceNM, acquisitions)
+		? calculerPrixActuelMoyen(basePriceNM, acquisitions)
 		: null
 	
 	// Calculer la plus/moins-value totale
-	const totalGainLoss = calculateTotalGainLoss(totalCurrentValue, totalPaid)
+	const totalGainLoss = calculerGainPerteTotale(totalCurrentValue, totalPaid)
 	
 	// Calculer le pourcentage de changement basé sur le prix moyen
-	const percentChange = calculatePercentChange(averageCurrentPrice ?? 0, averagePricePaid)
+	const percentChange = calculerChangementPourcentage(averageCurrentPrice ?? 0, averagePricePaid)
 
 	// Group acquisitions by condition
 	const conditionCounts = acquisitions.reduce((acc, acq) => {
@@ -294,7 +294,7 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 	}, {} as Record<CardCondition, number>)
 
 	return (
-		<Modal isOpen={true} onClose={onClose} title={card.name}>
+		<Modale isOpen={true} onClose={onClose} title={card.name}>
 			<ModalBody>
 				<CardImageContainer>
 					<CardImage src={card.images.large} alt={card.name} />
@@ -335,44 +335,44 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 							<DetailValue>{formatEuros(basePriceNM)}</DetailValue>
 						</DetailRow>
 					)}
-					{isValidNumber(averageCurrentPrice) && (
+					{estNombreValide(averageCurrentPrice) && (
 						<DetailRow>
 							<DetailLabel>Prix moyen actuel (par état)</DetailLabel>
 							<DetailValue>{formatEuros(averageCurrentPrice)}</DetailValue>
 						</DetailRow>
 					)}
-					{isValidNumber(averagePricePaid) && (
+					{estNombreValide(averagePricePaid) && (
 						<DetailRow>
 							<DetailLabel>Prix moyen payé</DetailLabel>
 							<DetailValue>{formatEuros(averagePricePaid)}</DetailValue>
 						</DetailRow>
 					)}
-					{isValidNumber(averageCurrentPrice) && isValidNumber(averagePricePaid) && (
+					{estNombreValide(averageCurrentPrice) && estNombreValide(averagePricePaid) && (
 						<DetailRow>
 							<DetailLabel>Écart moyen unitaire</DetailLabel>
 							<PriceValue>
 								<GainLossValue $isPositive={(averageCurrentPrice - averagePricePaid) >= 0}>
 									{(averageCurrentPrice - averagePricePaid) >= 0 ? '+' : ''}{formatEuros(averageCurrentPrice - averagePricePaid)}
 								</GainLossValue>
-								{isValidNumber(percentChange) && (
+								{estNombreValide(percentChange) && (
 									<PriceTrend percentChange={percentChange} inverted={true} />
 								)}
 							</PriceValue>
 						</DetailRow>
 					)}
-					{isValidNumber(totalCurrentValue) && numberOfCopies > 1 && (
+					{estNombreValide(totalCurrentValue) && numberOfCopies > 1 && (
 						<DetailRow>
 							<DetailLabel>Valeur totale actuelle ({numberOfCopies} copies)</DetailLabel>
 							<DetailValue>{formatEuros(totalCurrentValue)}</DetailValue>
 						</DetailRow>
 					)}
-					{isValidNumber(totalPaid) && numberOfCopies > 1 && (
+					{estNombreValide(totalPaid) && numberOfCopies > 1 && (
 						<DetailRow>
 							<DetailLabel>Total payé</DetailLabel>
 							<DetailValue>{formatEuros(totalPaid)}</DetailValue>
 						</DetailRow>
 					)}
-					{isValidNumber(totalGainLoss) && numberOfCopies > 1 && (
+					{estNombreValide(totalGainLoss) && numberOfCopies > 1 && (
 						<DetailRow>
 							<DetailLabel>Plus/Moins-value totale</DetailLabel>
 							<GainLossValue $isPositive={totalGainLoss >= 0}>
@@ -380,7 +380,7 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 							</GainLossValue>
 						</DetailRow>
 					)}
-					{isValidNumber(totalCurrentValue) && isValidNumber(totalPaid) && numberOfCopies === 1 && (
+					{estNombreValide(totalCurrentValue) && estNombreValide(totalPaid) && numberOfCopies === 1 && (
 						<DetailRow>
 							<DetailLabel>Plus/Moins-value</DetailLabel>
 							<GainLossValue $isPositive={(totalCurrentValue - totalPaid) >= 0}>
@@ -404,11 +404,11 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 					{[...acquisitions]
 						.sort((a: AcquiredCard, b: AcquiredCard) => new Date(b.acquiredDate).getTime() - new Date(a.acquiredDate).getTime())
 						.map((acquisition: AcquiredCard) => {
-								const pricePaid = isValidNumber(acquisition.pricePaid) ? acquisition.pricePaid : null
+								const pricePaid = estNombreValide(acquisition.pricePaid) ? acquisition.pricePaid : null
 								
 								// Calculer le prix actuel en fonction de l'état de cette acquisition
 								const currentPriceForCondition = basePriceNM !== null
-									? estimatePriceByCondition(basePriceNM, acquisition.condition)
+									? estimerPrixParCondition(basePriceNM, acquisition.condition)
 									: null
 								
 								const individualGainLoss = pricePaid !== null && currentPriceForCondition !== null
@@ -467,6 +467,6 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 							})}
 				</AcquisitionsList>
 			</ModalBody>
-		</Modal>
+		</Modale>
 	)
 }

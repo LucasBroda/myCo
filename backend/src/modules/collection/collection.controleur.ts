@@ -17,14 +17,14 @@
 import { Request, Response } from "express";
 import { CardCondition } from "../../types/models";
 import {
-  addCard,
-  followSet,
-  getCollection,
-  getCollectionWithDetails,
-  getFollowedSets,
-  getStats,
-  removeCard,
-  unfollowSet,
+  ajouterCarte,
+  suivreEdition,
+  obtenirCollection,
+  obtenirCollectionAvecDetails,
+  obtenirEditionsSuivies,
+  obtenirStatistiques,
+  supprimerCarte,
+  nePlusSuivreEdition,
 } from "./collection.service";
 
 /**
@@ -50,11 +50,11 @@ const VALID_CONDITIONS: CardCondition[] = [
  * @param res - Réponse Express
  * @returns 200 avec { data: AcquiredCard[] }
  */
-export async function getCollectionHandler(
+export async function obtenirCollectionGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const cards = await getCollection(req.user!.id);
+  const cards = await obtenirCollection(req.user!.id);
   res.json({ data: cards });
 }
 
@@ -69,11 +69,11 @@ export async function getCollectionHandler(
  * @param res - Réponse Express
  * @returns 200 avec { data: AcquiredCard[] } enrichies
  */
-export async function getCollectionWithDetailsHandler(
+export async function obtenirCollectionAvecDetailsGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const cards = await getCollectionWithDetails(req.user!.id);
+  const cards = await obtenirCollectionAvecDetails(req.user!.id);
   res.json({ data: cards });
 }
 
@@ -87,7 +87,7 @@ export async function getCollectionWithDetailsHandler(
  * @param res - Réponse Express
  * @returns 201 avec { data: AcquiredCard } ou 400 en cas d'erreur validation
  */
-export async function addCardHandler(
+export async function ajouterCarteGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
@@ -120,7 +120,7 @@ export async function addCardHandler(
   }
 
   // Ajout de la carte (enrichissement automatique avec noms)
-  const card = await addCard(
+  const card = await ajouterCarte(
     req.user!.id,
     cardId,
     setId,
@@ -140,11 +140,11 @@ export async function addCardHandler(
  * @param res - Réponse Express
  * @returns 200 avec message de confirmation ou 404 si carte non trouvée
  */
-export async function removeCardHandler(
+export async function supprimerCarteGestionnaire(
   req: Request<{ id: string }>,
   res: Response,
 ): Promise<void> {
-  await removeCard(req.user!.id, req.params.id);
+  await supprimerCarte(req.user!.id, req.params.id);
   res.json({ message: "Card removed from collection" });
 }
 
@@ -157,11 +157,11 @@ export async function removeCardHandler(
  * @param res - Réponse Express
  * @returns 200 avec { data: CollectionStats }
  */
-export async function getStatsHandler(
+export async function obtenirStatistiquesGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const stats = await getStats(req.user!.id);
+  const stats = await obtenirStatistiques(req.user!.id);
   res.json({ data: stats });
 }
 
@@ -175,7 +175,7 @@ export async function getStatsHandler(
  * @param res - Réponse Express
  * @returns 201 avec { data: { setId, followedAt } } ou 400 si setId manquant
  */
-export async function followSetHandler(
+export async function suivreEditionGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
@@ -187,7 +187,7 @@ export async function followSetHandler(
     return;
   }
 
-  const result = await followSet(req.user!.id, setId);
+  const result = await suivreEdition(req.user!.id, setId);
   res.status(201).json({ data: result });
 }
 
@@ -200,11 +200,11 @@ export async function followSetHandler(
  * @param res - Réponse Express
  * @returns 200 avec message de confirmation ou 404 si non suivie
  */
-export async function unfollowSetHandler(
+export async function nePlusSuivreEditionGestionnaire(
   req: Request<{ setId: string }>,
   res: Response,
 ): Promise<void> {
-  await unfollowSet(req.user!.id, req.params.setId);
+  await nePlusSuivreEdition(req.user!.id, req.params.setId);
   res.json({ message: "Set unfollowed" });
 }
 
@@ -218,10 +218,10 @@ export async function unfollowSetHandler(
  * @param res - Réponse Express
  * @returns 200 avec { data: string[] }
  */
-export async function getFollowedSetsHandler(
+export async function obtenirEditionsSuiviesGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const setIds = await getFollowedSets(req.user!.id);
+  const setIds = await obtenirEditionsSuivies(req.user!.id);
   res.json({ data: setIds });
 }

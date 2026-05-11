@@ -28,8 +28,8 @@ import { ErrorState } from '@components/ui/EtatErreur'
 import { Spinner } from '@components/ui/Chargeur'
 import { Input } from '@components/ui/Entree'
 import { Button } from '@components/ui/Bouton'
-import { Select, type SelectOption } from '@components/ui/Selection'
-import { FilterBar, type FilterOption } from '@components/layout/BarreFiltres'
+import { Selection, type SelectOption } from '@components/ui/Selection'
+import { BarreFiltres, type FilterOption } from '@components/layout/BarreFiltres'
 import { PageHeader } from '@components/layout/EntetePage'
 import { CardThumbnail } from '@components/pokemon/VignetteCarte'
 import { collectionService } from '@services/serviceCollection'
@@ -378,7 +378,7 @@ const rarityOrder: Record<string, number> = {
 }
 // ─── Page Component ───────────────────────────────────────────────────────────
 
-export default function MySalesPage() {
+export default function PageMesVentes() {
 	const [cards, setCards] = useState<PokemonCard[]>([])
 	const [sales, setSales] = useState<PlannedSale[]>([])
 	const [soldCardsDetails, setSoldCardsDetails] = useState<Map<string, PokemonCard>>(new Map())
@@ -844,7 +844,7 @@ export default function MySalesPage() {
 					/>
 				</SearchContainer>
 
-				<Select
+				<Selection
 					options={setOptions}
 					value={setFilter}
 					onChange={setSetFilter}
@@ -852,7 +852,7 @@ export default function MySalesPage() {
 					id="set-filter-cards"
 				/>
 
-				<FilterBar
+				<BarreFiltres
 					options={rarityOptions}
 					value={rarityFilter}
 					onChange={setRarityFilter}
@@ -954,7 +954,7 @@ export default function MySalesPage() {
 								)}
 							</>
 						) : (
-							<Select
+							<Selection
 									options={conditionOptions}
 									value={condition}
 									onChange={setCondition}

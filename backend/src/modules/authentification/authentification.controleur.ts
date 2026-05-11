@@ -13,7 +13,7 @@
 
 import { Request, Response } from "express";
 import { env } from "../../config/env";
-import { getMe, login, register } from "./authentification.service";
+import { obtenirUtilisateur, connecter, inscrire } from "./authentification.service";
 
 /**
  * Nom du cookie contenant le refresh token
@@ -45,7 +45,7 @@ const COOKIE_OPTIONS = {
  * @returns 201 avec { accessToken, user } ou 400 en cas d'erreur validation
  * @throws 409 si l'email existe déjà (géré par le service)
  */
-export async function registerHandler(
+export async function inscrireGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
@@ -64,7 +64,7 @@ export async function registerHandler(
   }
 
   // Création du compte
-  const { user, tokens } = await register(email, password);
+  const { user, tokens } = await inscrire(email, password);
   
   // Stocke le refresh token dans un cookie sécurisé
   res.cookie(REFRESH_COOKIE, tokens.refreshToken, COOKIE_OPTIONS);
@@ -83,7 +83,7 @@ export async function registerHandler(
  * @returns 200 avec { accessToken, user } ou 400/401 en cas d'erreur
  * @throws 401 si les identifiants sont incorrects (géré par le service)
  */
-export async function loginHandler(req: Request, res: Response): Promise<void> {
+export async function connecterGestionnaire(req: Request, res: Response): Promise<void> {
   const { email, password } = req.body as { email?: string; password?: string };
   
   // Validation des champs requis
@@ -93,7 +93,7 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
   }
 
   // Vérification des identifiants
-  const { user, tokens } = await login(email, password);
+  const { user, tokens } = await connecter(email, password);
   
   // Stocke le refresh token dans un cookie sécurisé
   res.cookie(REFRESH_COOKIE, tokens.refreshToken, COOKIE_OPTIONS);
@@ -112,9 +112,9 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
  * @param res - Réponse Express
  * @returns 200 avec { user }
  */
-export async function getMeHandler(req: Request, res: Response): Promise<void> {
+export async function obtenirUtilisateurGestionnaire(req: Request, res: Response): Promise<void> {
   // req.user! est garanti d'être défini par le middleware authenticate
-  const user = await getMe(req.user!.id);
+  const user = await obtenirUtilisateur(req.user!.id);
   res.json({ user });
 }
 
@@ -127,7 +127,7 @@ export async function getMeHandler(req: Request, res: Response): Promise<void> {
  * @param res - Réponse Express
  * @returns 200 avec message de confirmation
  */
-export function logoutHandler(_req: Request, res: Response): void {
+export function deconnecterGestionnaire(_req: Request, res: Response): void {
   // Supprime le cookie refresh token
   res.clearCookie(REFRESH_COOKIE);
   res.json({ message: "Logged out" });

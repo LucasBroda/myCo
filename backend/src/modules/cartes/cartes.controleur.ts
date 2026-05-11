@@ -12,7 +12,7 @@
  */
 
 import { Request, Response } from "express";
-import { getCard, getSet, getSets, searchCards } from "./cartes.service";
+import { obtenirCarte, obtenirEdition, obtenirEditions, rechercherCartes } from "./cartes.service";
 
 /**
  * Handler pour récupérer toutes les éditions
@@ -24,11 +24,11 @@ import { getCard, getSet, getSets, searchCards } from "./cartes.service";
  * @param res - Réponse Express
  * @returns 200 avec { data: PokemonSet[] }
  */
-export async function getSetsHandler(
+export async function obtenirEditionsGestionnaire(
   _req: Request,
   res: Response,
 ): Promise<void> {
-  const sets = await getSets();
+  const sets = await obtenirEditions();
   res.json({ data: sets });
 }
 
@@ -42,12 +42,12 @@ export async function getSetsHandler(
  * @param res - Réponse Express
  * @returns 200 avec { set: PokemonSet, cards: PokemonCard[] }
  */
-export async function getSetHandler(
+export async function obtenirEditionGestionnaire(
   req: Request<{ setId: string }>,
   res: Response,
 ): Promise<void> {
   const { setId } = req.params;
-  const result = await getSet(setId);
+  const result = await obtenirEdition(setId);
   res.json(result);
 }
 
@@ -61,12 +61,12 @@ export async function getSetHandler(
  * @param res - Réponse Express
  * @returns 200 avec { data: PokemonCard }
  */
-export async function getCardHandler(
+export async function obtenirCarteGestionnaire(
   req: Request<{ cardId: string }>,
   res: Response,
 ): Promise<void> {
   const { cardId } = req.params;
-  const card = await getCard(cardId);
+  const card = await obtenirCarte(cardId);
   res.json({ data: card });
 }
 
@@ -100,6 +100,6 @@ export async function searchHandler(
   }
   
   // Recherche avec trim pour enlever les espaces inutiles
-  const cards = await searchCards(q.trim(), set);
+  const cards = await rechercherCartes(q.trim(), set);
   res.json({ data: cards });
 }

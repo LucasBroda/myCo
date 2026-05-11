@@ -29,21 +29,21 @@ import { createRoot } from 'react-dom/client'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
 
 // Layouts
-import AppLayout from '@layout/AppLayout'
-import AuthLayout from '@layout/AuthLayout'
-import RootLayout, { ProtectedRoute, PublicOnlyRoute } from '@layout/RootLayout'
+import DispositionApp from '@layout/AppLayout'
+import DispositionAuth from '@layout/AuthLayout'
+import DispositionRacine, { RouteProtegee, RoutePubliqueUniquement } from '@layout/RootLayout'
 
 // Pages
-import AllCollectionsPage from '@pages/PageToutesCollections'
-import MyCollectionsPage from '@pages/PageMesCollections'
-import MyCardsPage from '@pages/PageMesCartes'
-import MySalesPage from '@pages/PageMesVentes'
-import LoginPage from '@pages/PageConnexion'
-import MarketPage from '@pages/PageMarche'
-import NotFoundPage from '@pages/PageNonTrouvee'
-import ProfilePage from '@pages/PageProfil'
-import RegisterPage from '@pages/PageInscription'
-import SetDetailPage from '@pages/PageDetailsCollection'
+import PageToutesCollections from '@pages/PageToutesCollections'
+import PageMesCollections from '@pages/PageMesCollections'
+import PageMesCartes from '@pages/PageMesCartes'
+import PageMesVentes from '@pages/PageMesVentes'
+import PageConnexion from '@pages/PageConnexion'
+import PageMarche from '@pages/PageMarche'
+import PageNonTrouvee from '@pages/PageNonTrouvee'
+import PageProfil from '@pages/PageProfil'
+import PageInscription from '@pages/PageInscription'
+import PageDetailsCollection from '@pages/PageDetailsCollection'
 
 /**
  * Configuration du routeur de l'application
@@ -58,20 +58,20 @@ import SetDetailPage from '@pages/PageDetailsCollection'
 const router = createBrowserRouter([
 	{
 		// Layout racine englobant toute l'application
-		element: <RootLayout />,
+		element: <DispositionRacine />,
 		children: [
 			// Redirection de la racine vers /mes-collections
 			{ index: true, element: <Navigate to="/mes-collections" replace /> },
 
 			// Routes publiques (accessibles uniquement si NON connecté)
 			{
-				element: <PublicOnlyRoute />,
+				element: <RoutePubliqueUniquement />,
 				children: [
 					{
-						element: <AuthLayout />,
+						element: <DispositionAuth />,
 						children: [
-							{ path: '/connexion', element: <LoginPage /> },
-							{ path: '/inscription', element: <RegisterPage /> },
+							{ path: '/connexion', element: <PageConnexion /> },
+							{ path: '/inscription', element: <PageInscription /> },
 						],
 					},
 				],
@@ -79,42 +79,42 @@ const router = createBrowserRouter([
 
 			// Routes protégées (nécessitent une authentification)
 			{
-				element: <ProtectedRoute />,
+				element: <RouteProtegee />,
 				children: [
 					{
 						// Layout principal avec navigation
-						element: <AppLayout />,
+						element: <DispositionApp />,
 						children: [
 							// Page : Mes collections suivies
-							{ path: '/mes-collections', element: <MyCollectionsPage /> },
+							{ path: '/mes-collections', element: <PageMesCollections /> },
 							
 							// Page : Toutes les collections disponibles
-							{ path: '/toutes-collections', element: <AllCollectionsPage /> },
+							{ path: '/toutes-collections', element: <PageToutesCollections /> },
 							
 							// Page : Mes cartes acquises
-							{ path: '/mes-cartes', element: <MyCardsPage /> },
+							{ path: '/mes-cartes', element: <PageMesCartes /> },
 							
 							// Page : Mes ventes planifiées
-							{ path: '/mes-ventes', element: <MySalesPage /> },
+							{ path: '/mes-ventes', element: <PageMesVentes /> },
 							
 							// Redirection pour compatibilité
 							{ path: '/collections', element: <Navigate to="/mes-collections" replace /> },
 							
 							// Page : Détails d'une édition spécifique
-							{ path: '/collections/:setId', element: <SetDetailPage /> },
+							{ path: '/collections/:setId', element: <PageDetailsCollection /> },
 							
 							// Page : Profil utilisateur
-							{ path: '/profil', element: <ProfilePage /> },
+							{ path: '/profil', element: <PageProfil /> },
 							
 							// Page : Marché (recherche et achats planifiés)
-							{ path: '/marche', element: <MarketPage /> },
+							{ path: '/marche', element: <PageMarche /> },
 						],
 					},
 				],
 			},
 
 			// Catch-all pour les routes non trouvées (404)
-			{ path: '*', element: <NotFoundPage /> },
+			{ path: '*', element: <PageNonTrouvee /> },
 		],
 	},
 ])

@@ -14,7 +14,7 @@
  */
 
 import { focusRing } from '@/styles/mixins'
-import { useToast } from '@hooks/useToast'
+import { useNotification } from '@hooks/useToast'
 import { authService } from '@services/serviceAuthentification'
 import { useAuthStore } from '@store/authStore'
 import { useState } from 'react'
@@ -118,13 +118,13 @@ const Footer = styled.p`
  * 
  * Utilise directement le authStore (Zustand) au lieu du hook useAuth pour plus de contrôle.
  */
-export default function RegisterPage() {
+export default function PageInscription() {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(false)
 	const setAuth = useAuthStore(s => s.setAuth) // Sélecteur Zustand pour la fonction setAuth
-	const { success } = useToast()
+	const { success } = useNotification()
 	const navigate = useNavigate()
 
 	/**

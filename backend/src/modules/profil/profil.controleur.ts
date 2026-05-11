@@ -11,7 +11,7 @@
  */
 
 import { Request, Response } from "express";
-import { addPlanned, deletePlanned, getPlanned } from "./profil.service";
+import { ajouterAchatPlanifie, supprimerAchatPlanifie, obtenirAchatsPlanifies } from "./profil.service";
 
 /**
  * Handler pour récupérer les achats planifiés
@@ -23,11 +23,11 @@ import { addPlanned, deletePlanned, getPlanned } from "./profil.service";
  * @param res - Réponse Express
  * @returns 200 avec { data: PlannedPurchase[] }
  */
-export async function getPlannedHandler(
+export async function obtenirAchatsPlanifiesGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
-  const planned = await getPlanned(req.user!.id);
+  const planned = await obtenirAchatsPlanifies(req.user!.id);
   res.json({ data: planned });
 }
 
@@ -45,7 +45,7 @@ export async function getPlannedHandler(
  * @param res - Réponse Express
  * @returns 201 avec { data: PlannedPurchase } ou 400 si champs manquants
  */
-export async function addPlannedHandler(
+export async function ajouterAchatPlanifieGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
@@ -69,7 +69,7 @@ export async function addPlannedHandler(
   }
 
   // Création avec valeurs par défaut : condition='NM', budget et notes nullable
-  const planned = await addPlanned({
+  const planned = await ajouterAchatPlanifie({
     userId: req.user!.id,
     cardId,
     setId,
@@ -93,10 +93,10 @@ export async function addPlannedHandler(
  * @param res - Réponse Express
  * @returns 200 avec message de confirmation ou 404 si non trouvé
  */
-export async function deletePlannedHandler(
+export async function supprimerAchatPlanifieGestionnaire(
   req: Request<{ id: string }>,
   res: Response,
 ): Promise<void> {
-  await deletePlanned(req.user!.id, req.params.id);
+  await supprimerAchatPlanifie(req.user!.id, req.params.id);
   res.json({ message: "Planned purchase deleted" });
 }

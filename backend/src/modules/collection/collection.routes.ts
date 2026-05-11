@@ -18,16 +18,16 @@
  */
 
 import { Router } from "express";
-import { authenticate } from "../../middleware/auth";
+import { authentifier } from "../../middleware/auth";
 import {
-  addCardHandler,
-  followSetHandler,
-  getCollectionHandler,
-  getCollectionWithDetailsHandler,
-  getFollowedSetsHandler,
-  getStatsHandler,
-  removeCardHandler,
-  unfollowSetHandler,
+  ajouterCarteGestionnaire,
+  suivreEditionGestionnaire,
+  obtenirCollectionGestionnaire,
+  obtenirCollectionAvecDetailsGestionnaire,
+  obtenirEditionsSuiviesGestionnaire,
+  obtenirStatistiquesGestionnaire,
+  supprimerCarteGestionnaire,
+  nePlusSuivreEditionGestionnaire,
 } from "./collection.controleur";
 
 const router = Router();
@@ -35,41 +35,41 @@ const router = Router();
 /**
  * Toutes les routes nécessitent une authentification
  */
-router.use(authenticate);
+router.use(authentifier);
 
 /**
  * GET /api/collection
  * Récupère la collection légère (sans enrichissement)
  * Plus rapide mais moins d'informations
  */
-router.get("/", getCollectionHandler);
+router.get("/", obtenirCollectionGestionnaire);
 
 /**
  * GET /api/collection/avec-details
  * Récupère la collection enrichie avec noms de cartes et d'éditions
  * Plus lent mais contient toutes les informations pour l'affichage
  */
-router.get("/avec-details", getCollectionWithDetailsHandler);
+router.get("/avec-details", obtenirCollectionAvecDetailsGestionnaire);
 
 /**
  * POST /api/collection
  * Ajoute une carte à la collection
  * Body : { cardId, setId, acquiredDate, pricePaid?, condition }
  */
-router.post("/", addCardHandler);
+router.post("/", ajouterCarteGestionnaire);
 
 /**
  * DELETE /api/collection/:id
  * Retire une carte de la collection
  * Vérifie que la carte appartient bien à l'utilisateur
  */
-router.delete("/:id", removeCardHandler);
+router.delete("/:id", supprimerCarteGestionnaire);
 
 /**
  * GET /api/collection/statistiques
  * Récupère les statistiques agrégées de collection
  */
-router.get("/statistiques", getStatsHandler);
+router.get("/statistiques", obtenirStatistiquesGestionnaire);
 
 /**
  * Routes pour les éditions suivies (favoris)
@@ -79,7 +79,7 @@ router.get("/statistiques", getStatsHandler);
  * GET /api/collection/collections-suivies
  * Liste des IDs d'éditions suivies par l'utilisateur
  */
-router.get("/collections-suivies", getFollowedSetsHandler);
+router.get("/collections-suivies", obtenirEditionsSuiviesGestionnaire);
 
 /**
  * POST /api/collection/collections-suivies
@@ -87,12 +87,12 @@ router.get("/collections-suivies", getFollowedSetsHandler);
  * Body : { setId }
  * Idempotent (pas d'erreur si déjà suivi)
  */
-router.post("/collections-suivies", followSetHandler);
+router.post("/collections-suivies", suivreEditionGestionnaire);
 
 /**
  * DELETE /api/collection/collections-suivies/:setId
  * Retire une édition des favoris
  */
-router.delete("/collections-suivies/:setId", unfollowSetHandler);
+router.delete("/collections-suivies/:setId", nePlusSuivreEditionGestionnaire);
 
 export default router;

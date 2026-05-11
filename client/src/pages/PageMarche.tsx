@@ -27,7 +27,7 @@ import { EmptyState } from '@components/ui/EtatVide'
 import { ErrorState } from '@components/ui/EtatErreur'
 import { Input } from '@components/ui/Entree'
 import { Spinner } from '@components/ui/Chargeur'
-import { Modal } from '@components/ui/Modale'
+import { Modale } from '@components/ui/Modale'
 import { PageHeader } from '@components/layout/EntetePage'
 import { SectionTitle } from '@components/layout/TitreSection'
 import { SearchIcon } from '@components/ui/Icones'
@@ -92,7 +92,7 @@ interface SearchBarProps {
 	readonly onSearch: (query: string) => void
 }
 
-function MarketSearchBar({ onSearch }: SearchBarProps) {
+function BarreRechercheMarche({ onSearch }: SearchBarProps) {
 	const [value, setValue] = useState('')
 	const debounced = useDebounce(value, 300)
 
@@ -164,7 +164,7 @@ const WelcomeText = styled.p`
 	margin: 0;
 `
 
-function WelcomeMessage() {
+function MessageBienvenue() {
 	return (
 		<WelcomeCard>
 			<WelcomeIconWrapper>
@@ -223,7 +223,7 @@ const ResultMeta = styled.span`
 	color: ${({ theme }) => theme.colors.textMuted};
 `
 
-function SearchResults({
+function ResultatsRecherche({
 	results,
 	onSelect,
 }: {
@@ -341,7 +341,7 @@ const BuyLink = styled.a`
 	}
 `
 
-function PriceComparisonPanel({
+function PanneauComparaisonPrix({
 	card,
 }: {
 	readonly card: MarketCard | null
@@ -504,7 +504,7 @@ const ModalPriceInfo = styled.div`
 	gap: ${({ theme }) => theme.spacing['2']};
 `
 
-function PriceComparisonModal({
+function ModaleComparaisonPrix({
 	card,
 	isOpen,
 	onClose,
@@ -539,7 +539,7 @@ function PriceComparisonModal({
 	if (!card || !isOpen) return null
 
 	return (
-		<Modal
+		<Modale
 			isOpen={isOpen}
 			onClose={onClose}
 			title="Liens d'achat 🛒"
@@ -606,13 +606,13 @@ function PriceComparisonModal({
 					</ModalPriceRow>
 				</ModalPricesContainer>
 			)}
-		</Modal>
+		</Modale>
 	)
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function MarketPage() {
+export default function PageMarche() {
 	const [query, setQuery] = useState('')
 	const [searchResults, setSearchResults] = useState<MarketCard[]>([])
 	const [selectedCard, setSelectedCard] = useState<MarketCard | null>(null)
@@ -658,28 +658,28 @@ export default function MarketPage() {
 			<PageHeader title="Marché" id="market-title" />
 			<PageLayout>
 				<LeftPane>
-					<MarketSearchBar onSearch={handleSearch} />
+					<BarreRechercheMarche onSearch={handleSearch} />
 
 					{showSearch ? (
 						<>
 							{isSearching && <Spinner center label="Recherche en cours…" />}
 							{!isSearching && searchError && <ErrorState message={searchError} />}
 							{!isSearching && !searchError && (
-								<SearchResults results={searchResults} onSelect={handleSelectCard} />
+								<ResultatsRecherche results={searchResults} onSelect={handleSelectCard} />
 							)}
 						</>
 					) : (
-						<WelcomeMessage />
+						<MessageBienvenue />
 					)}
 				</LeftPane>
 
 				<RightPane>
 					<SearchBarSpacer style={{ height: '88px' }} />
-					<PriceComparisonPanel card={selectedCard} />
+					<PanneauComparaisonPrix card={selectedCard} />
 				</RightPane>
 			</PageLayout>
 
-			<PriceComparisonModal
+			<ModaleComparaisonPrix
 				card={selectedCard}
 				isOpen={isModalOpen}
 				onClose={handleCloseModal}

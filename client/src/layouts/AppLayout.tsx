@@ -14,8 +14,8 @@
  */
 
 import { focusRing } from '@/styles/mixins'
-import ThemeToggle from '@components/ui/BasculeurTheme'
-import { useAuth } from '@hooks/useAuth'
+import BasculeurTheme from '@components/ui/BasculeurTheme'
+import { useAuthentification } from '@hooks/useAuth'
 import { Link, Outlet, useLocation } from 'react-router'
 import { useState } from 'react'
 import styled from 'styled-components'
@@ -334,8 +334,8 @@ const navItems = [
 	{ to: '/marche', label: 'Marché' },
 ]
 
-export default function AppLayout() {
-	const { user, logout } = useAuth()
+export default function DispositionApp() {
+	const { user, logout } = useAuthentification()
 	const location = useLocation()
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -365,7 +365,7 @@ export default function AppLayout() {
 				</BurgerButton>
 				<NavItems>
 					<li>
-						<ThemeToggle />
+						<BasculeurTheme />
 					</li>
 					{navItems.map(item => (
 						<li key={item.to}>
@@ -428,7 +428,7 @@ export default function AppLayout() {
 				)}
 
 				<MobileThemeToggleWrapper>
-					<ThemeToggle />
+					<BasculeurTheme />
 				</MobileThemeToggleWrapper>
 			</MobileMenu>
 

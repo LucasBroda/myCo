@@ -91,7 +91,7 @@ const ErrorText = styled.p`
 	margin: 0;
 `
 
-export function Field({ children, label, htmlFor, hint, error }: FieldProps) {
+export function Champ({ children, label, htmlFor, hint, error }: FieldProps) {
 	return (
 		<FieldWrapper>
 			<Label htmlFor={htmlFor}>{label}</Label>

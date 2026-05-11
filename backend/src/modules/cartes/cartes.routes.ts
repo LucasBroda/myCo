@@ -14,11 +14,11 @@
  */
 
 import { Router } from "express";
-import { authenticate } from "../../middleware/auth";
+import { authentifier } from "../../middleware/auth";
 import {
-  getCardHandler,
-  getSetHandler,
-  getSetsHandler,
+  obtenirCarteGestionnaire,
+  obtenirEditionGestionnaire,
+  obtenirEditionsGestionnaire,
   searchHandler,
 } from "./cartes.controleur";
 
@@ -28,20 +28,20 @@ const router = Router();
  * Toutes les routes de ce module nécessitent une authentification
  * Le middleware authenticate vérifie le JWT et injecte req.user
  */
-router.use(authenticate);
+router.use(authentifier);
 
 /**
  * GET /api/cartes/collections
  * Retourne toutes les éditions disponibles (jusqu'à 250, caché 24h)
  */
-router.get("/collections", getSetsHandler);
+router.get("/collections", obtenirEditionsGestionnaire);
 
 /**
  * GET /api/cartes/collections/:setId
  * Retourne les détails d'une édition et toutes ses cartes
  * Utilise Promise.all pour optimiser les requêtes parallèles
  */
-router.get("/collections/:setId", getSetHandler);
+router.get("/collections/:setId", obtenirEditionGestionnaire);
 
 /**
  * GET /api/cartes/recherche?q=xxx&set=yyy
@@ -55,6 +55,6 @@ router.get("/recherche", searchHandler);
  * Retourne les détails complets d'une carte spécifique
  * Inclut images, prix Cardmarket si disponibles, etc.
  */
-router.get("/:cardId", getCardHandler);
+router.get("/:cardId", obtenirCarteGestionnaire);
 
 export default router;

@@ -1,6 +1,6 @@
 import { focusRing } from '@/styles/mixins'
 import type { PokemonSet } from '@/types/models'
-import { ProgressBar } from '@components/ui/BarreProgression'
+import { BarreProgression } from '@components/ui/BarreProgression'
 import styled from 'styled-components'
 
 const Wrapper = styled.article`
@@ -83,7 +83,7 @@ export function SetCard({ set, ownedCount, onClick }: Props) {
 					<Series>{set.series}</Series>
 				</Info>
 			</Header>
-			<ProgressBar value={ownedCount} max={set.total} />
+			<BarreProgression value={ownedCount} max={set.total} />
 		</Wrapper>
 	)
 }

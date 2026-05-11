@@ -6,7 +6,7 @@ import {
 } from "../../types/models";
 import * as cardsService from "../cartes/cartes.service";
 
-export async function getPlannedSales(userId: string): Promise<PlannedSale[]> {
+export async function obtenirVentesPlanifiees(userId: string): Promise<PlannedSale[]> {
   const result = await db.query(
     `SELECT id, user_id, card_id, set_id, sale_price, sale_date, condition, notes, completed, created_at
      FROM planned_sales WHERE user_id = $1
@@ -20,7 +20,7 @@ export async function getPlannedSales(userId: string): Promise<PlannedSale[]> {
     let setName = "Unknown Set";
 
     try {
-      const card = await cardsService.getCard(row.card_id as string);
+      const card = await cardsService.obtenirCarte(row.card_id as string);
       cardName = card.name;
       setName = card.set.name;
     } catch (error) {
@@ -49,7 +49,7 @@ export async function getPlannedSales(userId: string): Promise<PlannedSale[]> {
   return Promise.all(salesWithDetailsPromises);
 }
 
-export async function addPlannedSale(
+export async function ajouterVentePlanifiee(
   userId: string,
   cardId: string,
   setId: string,
@@ -83,7 +83,7 @@ export async function addPlannedSale(
   let cardName = cardId;
   let setName = "Unknown Set";
   try {
-    const card = await cardsService.getCard(cardId);
+    const card = await cardsService.obtenirCarte(cardId);
     cardName = card.name;
     setName = card.set.name;
   } catch (error) {
@@ -106,7 +106,7 @@ export async function addPlannedSale(
   };
 }
 
-export async function updatePlannedSale(
+export async function modifierVentePlanifiee(
   userId: string,
   saleId: string,
   salePrice: number,
@@ -132,7 +132,7 @@ export async function updatePlannedSale(
   let cardName = row.card_id as string;
   let setName = "Unknown Set";
   try {
-    const card = await cardsService.getCard(row.card_id as string);
+    const card = await cardsService.obtenirCarte(row.card_id as string);
     cardName = card.name;
     setName = card.set.name;
   } catch (error) {
@@ -155,7 +155,7 @@ export async function updatePlannedSale(
   };
 }
 
-export async function deletePlannedSale(
+export async function supprimerVentePlanifiee(
   userId: string,
   saleId: string,
 ): Promise<void> {
@@ -169,7 +169,7 @@ export async function deletePlannedSale(
   }
 }
 
-export async function markSaleAsCompleted(
+export async function marquerVenteCommeTerminee(
   userId: string,
   saleId: string,
 ): Promise<PlannedSale> {
@@ -191,7 +191,7 @@ export async function markSaleAsCompleted(
   let cardName = row.card_id as string;
   let setName = "Unknown Set";
   try {
-    const card = await cardsService.getCard(row.card_id as string);
+    const card = await cardsService.obtenirCarte(row.card_id as string);
     cardName = card.name;
     setName = card.set.name;
   } catch (error) {
@@ -214,7 +214,7 @@ export async function markSaleAsCompleted(
   };
 }
 
-export async function getSalesStats(userId: string): Promise<SalesStats> {
+export async function obtenirStatistiquesVentes(userId: string): Promise<SalesStats> {
   const result = await db.query(
     `SELECT 
        COUNT(*)::int AS total_sales,

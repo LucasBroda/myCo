@@ -30,7 +30,7 @@ interface AppError extends Error {
  * @param res - Objet Response pour envoyer la réponse
  * @param _next - NextFunction (préfixé _ car non utilisé)
  */
-export function errorHandler(
+export function gestionnaireErreurs(
   err: AppError,
   _req: Request,
   res: Response,

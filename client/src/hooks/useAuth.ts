@@ -31,7 +31,7 @@ import { useCallback } from 'react'
  * }
  * ```
  */
-export function useAuth() {
+export function useAuthentification() {
 	// Sélecteurs Zustand pour extraire les données du store
 	const user = useAuthStore(s => s.user)
 	const accessToken = useAuthStore(s => s.accessToken)

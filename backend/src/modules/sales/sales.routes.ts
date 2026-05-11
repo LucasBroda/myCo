@@ -1,11 +1,11 @@
 import { Router } from "express";
 import * as salesController from "./sales.controller";
-import { authenticate } from "../../middleware/auth";
+import { authentifier } from "../../middleware/auth";
 
 const router = Router();
 
 // All routes require authentication
-router.use(authenticate);
+router.use(authentifier);
 
 // GET /api/sales/stats - Get sales statistics
 router.get("/stats", salesController.getSalesStats);

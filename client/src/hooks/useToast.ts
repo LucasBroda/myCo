@@ -31,7 +31,7 @@ import { useCallback } from 'react'
  * }
  * ```
  */
-export function useToast() {
+export function useNotification() {
 	// Récupère la fonction pushToast depuis le store UI
 	const pushToast = useUiStore(s => s.pushToast)
 

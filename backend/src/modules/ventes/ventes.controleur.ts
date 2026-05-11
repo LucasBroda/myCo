@@ -26,7 +26,7 @@ import type { CardCondition } from "../../types/models";
 export async function getPlannedSales(req: Request, res: Response) {
   try {
     const userId = req.user!.id;
-    const sales = await salesService.getPlannedSales(userId);
+    const sales = await salesService.obtenirVentesPlanifiees(userId);
     res.json({ data: sales });
   } catch (error) {
     console.error("Error fetching planned sales:", error);
@@ -57,7 +57,7 @@ export async function addPlannedSale(req: Request, res: Response) {
     }
 
     // Conversion du prix en nombre flottant
-    const sale = await salesService.addPlannedSale(
+    const sale = await salesService.ajouterVentePlanifiee(
       userId,
       cardId,
       setId,
@@ -103,7 +103,7 @@ export async function updatePlannedSale(req: Request, res: Response) {
       return;
     }
 
-    const sale = await salesService.updatePlannedSale(
+    const sale = await salesService.modifierVentePlanifiee(
       userId,
       id,
       Number.parseFloat(salePrice),
@@ -144,7 +144,7 @@ export async function deletePlannedSale(req: Request, res: Response) {
       return;
     }
 
-    await salesService.deletePlannedSale(userId, id);
+    await salesService.supprimerVentePlanifiee(userId, id);
     res.status(204).send(); // 204 No Content (succès sans corps de réponse)
   } catch (error) {
     console.error("Error deleting planned sale:", error);
@@ -167,7 +167,7 @@ export async function markSaleAsCompleted(req: Request, res: Response) {
       return;
     }
 
-    const sale = await salesService.markSaleAsCompleted(userId, id);
+    const sale = await salesService.marquerVenteCommeTerminee(userId, id);
     res.json({ data: sale });
   } catch (error) {
     console.error("Error marking sale as completed:", error);
@@ -182,7 +182,7 @@ export async function markSaleAsCompleted(req: Request, res: Response) {
 export async function getSalesStats(req: Request, res: Response) {
   try {
     const userId = req.user!.id;
-    const stats = await salesService.getSalesStats(userId);
+    const stats = await salesService.obtenirStatistiquesVentes(userId);
     res.json({ data: stats });
   } catch (error) {
     console.error("Error fetching sales stats:", error);

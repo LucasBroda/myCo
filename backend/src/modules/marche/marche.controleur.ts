@@ -11,7 +11,7 @@
  */
 
 import { Request, Response } from "express";
-import { compareCard, getDeals, searchMarket } from "./marche.service";
+import { comparerCarte, obtenirBonnesAffaires, rechercherMarche } from "./marche.service";
 
 /**
  * Handler pour la recherche de cartes avec prix eBay
@@ -29,7 +29,7 @@ import { compareCard, getDeals, searchMarket } from "./marche.service";
  * @example
  * GET /api/marche/recherche?q=Charizard&set=base1
  */
-export async function searchHandler(
+export async function rechercherGestionnaire(
   req: Request,
   res: Response,
 ): Promise<void> {
@@ -41,7 +41,7 @@ export async function searchHandler(
     return;
   }
   
-  const results = await searchMarket(q.trim(), set);
+  const results = await rechercherMarche(q.trim(), set);
   res.json({ data: results });
 }
 
@@ -55,11 +55,11 @@ export async function searchHandler(
  * @param res - Réponse Express
  * @returns 200 avec { data: DealCard[] } triées par remise décroissante
  */
-export async function getDealsHandler(
+export async function obtenirBonnesAffairesGestionnaire(
   _req: Request,
   res: Response,
 ): Promise<void> {
-  const deals = await getDeals();
+  const deals = await obtenirBonnesAffaires();
   res.json({ data: deals });
 }
 
@@ -73,11 +73,11 @@ export async function getDealsHandler(
  * @param res - Réponse Express
  * @returns 200 avec { data: MarketComparison }
  */
-export async function compareHandler(
+export async function comparerGestionnaire(
   req: Request<{ cardId: string }>,
   res: Response,
 ): Promise<void> {
   const { cardId } = req.params;
-  const comparison = await compareCard(cardId);
+  const comparison = await comparerCarte(cardId);
   res.json({ data: comparison });
 }

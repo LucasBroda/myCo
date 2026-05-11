@@ -66,7 +66,7 @@ async function fetchJson<T>(url: string): Promise<T> {
  * 
  * @returns Promise résolue avec le tableau des éditions
  */
-export async function getSets(): Promise<PokemonSet[]> {
+export async function obtenirEditions(): Promise<PokemonSet[]> {
   const cacheKey = "cache:sets:all";
   const cached = await cache.get<PokemonSet[]>(cacheKey);
   if (cached) return cached;
@@ -91,7 +91,7 @@ export async function getSets(): Promise<PokemonSet[]> {
  * @param setId - Identifiant unique de l'édition (ex: "base1")
  * @returns Promise avec l'objet édition et le tableau de ses cartes
  */
-export async function getSet(setId: string): Promise<{
+export async function obtenirEdition(setId: string): Promise<{
   set: PokemonSet;
   cards: PokemonCard[];
 }> {
@@ -120,7 +120,7 @@ export async function getSet(setId: string): Promise<{
  * @param cardId - Identifiant unique de la carte (ex: "base1-4")
  * @returns Promise résolue avec l'objet carte complet (image, HP, attaques, etc.)
  */
-export async function getCard(cardId: string): Promise<PokemonCard> {
+export async function obtenirCarte(cardId: string): Promise<PokemonCard> {
   const cacheKey = `cache:card:${cardId}`;
   const cached = await cache.get<PokemonCard>(cacheKey);
   if (cached) return cached;
@@ -147,7 +147,7 @@ export async function getCard(cardId: string): Promise<PokemonCard> {
  * @param setId - (Optionnel) Limite la recherche à une édition spécifique
  * @returns Promise avec le tableau des cartes correspondantes (max 50)
  */
-export async function searchCards(
+export async function rechercherCartes(
   query: string,
   setId?: string,
 ): Promise<PokemonCard[]> {

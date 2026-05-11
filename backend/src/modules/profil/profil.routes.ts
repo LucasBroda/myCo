@@ -14,11 +14,11 @@
  */
 
 import { Router } from "express";
-import { authenticate } from "../../middleware/auth";
+import { authentifier } from "../../middleware/auth";
 import {
-  addPlannedHandler,
-  deletePlannedHandler,
-  getPlannedHandler,
+  ajouterAchatPlanifieGestionnaire,
+  supprimerAchatPlanifieGestionnaire,
+  obtenirAchatsPlanifiesGestionnaire,
 } from "./profil.controleur";
 
 const router = Router();
@@ -26,14 +26,14 @@ const router = Router();
 /**
  * Toutes les routes nécessitent une authentification
  */
-router.use(authenticate);
+router.use(authentifier);
 
 /**
  * GET /api/profil/planifies
  * Récupère tous les achats planifiés de l'utilisateur
  * Triés par date planifiée croissante
  */
-router.get("/planifies", getPlannedHandler);
+router.get("/planifies", obtenirAchatsPlanifiesGestionnaire);
 
 /**
  * POST /api/profil/planifies
@@ -44,13 +44,13 @@ router.get("/planifies", getPlannedHandler);
  * }
  * Les noms sont stockés pour éviter des appels API répétés
  */
-router.post("/planifies", addPlannedHandler);
+router.post("/planifies", ajouterAchatPlanifieGestionnaire);
 
 /**
  * DELETE /api/profil/planifies/:id
  * Supprime un achat planifié de la wishlist
  * Vérifie que l'achat appartient bien à l'utilisateur
  */
-router.delete("/planifies/:id", deletePlannedHandler);
+router.delete("/planifies/:id", supprimerAchatPlanifieGestionnaire);
 
 export default router;

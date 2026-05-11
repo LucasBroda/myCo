@@ -15,14 +15,14 @@
 
 import { Router } from "express";
 import * as salesController from "./ventes.controleur";
-import { authenticate } from "../../middleware/auth";
+import { authentifier } from "../../middleware/auth";
 
 const router = Router();
 
 /**
  * Toutes les routes nécessitent une authentification
  */
-router.use(authenticate);
+router.use(authentifier);
 
 /**
  * GET /api/ventes/statistiques

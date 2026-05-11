@@ -37,7 +37,7 @@ import { useCollectionStore } from '@store/collectionStore'
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import styled from 'styled-components'
-import { useToast } from '@hooks/useToast'
+import { useNotification } from '@hooks/useToast'
 
 const SearchContainer = styled.div`
 	margin-bottom: ${({ theme }) => theme.spacing['4']};
@@ -178,7 +178,7 @@ const frenchToEnglishMapping: Record<string, string[]> = {
 	'aurore': ['dawn', 'aurora'],
 }
 
-function normalizeString(str: string): string {
+function normaliserChaine(str: string): string {
 	return str
 		.toLowerCase()
 		.normalize('NFD')
@@ -186,22 +186,22 @@ function normalizeString(str: string): string {
 		.trim()
 }
 
-function matchesSearch(setName: string, searchQuery: string): boolean {
+function correspondRecherche(setName: string, searchQuery: string): boolean {
 	if (!searchQuery) return true
 
-	const normalizedSetName = normalizeString(setName)
-	const normalizedQuery = normalizeString(searchQuery)
+	const normalizedSetName = normaliserChaine(setName)
+	const normalizedQuery = normaliserChaine(searchQuery)
 
 	// Recherche directe dans le nom anglais
 	if (normalizedSetName.includes(normalizedQuery)) return true
 
 	// Recherche via le mapping français-anglais
 	for (const [frenchTerm, englishTerms] of Object.entries(frenchToEnglishMapping)) {
-		const normalizedFrench = normalizeString(frenchTerm)
+		const normalizedFrench = normaliserChaine(frenchTerm)
 		if (normalizedFrench.includes(normalizedQuery) || normalizedQuery.includes(normalizedFrench)) {
 			// Si le terme français correspond, vérifier si un des termes anglais est dans le nom du set
 			return englishTerms.some(englishTerm => 
-				normalizedSetName.includes(normalizeString(englishTerm))
+				normalizedSetName.includes(normaliserChaine(englishTerm))
 			)
 		}
 	}
@@ -209,7 +209,7 @@ function matchesSearch(setName: string, searchQuery: string): boolean {
 	return false
 }
 
-export default function AllCollectionsPage() {
+export default function PageToutesCollections() {
 	const [sets, setSets] = useState<PokemonSet[]>([])
 	const [searchQuery, setSearchQuery] = useState('')
 	const [followedSetIds, setFollowedSetIds] = useState<Set<string>>(new Set())
@@ -217,7 +217,7 @@ export default function AllCollectionsPage() {
 	const [error, setError] = useState<string | null>(null)
 	const { setCollection, acquiredMap } = useCollectionStore()
 	const navigate = useNavigate()
-	const { toast } = useToast()
+	const { toast } = useNotification()
 
 	async function loadData() {
 		setIsLoading(true)
@@ -244,7 +244,7 @@ export default function AllCollectionsPage() {
 	}, [])
 
 	const filteredSets = useMemo(() => {
-		return sets.filter(set => matchesSearch(set.name, searchQuery))
+		return sets.filter(set => correspondRecherche(set.name, searchQuery))
 	}, [sets, searchQuery])
 
 	function getOwnedCount(setId: string): number {

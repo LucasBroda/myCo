@@ -42,7 +42,7 @@ const CountText = styled.span`
 	color: ${({ theme }) => theme.colors.textPrimary};
 `
 
-export function ProgressBar({
+export function BarreProgression({
 	value,
 	max,
 	label,

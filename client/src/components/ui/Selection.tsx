@@ -164,7 +164,7 @@ interface SelectProps<T extends string> {
 	readonly id?: string
 }
 
-export function Select<T extends string>({
+export function Selection<T extends string>({
 	options,
 	value,
 	onChange,

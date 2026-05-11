@@ -35,7 +35,7 @@ interface JwtPayload {
  * @param next - Fonction pour passer au middleware suivant
  * @returns void (mais envoie une réponse HTTP en cas d'erreur)
  */
-export function authenticate(
+export function authentifier(
   req: Request,
   res: Response,
   next: NextFunction,

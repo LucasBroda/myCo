@@ -24,11 +24,11 @@ import { EmptyState } from '@components/ui/EtatVide'
 import { ErrorState } from '@components/ui/EtatErreur'
 import { Spinner } from '@components/ui/Chargeur'
 import { Input } from '@components/ui/Entree'
-import { Select, type SelectOption } from '@components/ui/Selection'
-import { FilterBar, type FilterOption } from '@components/layout/BarreFiltres'
+import { Selection, type SelectOption } from '@components/ui/Selection'
+import { BarreFiltres, type FilterOption } from '@components/layout/BarreFiltres'
 import { PageHeader } from '@components/layout/EntetePage'
 import { CardThumbnail } from '@components/pokemon/VignetteCarte'
-import { CardDetailsModal } from '@components/pokemon/ModaleDetailsCarte'
+import { ModaleDetailsCarte } from '@components/pokemon/ModaleDetailsCarte'
 import { collectionService } from '@services/serviceCollection'
 import { cardsService } from '@services/serviceCartes'
 import { useCollectionStore } from '@store/collectionStore'
@@ -737,7 +737,7 @@ export default function MyCardsPage() {
 				/>
 			</SearchContainer>
 
-			<Select
+			<Selection
 				options={setOptions}
 				value={setFilter}
 				onChange={setSetFilter}
@@ -745,7 +745,7 @@ export default function MyCardsPage() {
 				id="set-filter"
 			/>
 
-			<Select
+			<Selection
 				options={conditionOptions}
 				value={conditionFilter}
 				onChange={setConditionFilter}
@@ -753,7 +753,7 @@ export default function MyCardsPage() {
 				id="condition-filter"
 			/>
 
-			<FilterBar
+			<BarreFiltres
 				options={rarityOptions}
 				value={rarityFilter}
 				onChange={setRarityFilter}
@@ -778,7 +778,7 @@ export default function MyCardsPage() {
 			)}
 
 			{selectedCard && (
-				<CardDetailsModal
+				<ModaleDetailsCarte
 					card={selectedCard}
 					acquisitions={selectedCardAcquisitions}
 					onClose={handleCloseModal}

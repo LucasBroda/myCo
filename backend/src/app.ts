@@ -11,7 +11,7 @@ import express from "express";
 import "express-async-errors"; // Permet aux erreurs async/await d'être capturées automatiquement
 import helmet from "helmet";
 
-import { errorHandler } from "./middleware/errorHandler";
+import { gestionnaireErreurs } from "./middleware/errorHandler";
 import authRoutes from "./modules/authentification/authentification.routes";
 import cardsRoutes from "./modules/cartes/cartes.routes";
 import collectionRoutes from "./modules/collection/collection.routes";
@@ -81,6 +81,6 @@ app.use("/api/ventes", salesRoutes);
  * Doit être enregistré en dernier pour capturer toutes les erreurs
  * non gérées dans les routes et middleware précédents.
  */
-app.use(errorHandler);
+app.use(gestionnaireErreurs);
 
 export default app;

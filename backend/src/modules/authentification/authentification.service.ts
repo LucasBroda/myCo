@@ -62,7 +62,7 @@ function signTokens(userId: string, email: string): AuthTokens {
  * @returns Promise avec les données utilisateur et les tokens
  * @throws Error 409 si l'email est déjà utilisé
  */
-export async function register(
+export async function inscrire(
   email: string,
   password: string,
 ): Promise<{ user: Omit<User, "createdAt">; tokens: AuthTokens }> {
@@ -112,7 +112,7 @@ export async function register(
  * @returns Promise avec les données utilisateur et les nouveaux tokens
  * @throws Error 401 si l'email ou le mot de passe est invalide
  */
-export async function login(
+export async function connecter(
   email: string,
   password: string,
 ): Promise<{ user: Omit<User, "createdAt">; tokens: AuthTokens }> {
@@ -161,7 +161,7 @@ export async function login(
  * @returns Promise avec les données utilisateur complètes
  * @throws Error 404 si l'utilisateur n'existe pas (cas rare : utilisateur supprimé)
  */
-export async function getMe(userId: string): Promise<User> {
+export async function obtenirUtilisateur(userId: string): Promise<User> {
   const result = await db.query(
     "SELECT id, email, created_at FROM users WHERE id = $1",
     [userId],

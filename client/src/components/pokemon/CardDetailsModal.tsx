@@ -1,5 +1,5 @@
 import type { PokemonCard, AcquiredCard, CardCondition } from '@/types/models'
-import { Modal, ModalBody } from '@components/ui/Modale'
+import { Modale, ModalBody } from '@components/ui/Modale'
 import { PriceTrend } from '@components/pokemon/PriceTrend'
 import { Badge } from '@components/ui/Badge'
 import styled from 'styled-components'
@@ -294,7 +294,7 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 	}, {} as Record<CardCondition, number>)
 
 	return (
-		<Modal isOpen={true} onClose={onClose} title={card.name}>
+		<Modale isOpen={true} onClose={onClose} title={card.name}>
 			<ModalBody>
 				<CardImageContainer>
 					<CardImage src={card.images.large} alt={card.name} />
@@ -467,6 +467,6 @@ export function CardDetailsModal({ card, acquisitions, onClose }: Props) {
 							})}
 				</AcquisitionsList>
 			</ModalBody>
-		</Modal>
+		</Modale>
 	)
 }

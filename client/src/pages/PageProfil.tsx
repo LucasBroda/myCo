@@ -35,7 +35,7 @@ import { salesService } from '@services/serviceVentes'
 import { PriceTrend } from '@components/pokemon/TendancePrix'
 import { usePlannedStore } from '@store/plannedStore'
 import { useEffect, useState } from 'react'
-import { useToast } from '@hooks/useToast'
+import { useNotification } from '@hooks/useToast'
 import { DayPicker } from 'react-day-picker'
 import 'react-day-picker/style.css'
 import {
@@ -1045,7 +1045,7 @@ function PurchaseCalendar({ planned, onDelete, onRefresh }: PurchaseCalendarProp
 	const [deleting, setDeleting] = useState<string | null>(null)
 	const [selectedDate, setSelectedDate] = useState<Date | null>(null)
 	const [cardDetails, setCardDetails] = useState<Record<string, PokemonCard>>({})
-	const { success, error: showError } = useToast()
+	const { success, error: showError } = useNotification()
 	const plannedDates = planned.map(p => new Date(p.plannedDate))
 
 	// Charger les détails des cartes au montage

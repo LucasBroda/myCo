@@ -72,7 +72,7 @@ const DismissButton = styled.button`
 	}
 `
 
-export function ToastContainer() {
+export function ConteneurToast() {
 	const toasts = useUiStore(s => s.toasts)
 	const dismiss = useUiStore(s => s.dismissToast)
 

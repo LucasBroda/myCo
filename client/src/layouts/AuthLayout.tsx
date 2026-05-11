@@ -65,7 +65,7 @@ const Logo = styled.div`
  * Affiche une carte centrée avec le logo myCo et injecte
  * les routes enfants (LoginPage, RegisterPage) via Outlet.
  */
-export default function AuthLayout() {
+export default function DispositionAuth() {
 	return (
 		<Wrapper>
 			<Card>

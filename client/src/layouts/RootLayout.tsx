@@ -12,7 +12,7 @@
 
 import { GlobalStyle } from '@/styles/GlobalStyle'
 import { darkTheme, lightTheme } from '@/styles/theme'
-import { ToastContainer } from '@components/ui/Toast'
+import { ConteneurToast } from '@components/ui/Toast'
 import { useAuthStore } from '@store/authStore'
 import { useUiStore } from '@store/uiStore'
 import { Navigate, Outlet } from 'react-router'
@@ -24,7 +24,7 @@ import { ThemeProvider } from 'styled-components'
  * Attend que l'hydration soit complète avant d'afficher l'application
  * pour éviter le flash de contenu non authentifié.
  */
-export default function RootLayout() {
+export default function DispositionRacine() {
 	// Vérifie si le store d'authentification a fini de charger depuis localStorage
 	const isHydrated = useAuthStore(s => s.isHydrated)
 	// Récupère le mode de thème actuel (persisté dans localStorage)
@@ -48,7 +48,7 @@ export default function RootLayout() {
 			<Outlet />
 			
 			{/* Conteneur des notifications toast (position fixed) */}
-			<ToastContainer />
+			<ConteneurToast />
 		</ThemeProvider>
 	)
 }
@@ -71,7 +71,7 @@ export default function RootLayout() {
  * }
  * ```
  */
-export function ProtectedRoute() {
+export function RouteProtegee() {
 	const user = useAuthStore(s => s.user)
 	const isHydrated = useAuthStore(s => s.isHydrated)
 
@@ -103,7 +103,7 @@ export function ProtectedRoute() {
  * }
  * ```
  */
-export function PublicOnlyRoute() {
+export function RoutePubliqueUniquement() {
 	const user = useAuthStore(s => s.user)
 	const isHydrated = useAuthStore(s => s.isHydrated)
 

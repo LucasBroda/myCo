@@ -45,7 +45,7 @@ const ToggleSlider = styled.span<{ $isDark: boolean }>`
 	}
 `
 
-export default function ThemeToggle() {
+export default function BasculeurTheme() {
 	const { themeMode, toggleTheme } = useUiStore()
 	const isDark = themeMode === 'dark'
 

@@ -24,7 +24,7 @@ import * as collectionService from "../collection/collection.service";
  * @param userId - ID de l'utilisateur
  * @throws Ne propage pas les erreurs pour continuer le traitement des autres achats
  */
-export async function processExpiredPlannedPurchases(userId: string): Promise<void> {
+export async function traiterAchatsExpires(userId: string): Promise<void> {
   const today = new Date();
   today.setHours(0, 0, 0, 0); // Minuit pour comparer uniquement les dates
   
@@ -45,7 +45,7 @@ export async function processExpiredPlannedPurchases(userId: string): Promise<vo
       // Ajoute la carte à la collection
       // Date d'acquisition = date planifiée
       // Prix payé = budget planifié
-      await collectionService.addCard(
+      await collectionService.ajouterCarte(
         purchase.user_id as string,
         purchase.card_id as string,
         purchase.set_id as string,
@@ -69,9 +69,9 @@ export async function processExpiredPlannedPurchases(userId: string): Promise<vo
   }
 }
 
-export async function getPlanned(userId: string): Promise<PlannedPurchase[]> {
+export async function obtenirAchatsPlanifies(userId: string): Promise<PlannedPurchase[]> {
   // Traiter automatiquement les achats planifiés expirés
-  await processExpiredPlannedPurchases(userId);
+  await traiterAchatsExpires(userId);
   
   const result = await db.query(
     `SELECT id, user_id, card_id, set_id, card_name, set_name, planned_date, budget, condition, notes, created_at
@@ -94,7 +94,7 @@ export async function getPlanned(userId: string): Promise<PlannedPurchase[]> {
   }));
 }
 
-export async function addPlanned(params: {
+export async function ajouterAchatPlanifie(params: {
   userId: string;
   cardId: string;
   setId: string;
@@ -128,7 +128,7 @@ export async function addPlanned(params: {
   };
 }
 
-export async function deletePlanned(userId: string, id: string): Promise<void> {
+export async function supprimerAchatPlanifie(userId: string, id: string): Promise<void> {
   const result = await db.query(
     "DELETE FROM planned_purchases WHERE id = $1 AND user_id = $2",
     [id, userId],

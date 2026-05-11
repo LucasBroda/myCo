@@ -45,7 +45,7 @@ interface Props {
 	onChange: (value: CardCondition) => void
 }
 
-export function ConditionSelect({ id, value, onChange }: Props) {
+export function SelectionCondition({ id, value, onChange }: Props) {
 	return (
 		<Select
 			id={id}

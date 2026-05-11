@@ -242,7 +242,7 @@ interface ModalProps {
 	readonly initialFocusRef?: React.RefObject<HTMLElement | null>
 }
 
-export function Modal({
+export function Modale({
 	isOpen,
 	onClose,
 	title,

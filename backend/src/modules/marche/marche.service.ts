@@ -12,7 +12,7 @@
 import { cache } from "../../config/redis";
 import { searchEbayPrice } from "../../config/ebay";
 import { MarketPrice, PokemonCard } from "../../types/models";
-import { getCard, searchCards } from "../cartes/cartes.service";
+import { obtenirCarte, rechercherCartes } from "../cartes/cartes.service";
 
 /**
  * Durée de cache pour les données de marché : 30 minutes
@@ -63,13 +63,13 @@ async function getEbayPrice(
  * @param cardId - ID de la carte à comparer
  * @returns Objet MarketPrice avec prix, URLs et tendance
  */
-export async function compareCard(cardId: string): Promise<MarketPrice> {
+export async function comparerCarte(cardId: string): Promise<MarketPrice> {
   const cacheKey = `cache:market:compare:${cardId}`;
   const cached = await cache.get<MarketPrice>(cacheKey);
   if (cached) return cached;
 
   // Récupération parallèle de la carte et des prix
-  const card = await getCard(cardId);
+  const card = await obtenirCarte(cardId);
   const [cm, ebay] = await Promise.all([
     getCardMarketPrice(card),
     getEbayPrice(card),
@@ -112,17 +112,17 @@ export async function compareCard(cardId: string): Promise<MarketPrice> {
  * @param setId - ID de l'édition (optionnel)
  * @returns Tableau de cartes avec données de marché enrichies
  */
-export async function searchMarket(
+export async function rechercherMarche(
   query: string,
   setId?: string,
 ): Promise<Array<PokemonCard & { market: MarketPrice }>> {
   // Recherche des cartes correspondantes
-  const cards = await searchCards(query, setId);
+  const cards = await rechercherCartes(query, setId);
 
   // Enrichissement parallèle avec les données de marché
   const results = await Promise.all(
     cards.map(async (card) => {
-      const market = await compareCard(card.id);
+      const market = await comparerCarte(card.id);
       return { ...card, market };
     }),
   );
@@ -213,7 +213,7 @@ function calculateDealScore(card: PokemonCard, market: MarketPrice): number {
   return getMarketplaceDiscount(market);
 }
 
-export async function getDeals(): Promise<
+export async function obtenirBonnesAffaires(): Promise<
   Array<PokemonCard & { market: MarketPrice; discountPercent: number }>
 > {
   const cacheKey = "cache:market:deals";
@@ -235,7 +235,7 @@ export async function getDeals(): Promise<
 
   // Fetch cards from multiple searches in parallel
   const allCardsArrays = await Promise.all(
-    searchQueries.map((query) => searchCards(query)),
+    searchQueries.map((query) => rechercherCartes(query)),
   );
 
   // Flatten and deduplicate cards by ID
@@ -251,7 +251,7 @@ export async function getDeals(): Promise<
   // Fetch market prices for all cards
   const withPrices = await Promise.all(
     cardsToAnalyze.map(async (card) => {
-      const market = await compareCard(card.id);
+      const market = await comparerCarte(card.id);
       return { ...card, market };
     }),
   );

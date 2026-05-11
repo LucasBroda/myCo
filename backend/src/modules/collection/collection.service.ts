@@ -25,7 +25,7 @@ import * as cardsService from "../cartes/cartes.service";
  * @param userId - Identifiant de l'utilisateur
  * @returns Promise avec le tableau des cartes acquises (tri chronologique inverse)
  */
-export async function getCollection(userId: string): Promise<AcquiredCard[]> {
+export async function obtenirCollection(userId: string): Promise<AcquiredCard[]> {
   const result = await db.query(
     `SELECT id, user_id, card_id, set_id, acquired_date, price_paid, condition, created_at
      FROM acquired_cards WHERE user_id = $1
@@ -63,26 +63,26 @@ export async function getCollection(userId: string): Promise<AcquiredCard[]> {
  * @param userId - Identifiant de l'utilisateur
  * @returns Promise avec le tableau des cartes avec détails complets
  */
-export async function getCollectionWithDetails(
+export async function obtenirCollectionAvecDetails(
   userId: string,
 ): Promise<AcquiredCard[]> {
   // Traite les achats planifiés avant de récupérer la collection
   // Cela garantit que les achats dont la date est arrivée sont ajoutés à la collection
   try {
-    const { processExpiredPlannedPurchases } = await import("../profil/profil.service");
+    const { traiterAchatsExpires: processExpiredPlannedPurchases } = await import("../profil/profil.service");
     await processExpiredPlannedPurchases(userId);
   } catch (error) {
     console.error("Failed to process expired planned purchases:", error);
     // Continue même si cela échoue (pas bloquant)
   }
   
-  const acquiredCards = await getCollection(userId);
+  const acquiredCards = await obtenirCollection(userId);
 
   // Récupère les détails des cartes en parallèle
   // (avec un batching raisonnable pour ne pas surcharger l'API)
   const cardDetailsPromises = acquiredCards.map(async (acquired) => {
     try {
-      const card = await cardsService.getCard(acquired.cardId);
+      const card = await cardsService.obtenirCarte(acquired.cardId);
       return {
         ...acquired,
         cardName: card.name,
@@ -121,7 +121,7 @@ export async function getCollectionWithDetails(
  * @param condition - État de la carte
  * @returns Promise avec la carte ajoutée incluant les détails
  */
-export async function addCard(
+export async function ajouterCarte(
   userId: string,
   cardId: string,
   setId: string,
@@ -141,7 +141,7 @@ export async function addCard(
   let cardName = cardId;
   let setName = "Unknown Set";
   try {
-    const card = await cardsService.getCard(cardId);
+    const card = await cardsService.obtenirCarte(cardId);
     cardName = card.name;
     setName = card.set.name;
   } catch (error) {
@@ -172,7 +172,7 @@ export async function addCard(
  * @param id - Identifiant de la carte acquise à supprimer
  * @throws Error 404 si la carte n'existe pas ou n'appartient pas à l'utilisateur
  */
-export async function removeCard(userId: string, id: string): Promise<void> {
+export async function supprimerCarte(userId: string, id: string): Promise<void> {
   const result = await db.query(
     "DELETE FROM acquired_cards WHERE id = $1 AND user_id = $2",
     [id, userId],
@@ -196,7 +196,7 @@ export async function removeCard(userId: string, id: string): Promise<void> {
  * @param setId - Identifiant de l'édition à suivre
  * @returns Promise avec l'ID de l'édition et la date de suivi
  */
-export async function followSet(
+export async function suivreEdition(
   userId: string,
   setId: string,
 ): Promise<{ setId: string; followedAt: string }> {
@@ -221,7 +221,7 @@ export async function followSet(
  * @param setId - Identifiant de l'édition à ne plus suivre
  * @throws Error 404 si l'édition n'était pas suivie
  */
-export async function unfollowSet(
+export async function nePlusSuivreEdition(
   userId: string,
   setId: string,
 ): Promise<void> {
@@ -246,7 +246,7 @@ export async function unfollowSet(
  * @param userId - Identifiant de l'utilisateur
  * @returns Promise avec le tableau des IDs d'éditions suivies
  */
-export async function getFollowedSets(userId: string): Promise<string[]> {
+export async function obtenirEditionsSuivies(userId: string): Promise<string[]> {
   const result = await db.query(
     "SELECT set_id FROM followed_sets WHERE user_id = $1 ORDER BY followed_at DESC",
     [userId],
@@ -254,10 +254,10 @@ export async function getFollowedSets(userId: string): Promise<string[]> {
   return result.rows.map((row) => row.set_id as string);
 }
 
-export async function getStats(userId: string): Promise<CollectionStats> {
+export async function obtenirStatistiques(userId: string): Promise<CollectionStats> {
   // Process expired planned purchases to ensure stats are up-to-date
   try {
-    const { processExpiredPlannedPurchases } = await import("../profil/profil.service");
+    const { traiterAchatsExpires: processExpiredPlannedPurchases } = await import("../profil/profil.service");
     await processExpiredPlannedPurchases(userId);
   } catch (error) {
     console.error("Failed to process expired planned purchases:", error);
@@ -286,12 +286,12 @@ export async function getStats(userId: string): Promise<CollectionStats> {
 
   // Calculate estimated value based on current market prices
   let estimatedValue = 0;
-  const acquiredCards = await getCollection(userId);
+  const acquiredCards = await obtenirCollection(userId);
   
   // Fetch market prices for all cards in parallel
   const pricePromises = acquiredCards.map(async (acquired) => {
     try {
-      const card = await cardsService.getCard(acquired.cardId);
+      const card = await cardsService.obtenirCarte(acquired.cardId);
       // Use average sell price, fallback to trend price, or 0 if unavailable
       const marketPrice = card.cardmarket?.prices?.averageSellPrice 
         || card.cardmarket?.prices?.trendPrice 

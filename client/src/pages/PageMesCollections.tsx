@@ -193,7 +193,7 @@ function matchesSearch(setName: string, searchQuery: string): boolean {
  * 
  * Charge et affiche les collections suivies par l'utilisateur avec recherche bilingue.
  */
-export default function MyCollectionsPage() {
+export default function PageMesCollections() {
 	const [sets, setSets] = useState<PokemonSet[]>([])
 	const [searchQuery, setSearchQuery] = useState('')
 	const [isLoading, setIsLoading] = useState(true)

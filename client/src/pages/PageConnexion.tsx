@@ -15,8 +15,8 @@
  */
 
 import { focusRing } from '@/styles/mixins'
-import { useAuth } from '@hooks/useAuth'
-import { useToast } from '@hooks/useToast'
+import { useAuthentification } from '@hooks/useAuth'
+import { useNotification } from '@hooks/useToast'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import styled from 'styled-components'
@@ -119,13 +119,13 @@ const Footer = styled.p`
  * 
  * Gère l'état local du formulaire (email, password, loading, error) et la soumission.
  */
-export default function LoginPage() {
+export default function PageConnexion() {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(false)
-	const { login } = useAuth() // Hook d'authentification (appelle l'API et met à jour le store Zustand)
-	const { success } = useToast() // Hook pour afficher les notifications
+	const { login } = useAuthentification() // Hook d'authentification (appelle l'API et met à jour le store Zustand)
+	const { success } = useNotification() // Hook pour afficher les notifications
 	const navigate = useNavigate() // Navigation programmatique React Router
 
 	/**

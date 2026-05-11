@@ -63,7 +63,7 @@ interface FilterBarProps<T extends string> {
 	readonly label: string
 }
 
-export function FilterBar<T extends string>({
+export function BarreFiltres<T extends string>({
 	options,
 	value,
 	onChange,

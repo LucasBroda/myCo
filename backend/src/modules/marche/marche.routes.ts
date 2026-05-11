@@ -14,11 +14,11 @@
  */
 
 import { Router } from "express";
-import { authenticate } from "../../middleware/auth";
+import { authentifier } from "../../middleware/auth";
 import {
-  compareHandler,
-  getDealsHandler,
-  searchHandler,
+  comparerGestionnaire,
+  obtenirBonnesAffairesGestionnaire,
+  rechercherGestionnaire,
 } from "./marche.controleur";
 
 const router = Router();
@@ -26,27 +26,27 @@ const router = Router();
 /**
  * Toutes les routes nécessitent une authentification
  */
-router.use(authenticate);
+router.use(authentifier);
 
 /**
  * GET /api/marche/recherche?q=xxx&set=yyy
  * Recherche de cartes avec enrichissement des prix eBay
  * Similaire à /api/cartes/recherche mais inclut les données de marché
  */
-router.get("/recherche", searchHandler);
+router.get("/recherche", rechercherGestionnaire);
 
 /**
  * GET /api/marche/offres
  * Retourne les cartes avec les meilleurs écarts négatifs
  * entre prix Cardmarket et prix eBay (opportunités d'achat)
  */
-router.get("/offres", getDealsHandler);
+router.get("/offres", obtenirBonnesAffairesGestionnaire);
 
 /**
  * GET /api/marche/comparer/:cardId
  * Compare les prix Cardmarket et eBay pour une carte spécifique
  * Utile pour évaluer si le prix eBay est intéressant
  */
-router.get("/comparer/:cardId", compareHandler);
+router.get("/comparer/:cardId", comparerGestionnaire);
 
 export default router;

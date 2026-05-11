@@ -13,12 +13,12 @@
  */
 
 import { Router } from "express";
-import { authenticate } from "../../middleware/auth";
+import { authentifier } from "../../middleware/auth";
 import {
-  getMeHandler,
-  loginHandler,
-  logoutHandler,
-  registerHandler,
+  obtenirUtilisateurGestionnaire,
+  connecterGestionnaire,
+  deconnecterGestionnaire,
+  inscrireGestionnaire,
 } from "./authentification.controleur";
 
 const router = Router();
@@ -28,27 +28,27 @@ const router = Router();
  * Crée un nouveau compte utilisateur
  * Public (pas d'authentification requise)
  */
-router.post("/inscription", registerHandler);
+router.post("/inscription", inscrireGestionnaire);
 
 /**
  * POST /api/authentification/connexion
  * Authentifie un utilisateur existant
  * Public (pas d'authentification requise)
  */
-router.post("/connexion", loginHandler);
+router.post("/connexion", connecterGestionnaire);
 
 /**
  * GET /api/authentification/moi
  * Récupère les informations du profil de l'utilisateur connecté
  * Protégé par le middleware authenticate
  */
-router.get("/moi", authenticate, getMeHandler);
+router.get("/moi", authentifier, obtenirUtilisateurGestionnaire);
 
 /**
  * POST /api/authentification/deconnexion
  * Supprime le cookie de session
  * Public (mais utilisé par les utilisateurs connectés)
  */
-router.post("/deconnexion", logoutHandler);
+router.post("/deconnexion", deconnecterGestionnaire);
 
 export default router;

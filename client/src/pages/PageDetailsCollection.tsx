@@ -32,21 +32,21 @@ import type { CardCondition, PokemonCard, PokemonSet } from '@/types/models'
 import { Button } from '@components/ui/Bouton'
 import { EmptyState } from '@components/ui/EtatVide'
 import { ErrorState } from '@components/ui/EtatErreur'
-import { Field, Input } from '@components/ui/Entree'
-import { Modal, ModalBody, ModalFooter } from '@components/ui/Modale'
-import { ProgressBar } from '@components/ui/BarreProgression'
+import { Champ, Input } from '@components/ui/Entree'
+import { Modale, ModalBody, ModalFooter } from '@components/ui/Modale'
+import { BarreProgression } from '@components/ui/BarreProgression'
 import { Spinner } from '@components/ui/Chargeur'
-import { FilterBar, type FilterOption } from '@components/layout/BarreFiltres'
+import { BarreFiltres, type FilterOption } from '@components/layout/BarreFiltres'
 import { PageHeader } from '@components/layout/EntetePage'
 import { CalendarIcon } from '@components/ui/Icones'
 import { CardThumbnail } from '@components/pokemon/VignetteCarte'
-import { ConditionSelect } from '@components/pokemon/SelectionCondition'
+import { SelectionCondition } from '@components/pokemon/SelectionCondition'
 import { collectionService } from '@services/serviceCollection'
 import { cardsService } from '@services/serviceCartes'
 import { profileService } from '@services/serviceProfil'
 import { useCollectionStore } from '@store/collectionStore'
 import { usePlannedStore } from '@store/plannedStore'
-import { useToast } from '@hooks/useToast'
+import { useNotification } from '@hooks/useToast'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import styled from 'styled-components'
@@ -340,7 +340,7 @@ interface AcquireModalProps {
 	readonly addToPlannedStore: (purchase: import('@/types/models').PlannedPurchase) => void
 }
 
-function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPlannedStore }: AcquireModalProps) {
+function ModaleAcquisition({ card, set, ownedCount = 0, onClose, onAcquired, addToPlannedStore }: AcquireModalProps) {
 	const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
 	const [price, setPrice] = useState('')
 	const [condition, setCondition] = useState<CardCondition>('NM')
@@ -348,7 +348,7 @@ function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPla
 	const [loading, setLoading] = useState(false)
 	const [formError, setFormError] = useState('')
 	const { addCard: addToStore } = useCollectionStore()
-	const { success } = useToast()
+	const { success } = useNotification()
 	const dateInputRef = useRef<HTMLInputElement>(null)
 
 	// Détecte si la date sélectionnée est dans le futur
@@ -402,7 +402,7 @@ function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPla
 	}
 
 	return (
-		<Modal
+		<Modale
 			isOpen={!!card}
 			onClose={onClose}
 			title={modalTitle}
@@ -429,7 +429,7 @@ function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPla
 					</InfoMessage>
 				)}
 
-				<Field 
+				<Champ 
 					label={isFutureDate ? "Date d'achat prévue" : "Date d'acquisition"} 
 					htmlFor="acquire-date"
 				>
@@ -441,9 +441,9 @@ function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPla
 					onChange={e => setDate(e.target.value)}
 					required
 				/>
-			</Field>
+			</Champ>
 
-			<Field
+			<Champ
 				label={isFutureDate ? "Budget prévu (optionnel)" : "Prix payé (optionnel)"}
 				htmlFor="acquire-price"
 				hint="En euros"
@@ -457,19 +457,19 @@ function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPla
 					onChange={e => setPrice(e.target.value)}
 					placeholder="0.00"
 				/>
-			</Field>
+			</Champ>
 
-			<Field label="État de la carte" htmlFor="acquire-condition">
-				<ConditionSelect
+			<Champ label="État de la carte" htmlFor="acquire-condition">
+				<SelectionCondition
 					id="acquire-condition"
 					value={condition}
 					onChange={setCondition}
 				/>
-			</Field>
+			</Champ>
 
 
 					{isFutureDate && (
-						<Field 
+						<Champ 
 							label="Notes (optionnel)" 
 							htmlFor="acquire-notes"
 							hint="Rappel ou informations complémentaires"
@@ -481,7 +481,7 @@ function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPla
 								placeholder="Ex: Attendre la réédition, surveiller les prix..."
 								maxLength={500}
 							/>
-						</Field>
+						</Champ>
 					)}
 				</ModalBody>
 				<ModalFooter>
@@ -493,16 +493,16 @@ function AcquireModal({ card, set, ownedCount = 0, onClose, onAcquired, addToPla
 					</Button>
 				</ModalFooter>
 			</form>
-		</Modal>
+		</Modale>
 	)
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function SetDetailPage() {
+export default function PageDetailsCollection() {
 	const { setId } = useParams<{ setId: string }>()
 	const navigate = useNavigate()
-	const { toast } = useToast()
+	const { toast } = useNotification()
 
 	const [pokemonSet, setPokemonSet] = useState<PokemonSet | null>(null)
 	const [cards, setCards] = useState<PokemonCard[]>([])
@@ -667,7 +667,7 @@ export default function SetDetailPage() {
 
 			{pokemonSet && (
 				<ProgressSection>
-					<ProgressBar
+					<BarreProgression
 						value={ownedCount}
 						max={pokemonSet.total}
 						label="Progression du set"
@@ -685,14 +685,14 @@ export default function SetDetailPage() {
 				/>
 			</SearchContainer>
 
-		<FilterBar
+		<BarreFiltres
 			options={filterOptions}
 			value={filter}
 			onChange={setFilter}
 			label="Filtrer les cartes"
 		/>
 
-		<FilterBar
+		<BarreFiltres
 			options={rarityOptions}
 			value={rarityFilter}
 			onChange={setRarityFilter}
@@ -716,7 +716,7 @@ export default function SetDetailPage() {
 				</CardGrid>
 			)}
 
-			<AcquireModal
+			<ModaleAcquisition
 				card={selectedCard}
 				set={pokemonSet}
 				ownedCount={selectedCard ? (acquiredMap[selectedCard.id]?.length ?? 0) : 0}
