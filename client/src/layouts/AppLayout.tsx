@@ -1,3 +1,18 @@
+/**
+ * Layout principal de l'application
+ * 
+ * Fournit la structure de navigation principale avec :
+ * - Sidebar persistante sur desktop (sticky)
+ * - Menu hamburger responsive sur mobile
+ * - Navigation vers toutes les pages de l'application
+ * - Basculeur de thème (clair/sombre)
+ * - Bouton de déconnexion
+ * 
+ * Design responsive :
+ * - Mobile : navigation en haut + menu latéral coulissant
+ * - Desktop : sidebar fixe à gauche (220px de large)
+ */
+
 import { focusRing } from '@/styles/mixins'
 import ThemeToggle from '@components/ui/BasculeurTheme'
 import { useAuth } from '@hooks/useAuth'
@@ -5,6 +20,10 @@ import { Link, Outlet, useLocation } from 'react-router'
 import { useState } from 'react'
 import styled from 'styled-components'
 
+/**
+ * Conteneur principal flex
+ * Colonne sur mobile, ligne sur desktop
+ */
 const Shell = styled.div`
 	display: flex;
 	flex-direction: column;
@@ -15,6 +34,10 @@ const Shell = styled.div`
 	}
 `
 
+/**
+ * Sidebar de navigation
+ * Barre horizontale sur mobile, sidebar verticale sticky sur desktop
+ */
 const Sidebar = styled.nav`
 	background-color: ${({ theme }) => theme.colors.surfaceElevated};
 	border-bottom: 1px solid ${({ theme }) => theme.colors.border};
@@ -34,6 +57,7 @@ const Sidebar = styled.nav`
 		border-bottom: none;
 		border-right: 1px solid ${({ theme }) => theme.colors.border};
 		padding: ${({ theme }) => theme.spacing['6']};
+		/* Sticky pour garder la sidebar visible pendant le scroll */
 		position: sticky;
 		top: 0;
 		height: 100vh;
@@ -41,6 +65,10 @@ const Sidebar = styled.nav`
 	}
 `
 
+/**
+ * Bouton hamburger pour ouvrir le menu mobile
+ * Masqué sur desktop
+ */
 const BurgerButton = styled.button`
 	display: flex;
 	flex-direction: column;
@@ -66,6 +94,7 @@ const BurgerButton = styled.button`
 		display: none;
 	}
 
+	/* Trois barres horizontales formant l'icône hamburger */
 	span {
 		width: 24px;
 		height: 2px;
@@ -76,6 +105,10 @@ const BurgerButton = styled.button`
 	}
 `
 
+/**
+ * Overlay semi-transparent derrière le menu mobile
+ * Cliquer dessus ferme le menu
+ */
 const MobileMenuOverlay = styled.div<{ $isOpen: boolean }>`
 	display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
 	position: fixed;
@@ -89,6 +122,10 @@ const MobileMenuOverlay = styled.div<{ $isOpen: boolean }>`
 	}
 `
 
+/**
+ * Menu mobile coulissant depuis la gauche
+ * Animation de translation pour l'ouverture/fermeture
+ */
 const MobileMenu = styled.div<{ $isOpen: boolean }>`
 	display: ${({ $isOpen }) => ($isOpen ? 'flex' : 'none')};
 	flex-direction: column;

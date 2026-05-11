@@ -1,3 +1,18 @@
+/**
+ * Routes du profil utilisateur
+ * 
+ * Définit les endpoints HTTP pour gérer les achats planifiés (wishlist).
+ * Toutes les routes nécessitent une authentification.
+ * 
+ * Endpoints :
+ * - GET /api/profil/planifies - Liste des achats planifiés
+ * - POST /api/profil/planifies - Ajouter un achat planifié
+ * - DELETE /api/profil/planifies/:id - Supprimer un achat planifié
+ * 
+ * Les achats planifiés permettent de créer une wishlist avec
+ * dates cibles et budgets pour les futures acquisitions.
+ */
+
 import { Router } from "express";
 import { authenticate } from "../../middleware/auth";
 import {
@@ -8,10 +23,34 @@ import {
 
 const router = Router();
 
+/**
+ * Toutes les routes nécessitent une authentification
+ */
 router.use(authenticate);
 
+/**
+ * GET /api/profil/planifies
+ * Récupère tous les achats planifiés de l'utilisateur
+ * Triés par date planifiée croissante
+ */
 router.get("/planifies", getPlannedHandler);
+
+/**
+ * POST /api/profil/planifies
+ * Ajoute un nouvel achat planifié à la wishlist
+ * Body : {
+ *   cardId, setId, cardName, setName, plannedDate,
+ *   budget?, condition?, notes?
+ * }
+ * Les noms sont stockés pour éviter des appels API répétés
+ */
 router.post("/planifies", addPlannedHandler);
+
+/**
+ * DELETE /api/profil/planifies/:id
+ * Supprime un achat planifié de la wishlist
+ * Vérifie que l'achat appartient bien à l'utilisateur
+ */
 router.delete("/planifies/:id", deletePlannedHandler);
 
 export default router;

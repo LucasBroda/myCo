@@ -1,6 +1,21 @@
+/**
+ * Layout pour les pages d'authentification
+ * 
+ * Fournit une mise en page centrée avec une carte stylisée pour les formulaires
+ * de connexion et d'inscription.
+ * 
+ * Design responsive :
+ * - Mobile : carte pleine largeur avec padding
+ * - Desktop : carte centrée avec largeur maximale de 400px
+ */
+
 import { Outlet } from 'react-router'
 import styled from 'styled-components'
 
+/**
+ * Conteneur principal en plein écran
+ * Centre le contenu verticalement et horizontalement
+ */
 const Wrapper = styled.div`
 	min-height: 100vh;
 	display: flex;
@@ -10,6 +25,10 @@ const Wrapper = styled.div`
 	padding: ${({ theme }) => theme.spacing['4']};
 `
 
+/**
+ * Carte contenant le formulaire d'authentification
+ * Largeur maximale 400px avec ombres et bordures arrondies
+ */
 const Card = styled.div`
 	width: 100%;
 	max-width: 400px;
@@ -20,6 +39,9 @@ const Card = styled.div`
 	padding: ${({ theme }) => theme.spacing['8']};
 `
 
+/**
+ * Section logo et description de l'application
+ */
 const Logo = styled.div`
 	text-align: center;
 	margin-bottom: ${({ theme }) => theme.spacing['6']};
@@ -37,6 +59,12 @@ const Logo = styled.div`
 	}
 `
 
+/**
+ * Composant AuthLayout
+ * 
+ * Affiche une carte centrée avec le logo myCo et injecte
+ * les routes enfants (LoginPage, RegisterPage) via Outlet.
+ */
 export default function AuthLayout() {
 	return (
 		<Wrapper>
@@ -45,6 +73,7 @@ export default function AuthLayout() {
 					<h1>myCo</h1>
 					<p>Gestionnaire de collection Pokémon TCG</p>
 				</Logo>
+				{/* Outlet = injecte LoginPage ou RegisterPage */}
 				<Outlet />
 			</Card>
 		</Wrapper>
