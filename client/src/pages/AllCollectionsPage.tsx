@@ -8,15 +8,15 @@
  */
 
 import type { PokemonSet } from '@/types/models'
-import { EmptyState } from '@components/ui/EmptyState'
-import { ErrorState } from '@components/ui/ErrorState'
-import { Spinner } from '@components/ui/Spinner'
-import { Button } from '@components/ui/Button'
-import { Input } from '@components/ui/Input'
-import { PageHeader } from '@components/layout/PageHeader'
-import { SetCard } from '@components/pokemon/SetCard'
-import { collectionService } from '@services/collectionService'
-import { cardsService } from '@services/cardsService'
+import { EmptyState } from '@components/ui/EtatVide'
+import { ErrorState } from '@components/ui/EtatErreur'
+import { Spinner } from '@components/ui/Chargeur'
+import { Button } from '@components/ui/Bouton'
+import { Input } from '@components/ui/Entree'
+import { PageHeader } from '@components/layout/EntetePage'
+import { SetCard } from '@components/pokemon/CarteCollection'
+import { collectionService } from '@services/serviceCollection'
+import { cardsService } from '@services/serviceCartes'
 import { useCollectionStore } from '@store/collectionStore'
 import { useEffect, useState, useMemo } from 'react'
 import { useNavigate } from 'react-router'
@@ -78,7 +78,7 @@ const SetCardContainer = styled.div`
 	gap: ${({ theme }) => theme.spacing['2']};
 `
 
-const FollowButton = styled(Button)<{ $isFollowed: boolean }>`
+	const FollowButton = styled(Button)<{ $isFollowed: boolean }>`
 	width: 100%;
 	font-size: ${({ theme }) => theme.font.size.sm};
 	padding: ${({ theme }) => `${theme.spacing['2']} ${theme.spacing['3']}`};
@@ -284,7 +284,7 @@ export default function AllCollectionsPage() {
 					type="text"
 					placeholder="Rechercher une collection (ex: Vainqueurs Suprêmes, Base, XY)..."
 					value={searchQuery}
-					onChange={(e) => setSearchQuery(e.target.value)}
+					onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
 					inputSize="md"
 				/>
 			</SearchContainer>
@@ -297,15 +297,15 @@ export default function AllCollectionsPage() {
 					return (
 						<SetCardContainer key={set.id}>
 							<SetCardWrapper $isFollowed={isFollowed}>
-								<SetCard
-									set={set}
-									ownedCount={getOwnedCount(set.id)}
-									onClick={() => navigate(`/collections/${set.id}`)}
-								/>
-							</SetCardWrapper>
-							<FollowButton
-								$isFollowed={isFollowed}
-								onClick={(e) => handleToggleFollow(set.id, set.name, e)}
+							<SetCard
+								set={set}
+								ownedCount={getOwnedCount(set.id)}
+								onClick={() => navigate(`/collections/${set.id}`)}
+							/>
+						</SetCardWrapper>
+						<FollowButton
+							$isFollowed={isFollowed}
+							onClick={(e: React.MouseEvent) => handleToggleFollow(set.id, set.name, e)}
 							>
 								{isFollowed ? '✓ Ajouté' : '+ Ajouter'}
 							</FollowButton>

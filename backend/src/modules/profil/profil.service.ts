@@ -1,4 +1,73 @@
-/**\n * Service de profil utilisateur\n * \n * G\u00e8re les achats planifi\u00e9s (wishlist) avec transfert automatique vers la collection.\n * \n * Fonctionnalit\u00e9 cl\u00e9 : lorsque la date planifi\u00e9e est atteinte, l'achat est automatiquement\n * transf\u00e9r\u00e9 vers la collection comme si la carte avait \u00e9t\u00e9 acquise.\n */\n\nimport { db } from \"../../config/db\";\nimport { PlannedPurchase } from \"../../types/models\";\nimport * as collectionService from \"../collection/collection.service\";\n\n/**\n * Traite les achats planifi\u00e9s expir\u00e9s (transfert automatique)\n * \n * Pour chaque achat dont la date planifi\u00e9e est atteinte ou d\u00e9pass\u00e9e :\n * 1. Ajoute la carte \u00e0 la collection avec la date planifi\u00e9e comme date d'acquisition\n * 2. Utilise le budget comme prix pay\u00e9\n * 3. Supprime l'achat planifi\u00e9\n * \n * Appel\u00e9 automatiquement lors de getPlanned() pour maintenir la coh\u00e9rence.\n * \n * @param userId - ID de l'utilisateur\n * @throws Ne propage pas les erreurs pour continuer le traitement des autres achats\n */\nexport async function processExpiredPlannedPurchases(userId: string): Promise<void> {\n  const today = new Date();\n  today.setHours(0, 0, 0, 0); // Minuit pour comparer uniquement les dates\n  \n  // R\u00e9cup\u00e8re tous les achats dont la date est \u00e9chue\n  const result = await db.query(\n    `SELECT id, user_id, card_id, set_id, card_name, set_name, planned_date, budget, condition, notes, created_at\n     FROM planned_purchases \n     WHERE user_id = $1 AND planned_date <= $2\n     ORDER BY planned_date ASC`,\n    [userId, today.toISOString()],\n  );\n  \n  const expiredPurchases = result.rows;\n  \n  // Traite chaque achat expir\u00e9\n  for (const purchase of expiredPurchases) {\n    try {\n      // Ajoute la carte \u00e0 la collection\n      // Date d'acquisition = date planifi\u00e9e\n      // Prix pay\u00e9 = budget planifi\u00e9\n      await collectionService.addCard(\n        purchase.user_id as string,\n        purchase.card_id as string,\n        purchase.set_id as string,\n        purchase.planned_date as string,\n        purchase.budget ? Number.parseFloat(purchase.budget) : null,\n        purchase.condition as import(\"../../types/models\").CardCondition,\n      );\n      \n      // Supprime l'achat planifi\u00e9 maintenant qu'il est dans la collection\n      await db.query(\n        \"DELETE FROM planned_purchases WHERE id = $1\",\n        [purchase.id],\n      );\n      \n      console.log(`Transferred planned purchase ${purchase.id} to collection for user ${userId}`);\n    } catch (error) {\n      console.error(`Failed to transfer planned purchase ${purchase.id}:`, error);\n      // Continue avec les autres achats m\u00eame si un \u00e9choue\n      // Permet un traitement partiel plut\u00f4t qu'un \u00e9chec total\n    }\n  }\n}
+/**
+ * Service de profil utilisateur
+ * 
+ * Gère les achats planifiés (wishlist) avec transfert automatique vers la collection.
+ * 
+ * Fonctionnalité clé : lorsque la date planifiée est atteinte, l'achat est automatiquement
+ * transféré vers la collection comme si la carte avait été acquise.
+ */
+
+import { db } from "../../config/db";
+import { PlannedPurchase } from "../../types/models";
+import * as collectionService from "../collection/collection.service";
+
+/**
+ * Traite les achats planifiés expirés (transfert automatique)
+ * 
+ * Pour chaque achat dont la date planifiée est atteinte ou dépassée :
+ * 1. Ajoute la carte à la collection avec la date planifiée comme date d'acquisition
+ * 2. Utilise le budget comme prix payé
+ * 3. Supprime l'achat planifié
+ * 
+ * Appelé automatiquement lors de getPlanned() pour maintenir la cohérence.
+ * 
+ * @param userId - ID de l'utilisateur
+ * @throws Ne propage pas les erreurs pour continuer le traitement des autres achats
+ */
+export async function processExpiredPlannedPurchases(userId: string): Promise<void> {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Minuit pour comparer uniquement les dates
+  
+  // Récupère tous les achats dont la date est échue
+  const result = await db.query(
+    `SELECT id, user_id, card_id, set_id, card_name, set_name, planned_date, budget, condition, notes, created_at
+     FROM planned_purchases 
+     WHERE user_id = $1 AND planned_date <= $2
+     ORDER BY planned_date ASC`,
+    [userId, today.toISOString()],
+  );
+  
+  const expiredPurchases = result.rows;
+  
+  // Traite chaque achat expiré
+  for (const purchase of expiredPurchases) {
+    try {
+      // Ajoute la carte à la collection
+      // Date d'acquisition = date planifiée
+      // Prix payé = budget planifié
+      await collectionService.addCard(
+        purchase.user_id as string,
+        purchase.card_id as string,
+        purchase.set_id as string,
+        purchase.planned_date as string,
+        purchase.budget ? Number.parseFloat(purchase.budget) : null,
+        purchase.condition as import("../../types/models").CardCondition,
+      );
+      
+      // Supprime l'achat planifié maintenant qu'il est dans la collection
+      await db.query(
+        "DELETE FROM planned_purchases WHERE id = $1",
+        [purchase.id],
+      );
+      
+      console.log(`Transferred planned purchase ${purchase.id} to collection for user ${userId}`);
+    } catch (error) {
+      console.error(`Failed to transfer planned purchase ${purchase.id}:`, error);
+      // Continue avec les autres achats même si un échoue
+      // Permet un traitement partiel plutôt qu'un échec total
+    }
+  }
+}
 
 export async function getPlanned(userId: string): Promise<PlannedPurchase[]> {
   // Traiter automatiquement les achats planifiés expirés

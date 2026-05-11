@@ -43,7 +43,7 @@ export async function getCollection(userId: string): Promise<AcquiredCard[]> {
     setId: row.set_id as string,
     acquiredDate: row.acquired_date as string,
     // PostgreSQL retourne NUMERIC en tant que chaîne, on convertit en nombre
-    pricePaid: row.price_paid ? parseFloat(row.price_paid) : null,
+    pricePaid: row.price_paid ? Number.parseFloat(row.price_paid) : null,
     condition: row.condition as CardCondition,
     createdAt: row.created_at as string,
   }));
@@ -157,7 +157,7 @@ export async function addCard(
     setId: row.set_id as string,
     acquiredDate: row.acquired_date as string,
     // PostgreSQL retourne NUMERIC en tant que chaîne, on convertit en nombre
-    pricePaid: row.price_paid ? parseFloat(row.price_paid) : null,
+    pricePaid: row.price_paid ? Number.parseFloat(row.price_paid) : null,
     condition: row.condition as CardCondition,
     createdAt: row.created_at as string,
   };
@@ -309,11 +309,11 @@ export async function getStats(userId: string): Promise<CollectionStats> {
   const totals = totalsResult.rows[0];
   return {
     totalCards: totals.total_cards as number,
-    totalSpent: parseFloat(totals.total_spent as string),
+    totalSpent: Number.parseFloat(totals.total_spent as string),
     estimatedValue: estimatedValue,
     byMonth: monthsResult.rows.map((row) => ({
       month: row.month as string,
-      totalSpent: parseFloat(row.total_spent as string),
+      totalSpent: Number.parseFloat(row.total_spent as string),
       cardCount: row.card_count as number,
     })),
   };

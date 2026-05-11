@@ -248,27 +248,6 @@ export default function MyCollectionsPage() {
 	 * Recalcule seulement quand sets ou searchQuery changent.
 	 */
 	const filteredSets = useMemo(() => {
-				collectionService.getCollection(),
-				cardsService.getSets(),
-			])
-			setCollection(collection)
-			
-			// Filter only followed sets
-			const followedSets = allSets.filter(set => followedSetIds.includes(set.id))
-			setSets(followedSets)
-		} catch (err) {
-			setError(err instanceof Error ? err.message : 'Erreur de chargement')
-		} finally {
-			setIsLoading(false)
-		}
-	}
-
-	useEffect(() => {
-		loadData()
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [])
-
-	const filteredSets = useMemo(() => {
 		return sets.filter(set => matchesSearch(set.name, searchQuery))
 	}, [sets, searchQuery])
 
