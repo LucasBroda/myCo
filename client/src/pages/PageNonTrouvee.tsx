@@ -1,3 +1,16 @@
+/**
+ * Page 404 - Page non trouvée
+ * 
+ * Affichée lorsque l'utilisateur accède à une route inexistante.
+ * Design simple et épuré avec message explicite et lien de retour.
+ * 
+ * Fonctionnalités :
+ * - Affichage du code d'erreur 404
+ * - Message en français
+ * - Lien de retour vers /collections (page d'accueil)
+ * - Style minimaliste et centré
+ */
+
 import { focusRing } from '@/styles/mixins'
 import { Link } from 'react-router'
 import styled from 'styled-components'
@@ -41,11 +54,19 @@ const BackLink = styled(Link)`
 	}
 `
 
+/**
+ * Composant de la page 404
+ * 
+ * Affichage centré verticalement et horizontalement avec le code 404,
+ * un message explicite et un bouton de retour vers la page des collections.
+ */
 export default function NotFoundPage() {
 	return (
 		<Wrapper>
+			{/* Code d'erreur HTTP 404 en grand */}
 			<Code>404</Code>
 			<Message>Page introuvable</Message>
+			{/* Lien de retour vers la page d'accueil de l'application */}
 			<BackLink to="/collections">Retour aux collections</BackLink>
 		</Wrapper>
 	)

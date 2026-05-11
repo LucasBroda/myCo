@@ -1,3 +1,12 @@
+/**
+ * MarketPage - Version alternative de PageMarche (imports anglais)
+ * 
+ * REMARQUE : Ce fichier est un doublon de PageMarche.tsx avec des imports anglais.
+ * Fonctionnalité identique : recherche et comparaison de prix de cartes Pokémon.
+ * 
+ * Voir PageMarche.tsx pour la documentation complète.
+ */
+
 import type { MarketPrice, PokemonCard } from '@/types/models'
 import { Card } from '@components/ui/Card'
 import { EmptyState } from '@components/ui/EmptyState'

@@ -1,3 +1,26 @@
+/**
+ * Page Marché - Comparaison de prix des cartes Pokémon
+ * 
+ * Permet de rechercher des cartes et de comparer leurs prix entre
+ * CardMarket et eBay en temps réel.
+ * 
+ * Fonctionnalités :
+ * - Recherche de cartes avec debounce (300ms)
+ * - Comparaison de prix CardMarket vs eBay
+ * - Affichage des offres avec images
+ * - Modale de détails avec comparaison approfondie
+ * - Section "Meilleures offres" avec réductions
+ * - Layout responsive avec barre de recherche fixe (desktop)
+ * 
+ * Structure :
+ * - LeftPane : Barre de recherche + Résultats
+ * - RightPane : Meilleures offres (sticky sur desktop)
+ * 
+ * APIs utilisées :
+ * - CardMarket API (prix bas, médian, tendance)
+ * - eBay Browse API (prix actuels du marché)
+ */
+
 import type { MarketPrice, PokemonCard } from '@/types/models'
 import { Card } from '@components/ui/Carte'
 import { EmptyState } from '@components/ui/EtatVide'

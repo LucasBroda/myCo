@@ -1,3 +1,12 @@
+/**
+ * MyCardsPage - Version alternative de PageMesCartes (imports anglais)
+ * 
+ * REMARQUE : Ce fichier est un doublon de PageMesCartes.tsx avec des imports anglais.
+ * Fonctionnalité identique : affichage et gestion de toutes les cartes possédées.
+ * 
+ * Voir PageMesCartes.tsx pour la documentation complète.
+ */
+
 import type { PokemonCard, PokemonSet, AcquiredCard } from '@/types/models'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'

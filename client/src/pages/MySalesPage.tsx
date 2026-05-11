@@ -1,3 +1,12 @@
+/**
+ * MySalesPage - Version alternative de PageMesVentes (imports anglais)
+ * 
+ * REMARQUE : Ce fichier est un doublon de PageMesVentes.tsx avec des imports anglais.
+ * Fonctionnalité identique : gestion des ventes de cartes.
+ * 
+ * Voir PageMesVentes.tsx pour la documentation complète.
+ */
+
 import type { PokemonCard, PlannedSale, CardCondition } from '@/types/models'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'

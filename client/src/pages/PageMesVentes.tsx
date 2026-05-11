@@ -1,3 +1,27 @@
+/**
+ * Page Mes Ventes
+ * 
+ * Gestion des cartes à vendre avec double section :
+ * 1. Cartes disponibles à la vente (de la collection)
+ * 2. Ventes planifiées/en cours avec suivi
+ * 
+ * Fonctionnalités :
+ * - Affichage de toutes les cartes de la collection
+ * - Ajout de ventes planifiées avec prix et condition
+ * - Filtrage par état (toutes/planifiées/vendues)
+ * - Recherche de cartes
+ * - Modification du prix et de l'état de vente
+ * - Marquage d'une vente comme complétée
+ * - Suppression de ventes planifiées
+ * - Modale de création/édition de vente
+ * 
+ * Workflow :
+ * 1. Utilisateur sélectionne une carte de sa collection
+ * 2. Remplit le formulaire (prix, condition, notes)
+ * 3. Vente créée avec statut "active"
+ * 4. Peut marquer comme "completed" une fois vendue
+ */
+
 import type { PokemonCard, PlannedSale, CardCondition } from '@/types/models'
 import { EmptyState } from '@components/ui/EtatVide'
 import { ErrorState } from '@components/ui/EtatErreur'

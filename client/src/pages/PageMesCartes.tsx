@@ -1,3 +1,24 @@
+/**
+ * Page Mes Cartes
+ * 
+ * Affiche toutes les cartes possédées par l'utilisateur, tous sets confondus.
+ * Fonctionnalités avancées de recherche, filtrage et visualisation statistique.
+ * 
+ * Fonctionnalités :
+ * - Recherche bilingue français-anglais (types, raretés, noms)
+ * - Filtrage par collection (set)
+ * - Tri personnalisable (nom, rareté, date d'ajout, prix)
+ * - Statistiques : nombre total, valeur, dépenses
+ * - Graphique camembert de répartition par collection (recharts)
+ * - Modale de détails de carte avec modification/suppression
+ * - Support du mapping français (ex: "feu" trouve les cartes "Fire")
+ * 
+ * Technologies :
+ * - recharts pour le PieChart de répartition
+ * - Mapping bilingue pour types/raretés/termes Pokémon
+ * - useMemo pour optimiser les calculs de filtrage
+ */
+
 import type { PokemonCard, PokemonSet, AcquiredCard } from '@/types/models'
 import { EmptyState } from '@components/ui/EtatVide'
 import { ErrorState } from '@components/ui/EtatErreur'
@@ -197,7 +218,19 @@ const ColorDot = styled.div<{ color: string }>`
 
 // ─── Search & Filter Functions ────────────────────────────────────────────────
 
-// Mapping français -> anglais pour les termes Pokémon
+/**
+ * Mapping français → anglais pour les termes Pokémon
+ * 
+ * Permet de rechercher avec des termes français et de trouver les cartes correspondantes.
+ * Couvre les types, raretés et termes généraux du jeu Pokémon TCG.
+ * 
+ * Structure : { terme_français: [termes_anglais_correspondants] }
+ * 
+ * Exemples :
+ * - "feu" → ["fire"] pour trouver les cartes de type Fire
+ * - "brillant" → ["shining", "shiny", "brilliant"] pour les cartes brillantes
+ * - "commune" → ["common"] pour les raretés communes
+ */
 const frenchToEnglishTerms: Record<string, string[]> = {
 	// Types
 	'feu': ['fire'],
@@ -224,15 +257,41 @@ const frenchToEnglishTerms: Record<string, string[]> = {
 	'illustration': ['illustration'],
 	'hyper': ['hyper'],
 	'amazing': ['amazing'],
-	'radiant': ['radiant'],
-	// Termes généraux
-	'dresseur': ['trainer'],
-	'énergie': ['energy'],
-	'support': ['supporter'],
-	'objet': ['item'],
-	'stade': ['stadium'],
-	'évolution': ['evolution'],
-	'base': ['basic'],
+/**
+ * Normalise une chaîne pour la recherche
+ * 
+ * Gère les valeurs nulles/undefined et applique :
+ * 1. Conversion en minuscules
+ * 2. Normalisation Unicode NFD
+ * 3. Suppression des accents
+ * 4. Trim
+ * 
+ * @param str - Chaîne à normaliser (peut être null/undefined)
+ * @returns Chaîne normalisée ou chaîne vide
+ */
+function normalizeString(str: string | undefined | null): string {
+	if (!str) return ''
+	return str
+		.toLowerCase()
+		.normalize('NFD')
+		.replaceAll(/[\u0300-\u036f]/g, '') // Retire les accents
+		.trim()
+}
+
+/**
+ * Vérifie si une carte correspond à la recherche
+ * 
+ * Stratégie de recherche en 2 étapes :
+ * 1. Recherche directe dans nom, numéro, rareté (anglais)
+ * 2. Si pas de correspondance, utilise le mapping français-anglais
+ * 
+ * Permet de rechercher "feu" pour trouver les cartes "Fire",
+ * ou "brillant" pour trouver les cartes "Shining".
+ * 
+ * @param card - Carte à tester
+ * @param searchQuery - Terme recherché par l'utilisateur
+ * @returns true si la carte correspond
+ */	'base': ['basic'],
 	'niveau': ['level'],
 }
 

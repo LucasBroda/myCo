@@ -1,3 +1,33 @@
+/**
+ * Page Détails de Collection
+ * 
+ * Affiche toutes les cartes d'une collection spécifique avec gestion complète
+ * (ajout, suppression, planification d'achat, suivi de collection).
+ * 
+ * Fonctionnalités :
+ * - Affichage de toutes les cartes d'un set
+ * - Barre de progression de complétion (ex: 45/150 cartes)
+ * - Suivi/Arrêt de suivi de la collection
+ * - Ajout de cartes à la collection (modale avec date, prix, condition)
+ * - Planification d'achats futurs (wishlist avec date planifiée)
+ * - Suppression de cartes possédées
+ * - Recherche bilingue de cartes (français → anglais)
+ * - Filtrage par statut (toutes/possédées/manquantes)
+ * - Tri par rareté (du plus commun au plus rare)
+ * - Bouton retour vers les collections
+ * 
+ * Workflow d'ajout de carte :
+ * 1. Clic sur une carte manquante
+ * 2. Choix : Ajouter maintenant OU Planifier achat
+ * 3. Si ajout : date d'acquisition, prix payé, condition
+ * 4. Si planification : date prévue, budget estimé, condition souhaitée
+ * 
+ * Technologies :
+ * - React Router useParams pour récupérer l'ID du set
+ * - Zustand pour le state global (collection, planned purchases)
+ * - Mapping français-anglais pour la recherche
+ */
+
 import type { CardCondition, PokemonCard, PokemonSet } from '@/types/models'
 import { Button } from '@components/ui/Bouton'
 import { EmptyState } from '@components/ui/EtatVide'

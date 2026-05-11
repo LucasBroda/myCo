@@ -1,3 +1,12 @@
+/**
+ * AllCollectionsPage - Version alternative de PageToutesCollections (imports anglais)
+ * 
+ * REMARQUE : Ce fichier est un doublon de PageToutesCollections.tsx avec des imports anglais.
+ * Fonctionnalité identique : affichage de toutes les collections avec fonction de suivi.
+ * 
+ * Voir PageToutesCollections.tsx pour la documentation complète.
+ */
+
 import type { PokemonSet } from '@/types/models'
 import { EmptyState } from '@components/ui/EmptyState'
 import { ErrorState } from '@components/ui/ErrorState'

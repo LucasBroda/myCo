@@ -1,3 +1,19 @@
+/**
+ * Page de connexion utilisateur
+ * 
+ * Formulaire d'authentification avec validation côté client et gestion d'état.
+ * Utilise le hook useAuth pour l'authentification et redirige vers les collections
+ * après succès.
+ * 
+ * Fonctionnalités :
+ * - Validation d'email et mot de passe
+ * - États de chargement pendant la requête
+ * - Affichage d'erreurs contextuelles
+ * - Redirection automatique après connexion
+ * - Lien vers la page d'inscription
+ * - Attributs ARIA pour l'accessibilité
+ */
+
 import { focusRing } from '@/styles/mixins'
 import { useAuth } from '@hooks/useAuth'
 import { useToast } from '@hooks/useToast'
@@ -98,27 +114,47 @@ const Footer = styled.p`
 	}
 `
 
+/**
+ * Composant principal de la page de connexion
+ * 
+ * Gère l'état local du formulaire (email, password, loading, error) et la soumission.
+ */
 export default function LoginPage() {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(false)
-	const { login } = useAuth()
-	const { success } = useToast()
-	const navigate = useNavigate()
+	const { login } = useAuth() // Hook d'authentification (appelle l'API et met à jour le store Zustand)
+	const { success } = useToast() // Hook pour afficher les notifications
+	const navigate = useNavigate() // Navigation programmatique React Router
 
+	/**
+	 * Gère la soumission du formulaire de connexion
+	 * 
+	 * Processus :
+	 * 1. Empêche le rechargement de la page
+	 * 2. Réinitialise les erreurs précédentes
+	 * 3. Appelle l'API de connexion via le hook useAuth
+	 * 4. Affiche une notification de succès
+	 * 5. Redirige vers /mes-collections
+	 * 6. En cas d'erreur, affiche le message d'erreur
+	 * 
+	 * @param e - Événement de soumission du formulaire
+	 */
 	async function handleSubmit(e: React.FormEvent) {
-		e.preventDefault()
+		e.preventDefault() // Empêche le comportement par défaut (rechargement de page)
 		setError('')
 		setLoading(true)
 		try {
+			// Appelle l'API backend et met à jour le authStore avec user + accessToken
 			await login(email, password)
 			success('Connexion réussie')
-			navigate('/mes-collections')
+			navigate('/mes-collections') // Redirection après authentification
 		} catch (err) {
+			// Extraction du message d'erreur (typiquement "Invalid credentials" ou erreur réseau)
 			setError(err instanceof Error ? err.message : 'Erreur de connexion')
 		} finally {
-			setLoading(false)
+			setLoading(false) // Toujours réactiver le bouton, succès ou erreur
 		}
 	}
 

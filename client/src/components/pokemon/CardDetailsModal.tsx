@@ -1,5 +1,5 @@
 import type { PokemonCard, AcquiredCard, CardCondition } from '@/types/models'
-import { Modal, ModalBody } from '@components/ui/Modal'
+import { Modal, ModalBody } from '@components/ui/Modale'
 import { PriceTrend } from '@components/pokemon/PriceTrend'
 import { Badge } from '@components/ui/Badge'
 import styled from 'styled-components'

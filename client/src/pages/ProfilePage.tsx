@@ -1,3 +1,12 @@
+/**
+ * ProfilePage - Version alternative de PageProfil (imports anglais)
+ * 
+ * REMARQUE : Ce fichier est un doublon de PageProfil.tsx avec des imports anglais.
+ * Fonctionnalité identique : tableau de bord utilisateur avec statistiques et graphiques.
+ * 
+ * Voir PageProfil.tsx pour la documentation complète.
+ */
+
 import type { CollectionStats, PlannedPurchase, AcquiredCard, PokemonCard, SalesStats, PlannedSale } from '@/types/models'
 import { Card } from '@components/ui/Card'
 import { EmptyState } from '@components/ui/EmptyState'

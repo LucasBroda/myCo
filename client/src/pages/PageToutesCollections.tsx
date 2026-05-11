@@ -1,3 +1,28 @@
+/**
+ * Page Toutes les Collections
+ * 
+ * Affiche toutes les collections Pokémon TCG disponibles avec fonction
+ * de suivi/désabonnement.
+ * 
+ * Fonctionnalités :
+ * - Affichage de tous les sets Pokémon TCG
+ * - Recherche bilingue français-anglais (ex: "Soleil" trouve "Sun & Moon")
+ * - Bouton Suivre/Ne plus suivre par collection
+ * - Indicateur visuel des collections déjà suivies (opacité réduite)
+ * - Compteur de cartes possédées par set
+ * - Navigation vers les détails de chaque collection
+ * - Toast de confirmation lors du suivi/désabonnement
+ * 
+ * Différence avec PageMesCollections :
+ * - PageMesCollections : uniquement les collections suivies
+ * - PageToutesCollections : toutes les collections avec gestion du suivi
+ * 
+ * Le suivi de collections permet de :
+ * - Les afficher dans "Mes Collections"
+ * - Recevoir potentiellement des notifications (futur)
+ * - Organiser sa collection par centres d'intérêt
+ */
+
 import type { PokemonSet } from '@/types/models'
 import { EmptyState } from '@components/ui/EtatVide'
 import { ErrorState } from '@components/ui/EtatErreur'

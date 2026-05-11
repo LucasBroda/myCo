@@ -1,3 +1,18 @@
+/**
+ * Page d'inscription utilisateur
+ * 
+ * Formulaire de création de compte avec validation de mot de passe.
+ * Appelle directement le service d'authentification et met à jour le store.
+ * 
+ * Fonctionnalités :
+ * - Validation : mot de passe minimum 8 caractères
+ * - Création de compte via API
+ * - Authentification automatique après inscription
+ * - Affichage d'erreurs (email déjà utilisé, mot de passe trop court, etc.)
+ * - Lien vers la page de connexion
+ * - Attributs HTML5 : autocomplete, minLength, required
+ */
+
 import { focusRing } from '@/styles/mixins'
 import { useToast } from '@hooks/useToast'
 import { authService } from '@services/serviceAuthentification'
@@ -98,25 +113,52 @@ const Footer = styled.p`
 	}
 `
 
+/**
+ * Composant principal de la page d'inscription
+ * 
+ * Utilise directement le authStore (Zustand) au lieu du hook useAuth pour plus de contrôle.
+ */
 export default function RegisterPage() {
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(false)
-	const setAuth = useAuthStore(s => s.setAuth)
+	const setAuth = useAuthStore(s => s.setAuth) // Sélecteur Zustand pour la fonction setAuth
 	const { success } = useToast()
 	const navigate = useNavigate()
 
+	/**
+	 * Gère la soumission du formulaire d'inscription
+	 * 
+	 * Processus :
+	 * 1. Appelle POST /api/auth/inscription avec email + password
+	 * 2. Récupère l'utilisateur créé et l'access token JWT
+	 * 3. Met à jour le authStore avec ces données (persiste dans localStorage via zustand-persist)
+	 * 4. Affiche une notification de succès
+	 * 5. Redirige vers la page des collections
+	 * 
+	 * Validation backend :
+	 * - Email doit être valide et unique
+	 * - Mot de passe doit faire minimum 8 caractères
+	 * - Le mot de passe est haché avec bcrypt (12 rounds) côté serveur
+	 * 
+	 * @param e - Événement de soumission du formulaire
+	 */
 	async function handleSubmit(e: React.FormEvent) {
 		e.preventDefault()
 		setError('')
 		setLoading(true)
 		try {
+			// Appel API : POST /api/auth/inscription
+			// Retour : { user: { id, email }, accessToken: string }
 			const { user, accessToken } = await authService.register(email, password)
+			
+			// Mise à jour du store d'authentification (persiste dans localStorage)
 			setAuth(user, accessToken)
 			success('Compte créé avec succès')
 			navigate('/mes-collections')
 		} catch (err) {
+			// Erreurs possibles : "Email already exists", "Password too short", erreur réseau
 			setError(
 				err instanceof Error ? err.message : "Erreur lors de l'inscription"
 			)

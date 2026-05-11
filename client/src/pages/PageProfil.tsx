@@ -1,3 +1,25 @@
+/**
+ * Page Profil utilisateur
+ * 
+ * Tableau de bord personnel affichant les statistiques de collection,
+ * les achats planifiés, les graphiques de dépenses et les ventes.
+ * 
+ * Fonctionnalités :
+ * - Statistiques de collection (nombre de cartes, valeur, dépenses)
+ * - Graphiques de dépenses par mois (AreaChart)
+ * - Graphiques d'achats par collection (BarChart)
+ * - Calendrier des achats planifiés (react-day-picker)
+ * - Liste des achats planifiés avec gestion (suppression)
+ * - Statistiques de ventes si l'utilisateur a vendu des cartes
+ * - Visualisation de la plus-value/moins-value de la collection
+ * 
+ * Technologies utilisées :
+ * - recharts pour les graphiques (AreaChart, BarChart)
+ * - react-day-picker pour le calendrier
+ * - Zustand pour l'état global (plannedStore)
+ * - API calls multiples en parallèle (Promise.all)
+ */
+
 import type { CollectionStats, PlannedPurchase, AcquiredCard, PokemonCard, SalesStats, PlannedSale } from '@/types/models'
 import { Card } from '@components/ui/Carte'
 import { EmptyState } from '@components/ui/EtatVide'
